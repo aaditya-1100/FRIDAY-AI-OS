@@ -1,0 +1,12 @@
+.venv/
+**pycache**/
+node_modules/
+.env
+*.mp3
+*.wav
+dist/
+build/
+*.log
+Thumbs.db
+.DS_Store
+frontend/dist-electron/

@@ -1,0 +1,10 @@
+{
+  "name": "friday",
+  "private": true,
+  "description": "Local run scripts — backend (uvicorn) + frontend (Vite)",
+  "scripts": {
+    "backend": "cd backend && ..\\.venv\\Scripts\\python.exe -m uvicorn api.server:app --host 127.0.0.1 --port 8001",
+    "frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build"
+  }
+}
