@@ -10,7 +10,8 @@
     "dev:all": "concurrently -k \"npm run dev\" \"npm run start\"",
     "build": "npx tsc && npx vite build",
     "preview": "vite preview",
-    "build:electron": "npm run build && electron-builder --win"
+    "build:dir": "npm run build && npx electron-packager . FRIDAY --platform=win32 --arch=x64 --out=dist-electron --overwrite",
+    "build:electron": "npm run build && npx electron-packager . FRIDAY --platform=win32 --arch=x64 --out=dist-electron --overwrite"
   },
   "build": {
     "appId": "com.friday.assistant",
@@ -19,7 +20,8 @@
       "output": "dist-electron"
     },
     "win": {
-      "target": "nsis"
+      "target": "dir",
+      "forceCodeSigning": false
     },
     "files": [
       "dist/**/*",
@@ -33,7 +35,8 @@
     "jotai": "^2.10.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "three": "^0.170.0"
+    "three": "^0.170.0",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
@@ -45,6 +48,7 @@
     "cross-env": "^10.1.0",
     "electron": "^42.0.1",
     "electron-builder": "^26.8.1",
+    "electron-packager": "^17.1.2",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "typescript": "~5.6.3",

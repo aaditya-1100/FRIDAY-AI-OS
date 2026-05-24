@@ -23,9 +23,19 @@ def unregister_json_emitter(fn: Emitter) -> None:
         _emitters.remove(fn)
 
 
+def has_emitters() -> bool:
+    """True when at least one WebSocket client is connected."""
+    return len(_emitters) > 0
+
+
 async def emit_json(payload: dict) -> None:
+    dead: list[Emitter] = []
     for fn in list(_emitters):
         try:
             await fn(payload)
         except Exception:
-            pass
+            # Emitter raised — likely a dead WS connection; queue for removal.
+            dead.append(fn)
+    for fn in dead:
+        if fn in _emitters:
+            _emitters.remove(fn)

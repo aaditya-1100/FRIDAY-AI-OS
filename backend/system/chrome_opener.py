@@ -59,7 +59,8 @@ def open_url_in_chrome(url: str) -> bool:
         return False
 
     try:
-        # No --user-data-dir: use the user's normal Chrome profile.
+        # Launch Chrome directly without profile-locking arguments so it attaches
+        # naturally to the user's active personal Chrome session (retains cookies, sessions).
         args = [str(chrome), url]
         popen_kw = {
             "stdin": _DEVNULL,
@@ -67,6 +68,7 @@ def open_url_in_chrome(url: str) -> bool:
             "stderr": _DEVNULL,
             "close_fds": True,
         }
+        print(f"[BROWSER] Launching URL in user's active Chrome session: '{url}'")
         if sys.platform == "win32":
             subprocess.Popen(
                 args,
@@ -77,5 +79,5 @@ def open_url_in_chrome(url: str) -> bool:
             subprocess.Popen(args, start_new_session=True, **popen_kw)
         return True
     except Exception as e:
-        print(f"[BROWSER] Failed to open URL in Chrome: {e}")
+        print(f"[BROWSER] Chrome launch failed: {e}")
         return False

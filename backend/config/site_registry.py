@@ -9,7 +9,9 @@ Keys are normalized to lowercase; lookups should use normalize_site_key().
 
 from __future__ import annotations
 
+import re
 import urllib.parse
+
 
 # Single source of truth: alias (lowercase) -> HTTPS URL
 WORKSPACE_SITES: dict[str, str] = {
@@ -57,3 +59,68 @@ def build_youtube_results_url(query: str) -> str:
     """YouTube search results URL (opened via Chrome policy)."""
     q = urllib.parse.quote((query or "").strip())
     return f"https://www.youtube.com/results?search_query={q}"
+
+
+def infer_url(target: str) -> str:
+    """
+    Dynamically infer a URL for any target — registered site, domain, or unknown service.
+    Priority:
+      1. Registered workspace alias
+      2. Looks like a domain already (contains dot, no spaces)
+      3. Common service patterns (github, reddit, twitter/x, etc.)
+      4. Google search fallback (universally works for anything)
+    """
+    t = (target or "").strip()
+    if not t:
+        return "https://www.google.com"
+
+    # 1. Registered alias
+    url = get_workspace_url(t)
+    if url:
+        return url
+
+    t_lower = t.lower()
+
+    # 2. Already looks like a domain or URL
+    if "." in t and " " not in t:
+        if t_lower.startswith("http"):
+            return t
+        return f"https://{t}"
+
+    # 3. Common service name patterns → canonical URL
+    _COMMON = {
+        "github": "https://github.com",
+        "reddit": "https://www.reddit.com",
+        "twitter": "https://twitter.com",
+        "x": "https://x.com",
+        "instagram": "https://www.instagram.com",
+        "linkedin": "https://www.linkedin.com",
+        "facebook": "https://www.facebook.com",
+        "amazon": "https://www.amazon.in",
+        "flipkart": "https://www.flipkart.com",
+        "netflix": "https://www.netflix.com",
+        "wikipedia": "https://en.wikipedia.org",
+        "whatsapp": "https://web.whatsapp.com",
+        "gmail": "https://mail.google.com",
+        "drive": "https://drive.google.com",
+        "maps": "https://maps.google.com",
+        "translate": "https://translate.google.com",
+        "canva": "https://www.canva.com",
+        "figma": "https://www.figma.com",
+        "stackoverflow": "https://stackoverflow.com",
+        "stack overflow": "https://stackoverflow.com",
+        "claude": "https://claude.ai",
+        "perplexity": "https://www.perplexity.ai",
+        "huggingface": "https://huggingface.co",
+        "hugging face": "https://huggingface.co",
+    }
+    for alias, url in _COMMON.items():
+        # Use word-boundary match to avoid 'x' matching 'example', 'xyz' etc.
+        if re.search(r'\b' + re.escape(alias) + r'\b', t_lower):
+            return url
+
+    # 4. Fallback: Google search — works for literally anything
+    q = urllib.parse.quote(t.strip())
+    return f"https://www.google.com/search?q={q}"
+
+

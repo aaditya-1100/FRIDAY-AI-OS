@@ -59,7 +59,7 @@ INTENT_MODEL       = "llama-3.3-70b-versatile"  # smarter, used for intent parsi
 REALTIME_MODEL     = "llama-3.3-70b-versatile"  # used for realtime summarization
 
 
-def ask_groq(query: str, system_prompt=None, model: str | None = None) -> str:
+def ask_groq(query: str, system_prompt=None, model: str | None = None, history: list | None = None) -> str:
     c = get_groq_client()
     if c is None:
         print("[GROQ] GROQ_API_KEY not set — configure backend/.env")
@@ -71,17 +71,39 @@ def ask_groq(query: str, system_prompt=None, model: str | None = None) -> str:
 
         chosen_model = model or DEFAULT_MODEL
 
-        response = c.chat.completions.create(
-            model=chosen_model,
-            temperature=0.25,
-            timeout=45.0,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": str(query)},
-            ],
-        )
+        messages = [{"role": "system", "content": system_prompt}]
+        if history:
+            for turn in history:
+                messages.append({
+                    "role": turn.get("role", "user"),
+                    "content": str(turn.get("content", ""))
+                })
+        messages.append({"role": "user", "content": str(query)})
 
-        return response.choices[0].message.content
+        try:
+            response = c.chat.completions.create(
+                model=chosen_model,
+                temperature=0.25,
+                timeout=45.0,
+                messages=messages,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            # Automatic failover retry if primary versatile model fails
+            if chosen_model == "llama-3.3-70b-versatile":
+                print(f"[GROQ FAILOVER] Model {chosen_model} failed due to rate limits or errors. Retrying with llama-3.1-8b-instant...")
+                try:
+                    response = c.chat.completions.create(
+                        model="llama-3.1-8b-instant",
+                        temperature=0.25,
+                        timeout=30.0,
+                        messages=messages,
+                    )
+                    return response.choices[0].message.content
+                except Exception as failover_err:
+                    print(f"[GROQ FAILOVER ERROR] Failover failed: {failover_err}")
+                    raise failover_err
+            raise e
 
     except Exception as e:
         print(f"[GROQ ERROR] {e}")

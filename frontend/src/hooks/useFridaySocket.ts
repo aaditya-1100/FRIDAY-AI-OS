@@ -1,6 +1,17 @@
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef } from "react";
-import { type AiState, aiStateAtom, commandErrorAtom, ttsLevelAtom, wsConnectedAtom } from "../atoms";
+import {
+  type AiState,
+  aiStateAtom,
+  commandErrorAtom,
+  micMutedAtom,
+  ttsLevelAtom,
+  wsConnectedAtom,
+  mapModeAtom,
+  mapLocationAtom,
+  transcriptAtom,
+  speakTextAtom
+} from "../atoms";
 
 // ─── Shared AudioContext ──────────────────────────────────────────────────────
 let _audioCtx: AudioContext | null = null;
@@ -125,9 +136,8 @@ export function sendStopSpeaking() {
 function wsUrl(): string {
   const env = import.meta.env.VITE_WS_URL;
   if (env) return env;
-  if (import.meta.env.DEV) return "ws://127.0.0.1:8001/api/ws";
-  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${window.location.host}/api/ws`;
+  // Always connect to local backend — works in both dev and packaged Electron app
+  return "ws://127.0.0.1:8001/api/ws";
 }
 
 function formatResultError(data: { reason?: string; detail?: string }): string {
@@ -143,8 +153,17 @@ export function useFridaySocket() {
   const setConnected    = useSetAtom(wsConnectedAtom);
   const setCommandError = useSetAtom(commandErrorAtom);
   const setTtsLevel     = useSetAtom(ttsLevelAtom);
+  const setTranscript   = useSetAtom(transcriptAtom);
+  const setSpeakText    = useSetAtom(speakTextAtom);
+  const setMapMode      = useSetAtom(mapModeAtom);
+  const setMapLocation  = useSetAtom(mapLocationAtom);
+  const micMuted        = useAtomValue(micMutedAtom);
+  const micMutedRef     = useRef(micMuted);
   const wsRef           = useRef<WebSocket | null>(null);
   const reconnectAttempt = useRef(0);
+
+  // Keep a ref so onopen closure always reads the latest mute state
+  micMutedRef.current = micMuted;
 
   // Register the tts level setter so the audio engine can update Jotai
   useEffect(() => {
@@ -168,6 +187,13 @@ export function useFridaySocket() {
         console.log("[WS] Connected to", wsUrl());
         setConnected(true);
         reconnectAttempt.current = 0;
+        // ── CRITICAL: Sync mic state to backend on every (re)connect. ──────────
+        // React 18 StrictMode unmounts and remounts this hook, sending mic_off
+        // during cleanup. Without this sync, the backend mic stays permanently
+        // disabled. We always send the current UI state so backend matches.
+        const syncMsg = micMutedRef.current ? "mic_off" : "mic_on";
+        console.log(`[WS] Syncing mic state on connect: ${syncMsg}`);
+        socket.send(JSON.stringify({ type: syncMsg }));
       };
       socket.onclose = (event) => {
         console.log("[WS] Closed", event.code, event.reason);
@@ -183,7 +209,30 @@ export function useFridaySocket() {
         try {
           const data = JSON.parse(ev.data as string);
           if (data.type === "state" && typeof data.state === "string") {
-            setState(data.state as AiState);
+            const newState = data.state as AiState;
+            setState(newState);
+            if (newState === "LISTENING") {
+              setTranscript("");
+              setSpeakText("");
+            } else if (newState === "THINKING") {
+              setSpeakText("");
+            }
+          }
+          if (data.type === "transcript" && typeof data.text === "string") {
+            setTranscript(data.text);
+          }
+          if (data.type === "speak" && typeof data.text === "string") {
+            setSpeakText(data.text);
+          }
+          if (data.type === "show_map") {
+            setMapMode(true);
+            if (typeof data.location === "string") {
+              setMapLocation(data.location);
+            }
+          }
+          if (data.type === "hide_map") {
+            setMapMode(false);
+            setMapLocation("");
           }
           if (data.type === "audio" && typeof data.audioBase64 === "string") {
             enqueueAudio(data.audioBase64);
@@ -193,6 +242,10 @@ export function useFridaySocket() {
           }
           if (data.type === "result" && data.ok === true) {
             setCommandError(null);
+          }
+          if (data.type === "hint" && typeof data.text === "string") {
+            setCommandError(data.text);
+            setTimeout(() => setCommandError(null), 3000);
           }
         } catch (err) {
           console.log("[WS] Message parse error", err);
@@ -234,22 +287,28 @@ export function useFridaySocket() {
       window.removeEventListener("beforeunload", onUnload);
       window.clearInterval(pingTimer);
       window.clearTimeout(reconnectTimer);
-      // Tell backend mic is off before closing socket
+      // On cleanup, only tell backend mic is off.
+      // Do NOT send stop_speaking here — React 18 StrictMode fires this cleanup
+      // immediately on mount before remounting, which would kill active TTS.
       const s = wsRef.current;
       if (s?.readyState === WebSocket.OPEN) {
         s.send(JSON.stringify({ type: "mic_off" }));
-        s.send(JSON.stringify({ type: "stop_speaking" }));
       }
       stopAudio();
       ws?.close();
       wsRef.current = null;
       setConnected(false);
     };
-  }, [setCommandError, setConnected, setState]);
+  // NOTE: micMuted intentionally excluded from deps — we use micMutedRef instead
+  // to avoid reconnecting the socket every time the user toggles the mic.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setCommandError, setConnected, setState, setTranscript, setSpeakText, setMapMode, setMapLocation]);
 
   const sendCommand = (text: string) => {
     const socket = wsRef.current;
     if (socket?.readyState === WebSocket.OPEN) {
+      setTranscript(text);
+      setSpeakText("");
       socket.send(JSON.stringify({ type: "command", text }));
     }
   };

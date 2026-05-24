@@ -10,6 +10,38 @@ Shutdown contract:
 - WS message 'stop_speaking': cancel TTS and broadcast IDLE.
 - WS message 'shutdown': trigger full process exit.
 """
+import sys
+import os
+import datetime
+
+class TeeLogger:
+    def __init__(self, original):
+        self.terminal = original
+        self.log_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "friday_runtime.log")
+        # Overwrite on start
+        if original == sys.stdout:
+            with open(self.log_file, "w", encoding="utf-8") as f:
+                f.write(f"--- FRIDAY RUNTIME LOG START {datetime.datetime.now()} ---\n")
+            
+    def write(self, message):
+        try:
+            self.terminal.write(message)
+        except UnicodeEncodeError:
+            # Safe fallback for Windows cp1252 terminals
+            safe_msg = message.encode("ascii", errors="replace").decode("ascii")
+            self.terminal.write(safe_msg)
+        self.terminal.flush()
+        try:
+            with open(self.log_file, "a", encoding="utf-8") as f:
+                f.write(message)
+        except Exception:
+            pass
+            
+    def flush(self):
+        self.terminal.flush()
+
+sys.stdout = TeeLogger(sys.stdout)
+sys.stderr = TeeLogger(sys.stderr)
 
 from contextlib import asynccontextmanager
 import asyncio
@@ -137,6 +169,124 @@ def health():
     return {"ok": True, "state": get_state()}
 
 
+@app.get("/api/weather")
+def weather_endpoint():
+    """
+    Real-time weather with dynamic geo-location lookup.
+    Uses ipapi.co to locate user, and Open-Meteo for hyper-accurate weather.
+    Returns structured JSON for the frontend WeatherWidget.
+    """
+    import requests as _req
+    from datetime import datetime as _dt
+
+    LAT, LON = 29.2098, 78.9618  # Default: Kashipur, Uttarakhand
+    loc_name = "Kashipur, Uttarakhand"
+
+    try:
+        # Dynamic location detection using ipapi.co
+        geo_r = _req.get("https://ipapi.co/json/", timeout=2.0, headers={"User-Agent": "FRIDAY-Assistant/2.0"})
+        if geo_r.status_code == 200:
+            geo_data = geo_r.json()
+            if "latitude" in geo_data and "longitude" in geo_data:
+                LAT = geo_data["latitude"]
+                LON = geo_data["longitude"]
+                city = geo_data.get("city", "Kashipur")
+                region = geo_data.get("region", "Uttarakhand")
+                loc_name = f"{city}, {region}"
+    except Exception as ge:
+        # Try alternate fallback api: ip-api.com
+        try:
+            geo_r = _req.get("http://ip-api.com/json/", timeout=2.0)
+            if geo_r.status_code == 200:
+                geo_data = geo_r.json()
+                if "lat" in geo_data and "lon" in geo_data:
+                    LAT = geo_data["lat"]
+                    LON = geo_data["lon"]
+                    city = geo_data.get("city", "Kashipur")
+                    region = geo_data.get("regionName", "Uttarakhand")
+                    loc_name = f"{city}, {region}"
+        except Exception:
+            pass
+
+    _WMO = {
+        0: ("Clear Sky", "clear"), 1: ("Mainly Clear", "clear"),
+        2: ("Partly Cloudy", "cloudy"), 3: ("Overcast", "cloudy"),
+        45: ("Foggy", "fog"), 48: ("Icy Fog", "fog"),
+        51: ("Light Drizzle", "drizzle"), 53: ("Drizzle", "drizzle"), 55: ("Heavy Drizzle", "drizzle"),
+        61: ("Light Rain", "rain"), 63: ("Moderate Rain", "rain"), 65: ("Heavy Rain", "rain"),
+        71: ("Light Snow", "snow"), 73: ("Snow", "snow"), 75: ("Heavy Snow", "snow"),
+        80: ("Showers", "rain"), 81: ("Showers", "rain"), 82: ("Heavy Showers", "rain"),
+        95: ("Thunderstorm", "thunder"), 96: ("Thunderstorm", "thunder"), 99: ("Thunderstorm", "thunder"),
+    }
+
+    try:
+        params = (
+            f"latitude={LAT}&longitude={LON}"
+            "&current=temperature_2m,apparent_temperature,relative_humidity_2m,"
+            "weather_code,wind_speed_10m,wind_direction_10m,uv_index,precipitation"
+            "&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,weather_code"
+            "&wind_speed_unit=kmh&timezone=Asia/Kolkata&forecast_days=3"
+        )
+        r = _req.get(
+            f"https://api.open-meteo.com/v1/forecast?{params}",
+            timeout=8,
+            headers={"User-Agent": "FRIDAY-Assistant/2.0"}
+        )
+        r.raise_for_status()
+        d = r.json()
+        cur = d["current"]
+        daily = d.get("daily", {})
+
+        code = cur.get("weather_code", 0)
+        label, kind = _WMO.get(code, ("Unknown", "clear"))
+
+        def fmt_time(iso_str):
+            if not iso_str:
+                return ""
+            try:
+                return _dt.fromisoformat(iso_str).strftime("%-I:%M %p")
+            except Exception:
+                # Windows doesn't support %-I
+                dt = _dt.fromisoformat(iso_str)
+                return dt.strftime("%I:%M %p").lstrip("0")
+
+        # Build 3-day forecast
+        forecast = []
+        for i in range(min(3, len(daily.get("time", [])))):
+            fc_code = daily["weather_code"][i]
+            fc_label, fc_kind = _WMO.get(fc_code, ("Unknown", "clear"))
+            forecast.append({
+                "date": daily["time"][i],
+                "max": round(daily["temperature_2m_max"][i]),
+                "min": round(daily["temperature_2m_min"][i]),
+                "label": fc_label,
+                "kind": fc_kind,
+            })
+
+        return {
+            "ok": True,
+            "location": loc_name,
+            "temp": round(cur["temperature_2m"]),
+            "feels": round(cur["apparent_temperature"]),
+            "humidity": cur["relative_humidity_2m"],
+            "wind": round(cur["wind_speed_10m"]),
+            "wind_dir": cur.get("wind_direction_10m", 0),
+            "uv": round(cur.get("uv_index", 0)),
+            "precip": round(cur.get("precipitation", 0), 1),
+            "code": code,
+            "label": label,
+            "kind": kind,
+            "sunrise": fmt_time(daily.get("sunrise", [""])[0]),
+            "sunset":  fmt_time(daily.get("sunset",  [""])[0]),
+            "forecast": forecast,
+            "updated_at": _dt.now().strftime("%I:%M %p"),
+        }
+
+    except Exception as e:
+        print(f"[WEATHER API ERROR] {e}")
+        return {"ok": False, "error": str(e)}
+
+
 async def _run_command(text: str) -> None:
     try:
         await process_transcript(text, web_mode=True)
@@ -151,6 +301,10 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     clients.add(websocket)
     set_web_session_active(True)
+    # Re-arm mic in case a previous session's cleanup sent mic_off
+    # (React 18 StrictMode unmounts → cleanup → remount cycle does this).
+    reset_stop()
+    set_mic_enabled(True)
     # Send current state immediately so UI doesn't show stale "Waiting"
     await _prune_send(websocket, {"type": "state", "state": get_state()})
 
@@ -166,11 +320,16 @@ async def websocket_endpoint(websocket: WebSocket):
 
             elif msg_type == "stop_speaking":
                 cancel_speak()
-                await _send_all_json({"type": "state", "state": AssistantState.IDLE})
+                # cancel_speak() already calls set_state(IDLE) which broadcasts via callback.
+                # No need to send a second IDLE broadcast here.
 
             elif msg_type == "mic_off":
                 # Disable backend microphone listener immediately
                 set_mic_enabled(False)
+                # Cancel any active TTS playback or speak loops instantly
+                cancel_speak()
+                from core.state_manager import AssistantState, set_state
+                set_state(AssistantState.IDLE)
                 print("[MIC] Disabled by UI")
 
             elif msg_type == "mic_on":

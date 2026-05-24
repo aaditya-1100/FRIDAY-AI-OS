@@ -12,6 +12,9 @@ export function MicButton() {
   const handleMicClick = () => {
     unlockAudio();
     setMuted(!muted);
+    if (isSpeaking) {
+      sendStopSpeaking();
+    }
   };
 
   return (

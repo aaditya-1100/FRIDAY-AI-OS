@@ -28,7 +28,11 @@ def generate_response(
                 "I did not understand sir"
             )
 
-        return ask_groq(query)
+        history_list = None
+        if memory:
+            history_list = memory.get()
+
+        return ask_groq(query, history=history_list)
 
     except Exception as e:
 

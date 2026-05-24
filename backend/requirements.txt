@@ -11,6 +11,8 @@ edge-tts==6.1.12
 SpeechRecognition==3.10.1
 PyAudio==0.2.13
 pygame==2.5.2
+gtts==2.5.4
+pyttsx3==2.99
 
 # System Control
 pyautogui==0.9.54

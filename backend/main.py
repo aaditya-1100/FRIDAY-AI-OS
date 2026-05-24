@@ -13,12 +13,16 @@ import sys
 
 from core import pipeline
 from core.state_manager import AssistantState, set_state
+from core.realtime_emit import has_emitters
 from voice.listen import listen, request_stop, reset_stop, set_mic_enabled
 
 
 async def main():
-    reset_stop()          # ensure listen is armed on (re)start
+    reset_stop()
     set_mic_enabled(True)
+    # In the packaged Electron app the user opened FRIDAY intentionally —
+    # activate immediately so mic works without a wake word.
+    pipeline.set_web_session_active(True)
 
     try:
         await pipeline.safe_speak(pipeline.STARTUP_MESSAGE)
@@ -28,19 +32,31 @@ async def main():
 
         while True:
             try:
-                if pipeline.is_speaking:
-                    await asyncio.sleep(0.05)
+                # Only listen if the assistant is completely IDLE
+                from core.state_manager import get_state
+                if get_state() not in (AssistantState.IDLE, AssistantState.LISTENING):
+                    await asyncio.sleep(0.1)
+                    continue
+
+                # Check if mic is enabled to prevent tight looping when muted
+                from voice.listen import _MIC_ENABLED
+                if not _MIC_ENABLED:
+                    set_state(AssistantState.IDLE)
+                    await asyncio.sleep(0.3)
                     continue
 
                 set_state(AssistantState.LISTENING)
+                print("[LISTENING] Waiting for speech...")
 
                 query = await listen()
                 if query is None:
-                    # None means silence / timeout — just loop again
-                    await asyncio.sleep(0)   # yield to event loop
+                    await asyncio.sleep(0.1)
                     continue
 
-                await pipeline.process_transcript(query, web_mode=False)
+                print(f"[TRANSCRIBED] '{query}'")
+                # web_mode=None → auto-detected inside process_transcript/safe_speak
+                # based on whether WS clients are connected (has_emitters()).
+                await pipeline.process_transcript(query)
 
             except asyncio.CancelledError:
                 # Shutdown signal from server lifespan

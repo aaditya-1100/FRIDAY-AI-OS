@@ -47,11 +47,10 @@ def unregister_state_callback(callback: StateCallback) -> None:
 
 
 def set_state(state):
-
     global current_state, _main_loop
-
+    if state == current_state:
+        return
     current_state = state
-
     print(f"[STATE] {state}")
 
     if not _callbacks:
