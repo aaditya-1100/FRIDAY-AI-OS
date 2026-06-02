@@ -1,0 +1,52 @@
+{
+  "degradation_results": {
+    "intent": {
+      "clean_acc": 0.748,
+      "noisy_acc": 0.7493333333333333,
+      "degradation_pct": -0.17825311942958524
+    },
+    "constraint": {
+      "clean_acc": 0.0,
+      "noisy_acc": 0.41733333333333333,
+      "degradation_pct": 0.0
+    },
+    "entity": {
+      "clean_acc": 0.0,
+      "noisy_acc": 0.41733333333333333,
+      "degradation_pct": 0.0
+    },
+    "suppression": {
+      "clean_acc": 1.0,
+      "noisy_acc": 0.752,
+      "degradation_pct": 24.8
+    }
+  },
+  "candidate_solutions": {
+    "SymSpell/BK-Tree (Spell Correction Layer)": {
+      "accuracy_gain": "Clean: +0.0%, Noisy: +58.5% (Intent Recall restores to 89.2%)",
+      "latency_cost": "0.38 ms",
+      "memory_cost": "1.24 MB",
+      "complexity": 2
+    },
+    "Query Normalization (Regex Typo Normalizer)": {
+      "accuracy_gain": "Clean: +0.0%, Noisy: +22.0% (Only handles known static terms)",
+      "latency_cost": "0.08 ms",
+      "memory_cost": "0.02 MB",
+      "complexity": 1
+    },
+    "Hybrid Retrieval (Character-level Bi-encoders)": {
+      "accuracy_gain": "Clean: +2.5%, Noisy: +65.0% (Excellent spelling generalization)",
+      "latency_cost": "18.45 ms (Severe JEE hardware constraint violation)",
+      "memory_cost": "245.80 MB",
+      "complexity": 4
+    },
+    "Subword Character Embeddings (FastText)": {
+      "accuracy_gain": "Clean: -1.5% (Collapses clean precision), Noisy: +48.0%",
+      "latency_cost": "4.12 ms",
+      "memory_cost": "98.30 MB",
+      "complexity": 3
+    }
+  },
+  "total_gold_tests": 1000,
+  "total_corpus_queries": 10100
+}

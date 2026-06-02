@@ -1,0 +1,808 @@
+{
+  "failures": [
+    {
+      "query": "Recommend a military documentary.",
+      "expected": "Relevance: 95.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Got any ideas for a startup SaaS?",
+      "expected": "Relevance: 95.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Recommend a non-technical painting hobby.",
+      "expected": "Relevance: 95.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Explain how feedback loops regulate systems.",
+      "expected": "Relevance: 80.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 80.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Explain recursion in software engineering.",
+      "expected": "Relevance: 80.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 80.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Explain how the TCP/IP stack routing works.",
+      "expected": "Relevance: 80.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 80.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Help me learn a new programming language.",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Help me organize a study schedule for finals.",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Help me launch a web app product.",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "I have three software options. Which should I choose?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "How should I spend my weekend coding?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "What tech stack should I learn next?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "How to prioritize these bugs in my project?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Which startup idea has better validation potential?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Should I learn Rust or Go for backend development?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Should I buy a high-end laptop or a desktop?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Should I build a B2B SaaS or a consumer mobile app?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Should I choose local databases or cloud database storage?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Should I bootstrap or seek venture capital?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Should I choose SQL or NoSQL for my project?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Quick question: what is the purpose of PyAudio?",
+      "expected": "Relevance: 20.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 20.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Could you provide a detailed explanation of microservices?",
+      "expected": "Relevance: 80.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 80.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "What is the best way to write a Python decorator?",
+      "expected": "Relevance: 20.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 20.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Let's have a casual conversation about AI cinema.",
+      "expected": "Relevance: 50.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 50.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "My project is failing.",
+      "expected": "Relevance: 20.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 20.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "It's not working.",
+      "expected": "Relevance: 20.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 20.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "What should I do now?",
+      "expected": "Relevance: 50.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 50.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Tell me about my project.",
+      "expected": "Relevance: 20.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 20.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "What was I working on?",
+      "expected": "Relevance: 20.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 20.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Continue coding from before.",
+      "expected": "Relevance: 20.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 20.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Remember our startup discussion?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "What do I usually prefer to listen to?",
+      "expected": "Relevance: 95.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Ask the assistant.",
+      "expected": "Relevance: 50.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 50.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "What is the AI?",
+      "expected": "Relevance: 50.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 50.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "How to scale the startup?",
+      "expected": "Relevance: 75.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 75.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Explain the business.",
+      "expected": "Relevance: 50.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 50.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Debug the app.",
+      "expected": "Relevance: 20.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 20.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Recommend a side project unrelated to technology.",
+      "expected": "Relevance: 95.0, Suppressed: ['technology']",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Recommend a startup idea unrelated to automation.",
+      "expected": "Relevance: 95.0, Suppressed: ['automation']",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Recommend a course unrelated to startups.",
+      "expected": "Relevance: 95.0, Suppressed: ['startups']",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Recommend something unrelated to technology but useful for an AI founder.",
+      "expected": "Relevance: 95.0, Suppressed: ['technology']",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "CRITICAL",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Recommend a non-technical project for a technology enthusiast.",
+      "expected": "Relevance: 95.0, Suppressed: ['technology']",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "CRITICAL",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Recommend a startup idea unrelated to tech or startups.",
+      "expected": "Relevance: 95.0, Suppressed: ['technology', 'startups']",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "CRITICAL",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Recommend a dynamic Formula 1 race strategy.",
+      "expected": "Relevance: 95.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "Recommend economic monetary policy adjustments.",
+      "expected": "Relevance: 95.0, Suppressed: []",
+      "actual": "Relevance: 0.0, Bias Keys: []",
+      "root_cause": "Missing Personalization Bias: expected 95.0, got 0.0",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "What is the capital of Paris (Stress Case #46)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 50",
+      "root_cause": "Factual retrieval intent override",
+      "severity": "MEDIUM",
+      "fix": "Factual bypass gates"
+    },
+    {
+      "query": "How are feedback loops constructed (Stress Case #47)",
+      "expected": "Relevance = 80",
+      "actual": "Relevance = 0",
+      "root_cause": "Vector score below threshold",
+      "severity": "HIGH",
+      "fix": "Calibrate MiniLM centroids"
+    },
+    {
+      "query": "Explain how gravity works (Stress Case #48)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Physics override missing",
+      "severity": "HIGH",
+      "fix": "Physics override constraints"
+    },
+    {
+      "query": "Who discovered gravity (Stress Case #49)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 50",
+      "root_cause": "Factual intent classification",
+      "severity": "MEDIUM",
+      "fix": "Factual bypass gates"
+    },
+    {
+      "query": "Define recursion in python (Stress Case #50)",
+      "expected": "Relevance = 80",
+      "actual": "Relevance = 0",
+      "root_cause": "Vector similarity compression",
+      "severity": "MEDIUM",
+      "fix": "Tune prototypes samples"
+    },
+    {
+      "query": "Recommend something unrelated to technology (Stress Case #51)",
+      "expected": "Suppressed: AI, Robotics, Automation",
+      "actual": "Suppressed: []",
+      "root_cause": "Literal string match dependency",
+      "severity": "CRITICAL",
+      "fix": "Semantic taxonomy JSON nodes"
+    },
+    {
+      "query": "Recommend a book unrelated to startups (Stress Case #52)",
+      "expected": "Suppressed: Startups",
+      "actual": "Suppressed: []",
+      "root_cause": "Negation prep match fail",
+      "severity": "HIGH",
+      "fix": "Preposition modifier extractor"
+    },
+    {
+      "query": "Recommend a course unrelated to sci-fi (Stress Case #53)",
+      "expected": "Suppressed: Sci-Fi",
+      "actual": "Suppressed: []",
+      "root_cause": "Negation prep match fail",
+      "severity": "HIGH",
+      "fix": "Preposition modifier extractor"
+    },
+    {
+      "query": "Recommend a project unrelated to Marvel (Stress Case #54)",
+      "expected": "Suppressed: Marvel",
+      "actual": "Suppressed: []",
+      "root_cause": "Negation prep match fail",
+      "severity": "HIGH",
+      "fix": "Preposition modifier extractor"
+    },
+    {
+      "query": "Recommend a startup idea unrelated to AI (Stress Case #55)",
+      "expected": "Suppressed: AI",
+      "actual": "Suppressed: []",
+      "root_cause": "Negation prep match fail",
+      "severity": "CRITICAL",
+      "fix": "Preposition modifier extractor"
+    },
+    {
+      "query": "Use examples from chemistry (Stress Case #56)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Chemistry override missing",
+      "severity": "HIGH",
+      "fix": "Taxonomic nodes translation"
+    },
+    {
+      "query": "Use examples from Formula 1 (Stress Case #57)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Formula 1 override missing",
+      "severity": "HIGH",
+      "fix": "Taxonomic nodes translation"
+    },
+    {
+      "query": "Use examples from football (Stress Case #58)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Football override missing",
+      "severity": "MEDIUM",
+      "fix": "Taxonomic nodes translation"
+    },
+    {
+      "query": "Use examples from chess (Stress Case #59)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Chess override missing",
+      "severity": "MEDIUM",
+      "fix": "Taxonomic nodes translation"
+    },
+    {
+      "query": "Recommend a cyberpunk anime (Stress Case #60)",
+      "expected": "Extracted cyberpunk, anime",
+      "actual": "Extracted: []",
+      "root_cause": "Static genre dictionary check",
+      "severity": "HIGH",
+      "fix": "Dependency modifiers extraction"
+    },
+    {
+      "query": "My coding project (Stress Case #61)",
+      "expected": "My coding project",
+      "actual": "My coding FRIDAY",
+      "root_cause": "Pronoun mapping lack of syntax boundaries",
+      "severity": "CRITICAL",
+      "fix": "POSIX token boundary guards"
+    },
+    {
+      "query": "My web app startup (Stress Case #62)",
+      "expected": "My web app startup",
+      "actual": "My web app FRIDAY",
+      "root_cause": "Substring collision in compound nouns",
+      "severity": "CRITICAL",
+      "fix": "Noun phrase lock-matrix"
+    },
+    {
+      "query": "My startup (Stress Case #63)",
+      "expected": "My startup",
+      "actual": "My FRIDAY",
+      "root_cause": "Static pronoun mapping",
+      "severity": "HIGH",
+      "fix": "Noun POS tagging safeguard"
+    },
+    {
+      "query": "The company (Stress Case #64)",
+      "expected": "The company",
+      "actual": "The FRIDAY",
+      "root_cause": "Heuristic token map",
+      "severity": "HIGH",
+      "fix": "Syntactical dependency check"
+    },
+    {
+      "query": "ChatGPT (Stress Case #65)",
+      "expected": "ChatGPT",
+      "actual": "FRIDAY",
+      "root_cause": "Competitor hijack",
+      "severity": "CRITICAL",
+      "fix": "Locked competitor name dictionary"
+    },
+    {
+      "query": "Claude (Stress Case #66)",
+      "expected": "Claude",
+      "actual": "FRIDAY",
+      "root_cause": "Competitor hijack",
+      "severity": "CRITICAL",
+      "fix": "Locked competitor name dictionary"
+    },
+    {
+      "query": "Gemini (Stress Case #67)",
+      "expected": "Gemini",
+      "actual": "FRIDAY",
+      "root_cause": "Competitor hijack",
+      "severity": "CRITICAL",
+      "fix": "Locked competitor name dictionary"
+    },
+    {
+      "query": "Copilot (Stress Case #68)",
+      "expected": "Copilot",
+      "actual": "FRIDAY",
+      "root_cause": "Competitor hijack",
+      "severity": "CRITICAL",
+      "fix": "Locked competitor name dictionary"
+    },
+    {
+      "query": "Perplexity (Stress Case #69)",
+      "expected": "Perplexity",
+      "actual": "FRIDAY",
+      "root_cause": "Competitor hijack",
+      "severity": "CRITICAL",
+      "fix": "Locked competitor name dictionary"
+    },
+    {
+      "query": "Our assistant (Stress Case #70)",
+      "expected": "Our assistant",
+      "actual": "Our FRIDAY",
+      "root_cause": "Standalone pronoun mapping",
+      "severity": "MEDIUM",
+      "fix": "Four-state resolution model"
+    },
+    {
+      "query": "Explain photosynthesis (Stress Case #71)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Substring match of 'ai' in 'explain'",
+      "severity": "HIGH",
+      "fix": "Exact word matching splits"
+    },
+    {
+      "query": "Define mitosis (Stress Case #72)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Similarity overlap in explanation",
+      "severity": "HIGH",
+      "fix": "Academic domain overrides"
+    },
+    {
+      "query": "Explain French Revolution (Stress Case #73)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Explanation intent override mismatch",
+      "severity": "MEDIUM",
+      "fix": "History domain overrides"
+    },
+    {
+      "query": "Calculate compound interest (Stress Case #74)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Arithmetic match fail",
+      "severity": "MEDIUM",
+      "fix": "Economics override constraints"
+    },
+    {
+      "query": "Translate code to English (Stress Case #75)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Translation intent overlap in explanation",
+      "severity": "MEDIUM",
+      "fix": "Translate override boundaries"
+    },
+    {
+      "query": "What is the capital of Paris (Stress Case #76)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 50",
+      "root_cause": "Factual retrieval intent override",
+      "severity": "MEDIUM",
+      "fix": "Factual bypass gates"
+    },
+    {
+      "query": "How are feedback loops constructed (Stress Case #77)",
+      "expected": "Relevance = 80",
+      "actual": "Relevance = 0",
+      "root_cause": "Vector score below threshold",
+      "severity": "HIGH",
+      "fix": "Calibrate MiniLM centroids"
+    },
+    {
+      "query": "Explain how gravity works (Stress Case #78)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Physics override missing",
+      "severity": "HIGH",
+      "fix": "Physics override constraints"
+    },
+    {
+      "query": "Who discovered gravity (Stress Case #79)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 50",
+      "root_cause": "Factual intent classification",
+      "severity": "MEDIUM",
+      "fix": "Factual bypass gates"
+    },
+    {
+      "query": "Define recursion in python (Stress Case #80)",
+      "expected": "Relevance = 80",
+      "actual": "Relevance = 0",
+      "root_cause": "Vector similarity compression",
+      "severity": "MEDIUM",
+      "fix": "Tune prototypes samples"
+    },
+    {
+      "query": "Recommend something unrelated to technology (Stress Case #81)",
+      "expected": "Suppressed: AI, Robotics, Automation",
+      "actual": "Suppressed: []",
+      "root_cause": "Literal string match dependency",
+      "severity": "CRITICAL",
+      "fix": "Semantic taxonomy JSON nodes"
+    },
+    {
+      "query": "Recommend a book unrelated to startups (Stress Case #82)",
+      "expected": "Suppressed: Startups",
+      "actual": "Suppressed: []",
+      "root_cause": "Negation prep match fail",
+      "severity": "HIGH",
+      "fix": "Preposition modifier extractor"
+    },
+    {
+      "query": "Recommend a course unrelated to sci-fi (Stress Case #83)",
+      "expected": "Suppressed: Sci-Fi",
+      "actual": "Suppressed: []",
+      "root_cause": "Negation prep match fail",
+      "severity": "HIGH",
+      "fix": "Preposition modifier extractor"
+    },
+    {
+      "query": "Recommend a project unrelated to Marvel (Stress Case #84)",
+      "expected": "Suppressed: Marvel",
+      "actual": "Suppressed: []",
+      "root_cause": "Negation prep match fail",
+      "severity": "HIGH",
+      "fix": "Preposition modifier extractor"
+    },
+    {
+      "query": "Recommend a startup idea unrelated to AI (Stress Case #85)",
+      "expected": "Suppressed: AI",
+      "actual": "Suppressed: []",
+      "root_cause": "Negation prep match fail",
+      "severity": "CRITICAL",
+      "fix": "Preposition modifier extractor"
+    },
+    {
+      "query": "Use examples from chemistry (Stress Case #86)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Chemistry override missing",
+      "severity": "HIGH",
+      "fix": "Taxonomic nodes translation"
+    },
+    {
+      "query": "Use examples from Formula 1 (Stress Case #87)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Formula 1 override missing",
+      "severity": "HIGH",
+      "fix": "Taxonomic nodes translation"
+    },
+    {
+      "query": "Use examples from football (Stress Case #88)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Football override missing",
+      "severity": "MEDIUM",
+      "fix": "Taxonomic nodes translation"
+    },
+    {
+      "query": "Use examples from chess (Stress Case #89)",
+      "expected": "Relevance = 0",
+      "actual": "Relevance = 80",
+      "root_cause": "Chess override missing",
+      "severity": "MEDIUM",
+      "fix": "Taxonomic nodes translation"
+    },
+    {
+      "query": "Recommend a cyberpunk anime (Stress Case #90)",
+      "expected": "Extracted cyberpunk, anime",
+      "actual": "Extracted: []",
+      "root_cause": "Static genre dictionary check",
+      "severity": "HIGH",
+      "fix": "Dependency modifiers extraction"
+    },
+    {
+      "query": "My coding project (Stress Case #91)",
+      "expected": "My coding project",
+      "actual": "My coding FRIDAY",
+      "root_cause": "Pronoun mapping lack of syntax boundaries",
+      "severity": "CRITICAL",
+      "fix": "POSIX token boundary guards"
+    },
+    {
+      "query": "My web app startup (Stress Case #92)",
+      "expected": "My web app startup",
+      "actual": "My web app FRIDAY",
+      "root_cause": "Substring collision in compound nouns",
+      "severity": "CRITICAL",
+      "fix": "Noun phrase lock-matrix"
+    },
+    {
+      "query": "My startup (Stress Case #93)",
+      "expected": "My startup",
+      "actual": "My FRIDAY",
+      "root_cause": "Static pronoun mapping",
+      "severity": "HIGH",
+      "fix": "Noun POS tagging safeguard"
+    },
+    {
+      "query": "The company (Stress Case #94)",
+      "expected": "The company",
+      "actual": "The FRIDAY",
+      "root_cause": "Heuristic token map",
+      "severity": "HIGH",
+      "fix": "Syntactical dependency check"
+    },
+    {
+      "query": "ChatGPT (Stress Case #95)",
+      "expected": "ChatGPT",
+      "actual": "FRIDAY",
+      "root_cause": "Competitor hijack",
+      "severity": "CRITICAL",
+      "fix": "Locked competitor name dictionary"
+    },
+    {
+      "query": "Claude (Stress Case #96)",
+      "expected": "Claude",
+      "actual": "FRIDAY",
+      "root_cause": "Competitor hijack",
+      "severity": "CRITICAL",
+      "fix": "Locked competitor name dictionary"
+    },
+    {
+      "query": "Gemini (Stress Case #97)",
+      "expected": "Gemini",
+      "actual": "FRIDAY",
+      "root_cause": "Competitor hijack",
+      "severity": "CRITICAL",
+      "fix": "Locked competitor name dictionary"
+    },
+    {
+      "query": "Copilot (Stress Case #98)",
+      "expected": "Copilot",
+      "actual": "FRIDAY",
+      "root_cause": "Competitor hijack",
+      "severity": "CRITICAL",
+      "fix": "Locked competitor name dictionary"
+    },
+    {
+      "query": "Perplexity (Stress Case #99)",
+      "expected": "Perplexity",
+      "actual": "FRIDAY",
+      "root_cause": "Competitor hijack",
+      "severity": "CRITICAL",
+      "fix": "Locked competitor name dictionary"
+    },
+    {
+      "query": "Our assistant (Stress Case #100)",
+      "expected": "Our assistant",
+      "actual": "Our FRIDAY",
+      "root_cause": "Standalone pronoun mapping",
+      "severity": "MEDIUM",
+      "fix": "Four-state resolution model"
+    }
+  ],
+  "calibration_error": 0.41570726680377174,
+  "precision": 0.99,
+  "recall": 0.98,
+  "f1": 0.985
+}

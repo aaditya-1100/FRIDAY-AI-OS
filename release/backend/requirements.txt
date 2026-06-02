@@ -1,0 +1,37 @@
+# Backend dependencies
+
+# Core
+python-dotenv==1.2.2
+
+# LLM
+groq==0.10.0
+
+# Voice
+edge-tts==6.1.12
+SpeechRecognition==3.10.1
+PyAudio==0.2.13
+pygame==2.5.2
+gtts==2.5.4
+pyttsx3==2.99
+
+# System Control
+pyautogui==0.9.54
+psutil==6.0.0
+
+# HTTP Client
+httpx==0.27.2
+
+# Web API (React UI)
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+websockets==14.1
+
+# Async utilities
+aiofiles==23.2.1
+
+# Data
+pydantic==2.13.4
+
+# Development
+pytest==7.4.4
+pytest-asyncio==0.23.3

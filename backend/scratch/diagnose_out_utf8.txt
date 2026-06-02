@@ -1,0 +1,136 @@
+================================================================================
+              DIAGNOSTIC TEST 1: TRIGGER AUTHORITY FAILURE ANALYSIS
+================================================================================
+
+QUERY: "Explain Python"
+[Planner] Winner Target Brain: LLM
+[Planner] Freshness Score: 0.0000 | Signals: []
+[Planner] Trigger Scores: {'MEMORY': 0.0, 'MEDIA': 0.0, 'NATIVE_OS': 0.0, 'TEMPORAL': 0.0, 'RETRIEVAL': 0.0, 'LLM': 5.8703}
+[Planner] Tiebreak Invoked: False
+[Intent Classifier Mock] Mock classified intent prior to sanity check: {'intent': 'AI_QUERY', 'query': 'Explain Python'}
+[Sanity Validation Layer] Final Resolved Intent: {'intent': 'YOUTUBE_TOPIC_SEARCH', 'query': 'Explain Python'}
+
+QUERY: "Explain Rust"
+[Planner] Winner Target Brain: LLM
+[Planner] Freshness Score: 0.0000 | Signals: []
+[Planner] Trigger Scores: {'MEMORY': 0.0, 'MEDIA': 0.0, 'NATIVE_OS': 0.0, 'TEMPORAL': 0.0, 'RETRIEVAL': 0.0, 'LLM': 5.8703}
+[Planner] Tiebreak Invoked: False
+[Intent Classifier Mock] Mock classified intent prior to sanity check: {'intent': 'AI_QUERY', 'query': 'Explain Rust'}
+[Sanity Validation Layer] Final Resolved Intent: {'intent': 'AI_QUERY', 'query': 'Explain Rust'}
+
+QUERY: "Rust vs Python"
+[Planner] Winner Target Brain: LLM
+[Planner] Freshness Score: 0.0000 | Signals: []
+[Planner] Trigger Scores: {'MEMORY': 0.0, 'MEDIA': 0.0, 'NATIVE_OS': 0.0, 'TEMPORAL': 0.0, 'RETRIEVAL': 0.0, 'LLM': 0.0}
+[Planner] Tiebreak Invoked: True
+[Intent Classifier Mock] Mock classified intent prior to sanity check: {'intent': 'AI_QUERY', 'query': 'Rust vs Python'}
+[Sanity Validation Layer] Final Resolved Intent: {'intent': 'YOUTUBE_TOPIC_SEARCH', 'query': 'Rust vs Python'}
+
+QUERY: "Play Rust tutorial"
+[Planner] Winner Target Brain: MEDIA
+[Planner] Freshness Score: 0.0000 | Signals: []
+[Planner] Trigger Scores: {'MEMORY': 0.0, 'MEDIA': 7.2477, 'NATIVE_OS': 0.0, 'TEMPORAL': 0.0, 'RETRIEVAL': 0.0, 'LLM': 0.0}
+[Planner] Tiebreak Invoked: False
+[Intent Classifier Mock] Mock classified intent prior to sanity check: {'intent': 'PLAY_MEDIA', 'query': 'rust tutorial'}
+[Sanity Validation Layer] Final Resolved Intent: {'intent': 'PLAY_MEDIA', 'query': 'rust tutorial'}
+
+QUERY: "Python tutorial"
+[Planner] Winner Target Brain: LLM
+[Planner] Freshness Score: 0.0000 | Signals: []
+[Planner] Trigger Scores: {'MEMORY': 0.0, 'MEDIA': 0.0, 'NATIVE_OS': 0.0, 'TEMPORAL': 0.0, 'RETRIEVAL': 0.0, 'LLM': 0.0}
+[Planner] Tiebreak Invoked: True
+[Intent Classifier Mock] Mock classified intent prior to sanity check: {'intent': 'AI_QUERY', 'query': 'Python tutorial'}
+[Sanity Validation Layer] Final Resolved Intent: {'intent': 'YOUTUBE_TOPIC_SEARCH', 'query': 'Python tutorial'}
+
+QUERY: "Open Python documentation"
+[Planner] Winner Target Brain: NATIVE_OS
+[Planner] Freshness Score: 0.0000 | Signals: []
+[Planner] Trigger Scores: {'MEMORY': 0.0, 'MEDIA': 0.0, 'NATIVE_OS': 8.5734, 'TEMPORAL': 0.0, 'RETRIEVAL': 0.0, 'LLM': 0.0}
+[Planner] Tiebreak Invoked: False
+[Intent Classifier Mock] Mock classified intent prior to sanity check: {'intent': 'OPEN', 'target': 'python documentation'}
+[Sanity Validation Layer] Final Resolved Intent: {'intent': 'YOUTUBE_TOPIC_SEARCH', 'query': 'Open Python documentation'}
+
+QUERY: "Compare Rust and Python"
+[Planner] Winner Target Brain: LLM
+[Planner] Freshness Score: 0.0000 | Signals: []
+[Planner] Trigger Scores: {'MEMORY': 0.0, 'MEDIA': 0.0, 'NATIVE_OS': 0.0, 'TEMPORAL': 0.0, 'RETRIEVAL': 0.0, 'LLM': 0.0}
+[Planner] Tiebreak Invoked: True
+[Intent Classifier Mock] Mock classified intent prior to sanity check: {'intent': 'AI_QUERY', 'query': 'Compare Rust and Python'}
+[Sanity Validation Layer] Final Resolved Intent: {'intent': 'YOUTUBE_TOPIC_SEARCH', 'query': 'Compare Rust and Python'}
+
+================================================================================
+              DIAGNOSTIC TEST 2: MEMORY PARTICIPATION ANALYSIS
+================================================================================
+
+--- Turn Pair ---
+WRITE QUERY: "Remember FRIDAY is my AI project"
+  [Write Planner] Winner: MEMORY
+  [Write Sanity] Resolved Intent: AI_QUERY
+  [Memory Check] Checking if semantic memory size changed or key is present...
+READ QUERY: "What is my AI project?"
+  [Read Planner] Winner: LLM
+  [Context enrichment] Original: "What is my AI project?" -> Enriched: "What is my AI project?"
+  [Semantic Memory Lookup] Matched facts in semantic.json: []
+
+--- Turn Pair ---
+WRITE QUERY: "Remember I am building FRIDAY"
+  [Write Planner] Winner: MEMORY
+  [Write Sanity] Resolved Intent: AI_QUERY
+  [Memory Check] Checking if semantic memory size changed or key is present...
+READ QUERY: "What am I building?"
+  [Read Planner] Winner: LLM
+  [Context enrichment] Original: "What am I building?" -> Enriched: "What am I building?"
+  [Semantic Memory Lookup] Matched facts in semantic.json: []
+
+--- Turn Pair ---
+WRITE QUERY: "Remember project status is implementation phase"
+  [Write Planner] Winner: MEMORY
+  [Write Sanity] Resolved Intent: REALTIME_QUERY
+  [Memory Check] Checking if semantic memory size changed or key is present...
+READ QUERY: "What is current project status?"
+  [Read Planner] Winner: RETRIEVAL
+  [Context enrichment] Original: "What is current project status?" -> Enriched: "What is current project status?"
+  [Semantic Memory Lookup] Matched facts in semantic.json: []
+
+================================================================================
+              DIAGNOSTIC TEST 3: IDENTITY PARTICIPATION ANALYSIS
+================================================================================
+QUERY: "What project are we working on?"
+
+--- IDENTITY MANAGER DYNAMICS ---
+Relevance Score: 75.0
+Influence Weight: 0.3
+Behavior Directives injected into System Prompt:
+== BEHAVIORAL DIRECTIVES & REASONING MODIFIERS ==
+- PERSONALIZATION PRIORITY: Prioritize instructions in this strict hierarchy: 1. Current Task constraints, 2. Active Session Context, 3. Fused Behavioral Signals (conciseness, tradeoffs, systems reasoning), 4. Historical Memory. Never force interest mentions.
+- Style constraints: Output is strictly gated under 150 words. Eliminate conversational fluff.
+- Phrasing constraints: State the direct conclusion or answer first, in sentence 1.
+- Reasoning rules: Analyze problems from first principles, isolating structural root causes.
+- Structural rules: Map component dependencies, integrations, and components explicitly.
+- Task structure: Output concrete, actionable checklists of command-ready execution steps.
+- Decision support: Render explicit comparison tables showing tradeoff complexity matrices.
+- Safety margins: Inject edge-case warnings and failure mitigation steps for technical implementations.
+- Cognitive framing: Illustrate concepts using systems-level software or hardware engineering examples.
+=================================================
+
+
+Targeted Context Slices returned by get_contextual_slices(query):
+{
+  "personalization_relevance": 75.0,
+  "personalization_influence": 0.3,
+  "behavior_directives": "== BEHAVIORAL CONTRACT DIRECTIVES ==\n- Preferred Address: Address the user as \"Sir\" (always capitalized) naturally, respectfully, and casually when appropriate (e.g. in greetings, key transitions, or statements). Do NOT force it as a mechanical prefix to every single sentence.\n- Verbosity: Concise by default (typically 1 to 3 sentences, under 50 words), high signal, low fluff. Deliver the direct answer in the very first sentence.\n- Explanation Style: Factual, logical, evidence-based, and clear.\n- Tone: Premium Jarvis-style companion. Avoid corporate disclaimers, AI disclaimers, or robotic helper preambles.\n=====================================\n",
+  "behavioral_signals": "== BEHAVIORAL DIRECTIVES & REASONING MODIFIERS ==\n- PERSONALIZATION PRIORITY: Prioritize instructions in this strict hierarchy: 1. Current Task constraints, 2. Active Session Context, 3. Fused Behavioral Signals (conciseness, tradeoffs, systems reasoning), 4. Historical Memory. Never force interest mentions.\n- Style constraints: Output is strictly gated under 150 words. Eliminate conversational fluff.\n- Phrasing constraints: State the direct conclusion or answer first, in sentence 1.\n- Reasoning rules: Analyze problems from first principles, isolating structural root causes.\n- Structural rules: Map component dependencies, integrations, and components explicitly.\n- Task structure: Output concrete, actionable checklists of command-ready execution steps.\n- Decision support: Render explicit comparison tables showing tradeoff complexity matrices.\n- Safety margins: Inject edge-case warnings and failure mitigation steps for technical implementations.\n- Cognitive framing: Illustrate concepts using systems-level software or hardware engineering examples.\n=================================================\n",
+  "user_identity": {
+    "name": "Aaditya"
+  },
+  "self_identity": {
+    "name": "FRIDAY",
+    "purpose": "A private single-owner AI companion system designed and built specifically by Aaditya for Aaditya",
+    "builder": "Aaditya",
+    "project": "FRIDAY (refers to the assistant itself)",
+    "relationship": "FRIDAY is Aaditya's private personal AI companion and project. Aaditya created it, owns it, and continuously refines it.",
+    "architecture_context": "FRIDAY is a RAM-conscious, low-latency, low-entropy runtime assistant that resides locally on Aaditya's system as an extension of his workflow."
+  }
+}
+
+================================================================================

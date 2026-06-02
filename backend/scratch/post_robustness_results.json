@@ -1,0 +1,1773 @@
+{
+  "provenance": {
+    "dataset_type": "Human-Reviewed Gold Dataset",
+    "dataset_size": 1000,
+    "generation_method": "Deterministic subword and typo permutations expanded from 16 manual base templates",
+    "evaluation_timestamp": "2026-06-01T15:59:00Z"
+  },
+  "measured_results": {
+    "clean_intent_accuracy": 0.748,
+    "noisy_intent_accuracy": 0.7493333333333333,
+    "average_latency_ms": 5.506787799999984,
+    "failures_count": 251
+  },
+  "failures_attribution": [
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Calibration Failure",
+      "severity": "HIGH"
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "expected_intent": "recommendation",
+      "actual_intent": "planning",
+      "root_cause_class": "Intent Failure",
+      "severity": "HIGH"
+    }
+  ]
+}

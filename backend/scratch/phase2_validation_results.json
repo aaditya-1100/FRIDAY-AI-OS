@@ -1,0 +1,839 @@
+{
+  "personalized_stats": {
+    "precision": 0.6035634743875279,
+    "precision_ci": [
+      0.5583173686136352,
+      0.6488095801614205
+    ],
+    "recall": 0.18574366004112405,
+    "recall_ci": [
+      0.1657880044818498,
+      0.2056993156003983
+    ],
+    "f1": 0.28406708595387836,
+    "f1_ci": [
+      0.2667323983301951,
+      0.30140177357756165
+    ],
+    "fpr": 0.15600350569675722,
+    "fpr_ci": [
+      0.1349487236809354,
+      0.17705828771257903
+    ],
+    "fnr": 0.8142563399588759,
+    "fnr_ci": [
+      0.7943006843996017,
+      0.8342119955181502
+    ],
+    "total": 2600
+  },
+  "leakage_fp": 1,
+  "leakage_tn": 549,
+  "drift_rate": 0.1612,
+  "drift_ci": [
+    0.1510074512147746,
+    0.17139254878522542
+  ],
+  "failures": [
+    {
+      "query": "btw timeline for JEE preparation and automation script",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "whats the roadmap for the business",
+      "expected": "Relevance: 0.0",
+      "actual": "Relevance: 75.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "HIGH",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what is the critical path for resolving building a SaaS vs building a mobile app",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "explain recursion with a coding analogy",
+      "expected": "Relevance: 80.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "best realtime youtube channel for a JEE student",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what was i working on yesterday tbh",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how should i organize my week for microservices setup",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "continue from where we left off",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how to prioritize these features: backend redesign vs UI cleanup",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "best sci-fi hobby for a JEE student",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how to prioritize these features: adding caching vs optimizing database indices",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "B2B SaaS vs consumer app for Rust or Go r",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what was i working on yewterday",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "should i learn Rust or Go for systems building",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "lolking for AI automation harness suggestions",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "my script is failing, what do i do",
+      "expected": "Relevance: 0.0",
+      "actual": "Relevance: 20.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "HIGH",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "create a schedule to learn minimal web app",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "it's not working properly, help",
+      "expected": "Relevance: 0.0",
+      "actual": "Relevance: 20.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "HIGH",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "step by step guide to lqunch a programming language study",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "which is better: SaaS or mobile app under low RAM constraints",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how should i allocate my coding hours between JEE mock test vs writing python code",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "explain the project structure",
+      "expected": "Relevance: 0.0",
+      "actual": "Relevance: 75.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "HIGH",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "bootdtrap or raise VC for my Docker or bare metal",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "do you remember my startup goal",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "r i need a new military framework to check out",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what do i uwually listen to on spotify r",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "step by step guide to lzunch a microaervices setup r",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "create a schedule to learn microservices setup",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "which is better: SQL or NoSQL under low RAM constraints",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how should i allocate my coding hours between adding caching vs optimizong database indices",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what do i uaually listen to on spotify",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "should i use a local database or cloud db for SaaS or mobile app",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "whsts the roadmap for the business",
+      "expected": "Relevance: 0.0",
+      "actual": "Relevance: 75.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "HIGH",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how should i allocate my coding hours between backend redesign vs UI cleanup",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "looking for lightweight hobby suggestions",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "whats the roadmap for the buskness",
+      "expected": "Relevance: 0.0",
+      "actual": "Relevance: 75.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "HIGH",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "help me plan a microservices setup",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "should i use a local database or clpud db for Rust or Go",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "create a schedule to learn SaaS startup launch",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "my script is failing, what do i do tbh",
+      "expected": "Relevance: 0.0",
+      "actual": "Relevance: 20.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "HIGH",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "recimmend a realtime anime",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "which of these is more startup-viable: backend redesign vs UI cleanup",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "should i use a local database or cloud db for Docker or bare metal",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how should i allocate my coding hours bwtween backend redesign vs UI cleanup",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "suggest a action library that's low footprint",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what do i usually listen to on spotify",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what is the core concept of TCP/IP stack",
+      "expected": "Relevance: 80.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "ikr B2B SaaS vs consumer app for laptop or desktop",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "help me plan a finals study schedule",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "i need a new cyberpunk library to check out u",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "step by step guide to launch a SaaS startup launch",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "i need a new milotary framework to check out",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "B2B SaaS vs consumer app for laptop or desktop",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "should i use a local database or cloud db for laptop or desktop",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "bootstrap or raise VC for my laptop or desktop",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "which is better: local SQLite or PostgreSQL under low RAM constraints tbh",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "tech should i learn SaaS or mobile app for systems building",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "bootstrap or raise VC for my Rust or Go",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "best AI automation harness for a JEE student",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "got any ideas for a AI automatipn hobby",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "which is better: Docker or bare metal under low RAM constraints",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "best non-technical tv show for a JEE student",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how to prioritize thdse features: backend redesign vs UI cleanup",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what do i usually listen to on spotify u",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how should i allocqte my coding hours between building a SaaS vs building a mlbile app",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "i have multiple adding caching vs optimizing databade indices. what should i build first",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "create a schedule to learn finals study schedule",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how shluld i organize my week for finals study schedule",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what was i working on yestdrday",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what is the critical path for resolving JEE mock test vs writing python code",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "bootstrap or raise VC for my local SQLite or PostgreSQL",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "roadmap to build a minimal web app wat",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "bootstrap or raise VC for my SaaS or mobile app",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how should i organize my week for automation script",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what do i usually liaten to on spotify",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "suggest a AI automation harness that's low footprint",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "ikr bootstrap or raise VC for my SaaS or mobile app",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "recommend a low-latency anime",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "pls should i learn laptop or desktop for systems building",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "recommend a military book",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how to prioritize these features: building a SaaS vs building a mobile app",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "bootstrap or raise VC for my SQL or NoSQL tbh",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how should i allpcate my coding hours between JEE mock test vs writing python code",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "got any idras for a action hobby",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "timeline for JEE preparation and automatkon script",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "B2B SaaS vs consumer app for local SQLite or PostgreSQL rn",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "which of these is more startup-viable: adding caching vs optimizing database indices imo",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "explain recursoon in simple terms",
+      "expected": "Relevance: 80.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "which of these is more startup-viable: JEE mock test vs wruting python code",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "should i use a local database or cloud db for SQL or NoSQL",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "which is bettdr: Rust or Go under low RAM constraints",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "how should i allocate my coding hours between building a SaaS vs building a mobile app",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "my script is failing, what do i do btw",
+      "expected": "Relevance: 0.0",
+      "actual": "Relevance: 20.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "HIGH",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "which of these is more startup-viable: adding caching vs optimizing database indices tech",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "which is better: Rust or Go under low RAM constraints",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "should i use a local datsbase or cloud db for local SQLite or PostgreSQL",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what are some good cyberpunk books imo",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "should i use a lical database or cloud db for laptop or desktop",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "i need a new horror framework to check out",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    },
+    {
+      "query": "what are some good realtime podcasts",
+      "expected": "Relevance: 75.0",
+      "actual": "Relevance: 0.0",
+      "root_cause": "Taxonomic / Override mismatch",
+      "severity": "MEDIUM",
+      "fix": "Tune Spacy POS locking matrices or adjust taxonomic synonym mappings"
+    }
+  ]
+}

@@ -1,0 +1,2725 @@
+{
+  "confusion_matrix": {
+    "recommendation": {
+      "recommendation": 250,
+      "explanation": 0,
+      "debugging": 0,
+      "planning": 251,
+      "casual_chat": 0,
+      "arithmetic": 0,
+      "translation": 0,
+      "factual_retrieval": 0
+    },
+    "explanation": {
+      "recommendation": 0,
+      "explanation": 313,
+      "debugging": 0,
+      "planning": 0,
+      "casual_chat": 0,
+      "arithmetic": 0,
+      "translation": 0,
+      "factual_retrieval": 0
+    },
+    "planning": {
+      "recommendation": 0,
+      "explanation": 0,
+      "debugging": 0,
+      "planning": 186,
+      "casual_chat": 0,
+      "arithmetic": 0,
+      "translation": 0,
+      "factual_retrieval": 0
+    }
+  },
+  "prototype_similarity_matrix": {
+    "recommendation": {
+      "recommendation": 1.0,
+      "explanation": 0.159975066781044,
+      "debugging": 0.034512244164943695,
+      "planning": 0.18350850045681,
+      "casual_chat": 0.3522791564464569,
+      "arithmetic": 0.07055540382862091,
+      "translation": 0.13195903599262238,
+      "factual_retrieval": 0.2109559178352356
+    },
+    "explanation": {
+      "recommendation": 0.159975066781044,
+      "explanation": 1.0,
+      "debugging": 0.2702774703502655,
+      "planning": 0.19845879077911377,
+      "casual_chat": 0.2640136778354645,
+      "arithmetic": 0.2741074562072754,
+      "translation": 0.22770041227340698,
+      "factual_retrieval": 0.16027560830116272
+    },
+    "debugging": {
+      "recommendation": 0.034512244164943695,
+      "explanation": 0.2702774703502655,
+      "debugging": 1.0,
+      "planning": 0.003954592160880566,
+      "casual_chat": 0.26873233914375305,
+      "arithmetic": 0.253961443901062,
+      "translation": 0.19840098917484283,
+      "factual_retrieval": 0.11385443061590195
+    },
+    "planning": {
+      "recommendation": 0.18350850045681,
+      "explanation": 0.19845879077911377,
+      "debugging": 0.003954592160880566,
+      "planning": 0.9999999403953552,
+      "casual_chat": 0.15288317203521729,
+      "arithmetic": 0.087173230946064,
+      "translation": 0.048122577369213104,
+      "factual_retrieval": 0.06121542304754257
+    },
+    "casual_chat": {
+      "recommendation": 0.3522791564464569,
+      "explanation": 0.2640136778354645,
+      "debugging": 0.26873233914375305,
+      "planning": 0.15288317203521729,
+      "casual_chat": 1.0000001192092896,
+      "arithmetic": 0.1766737997531891,
+      "translation": 0.36813685297966003,
+      "factual_retrieval": 0.28297826647758484
+    },
+    "arithmetic": {
+      "recommendation": 0.07055540382862091,
+      "explanation": 0.2741074562072754,
+      "debugging": 0.253961443901062,
+      "planning": 0.087173230946064,
+      "casual_chat": 0.1766737997531891,
+      "arithmetic": 1.0,
+      "translation": 0.16834044456481934,
+      "factual_retrieval": 0.1653478592634201
+    },
+    "translation": {
+      "recommendation": 0.13195903599262238,
+      "explanation": 0.22770041227340698,
+      "debugging": 0.19840098917484283,
+      "planning": 0.048122577369213104,
+      "casual_chat": 0.36813685297966003,
+      "arithmetic": 0.16834044456481934,
+      "translation": 1.0,
+      "factual_retrieval": 0.18408431112766266
+    },
+    "factual_retrieval": {
+      "recommendation": 0.2109559178352356,
+      "explanation": 0.16027560830116272,
+      "debugging": 0.11385443061590195,
+      "planning": 0.06121542304754257,
+      "casual_chat": 0.28297826647758484,
+      "arithmetic": 0.1653478592634201,
+      "translation": 0.18408431112766266,
+      "factual_retrieval": 1.0
+    }
+  },
+  "failures_by_class": {
+    "Intent Failure": 63,
+    "Calibration Failure": 188,
+    "Constraint Failure": 0,
+    "Suppression Failure": 0,
+    "Entity Failure": 0
+  },
+  "failures_list": [
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a B2B SaaS startup idea.",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.24087940156459808,
+        "explanation": -0.04043145850300789,
+        "debugging": -0.042390160262584686,
+        "planning": 0.3737102150917053,
+        "casual_chat": 0.09459173679351807,
+        "arithmetic": -0.03413030132651329,
+        "translation": 0.07815444469451904,
+        "factual_retrieval": -0.08014477044343948
+      },
+      "calibrated_scores": {
+        "recommendation": 0.1167982901845659,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.49631490026201514,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Recommend a coding side project. btw",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.36446642875671387,
+        "explanation": 0.10146687924861908,
+        "debugging": 0.10122031718492508,
+        "planning": 0.3799276351928711,
+        "casual_chat": 0.1321595013141632,
+        "arithmetic": 0.01764698512852192,
+        "translation": -0.013037116266787052,
+        "factual_retrieval": 0.040818482637405396
+      },
+      "calibrated_scores": {
+        "recommendation": 0.46990408216203955,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5140789576939173,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Got any tools for low-footprint systems?",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Intent Failure",
+      "raw_similarities": {
+        "recommendation": 0.07299371808767319,
+        "explanation": -0.014063219539821148,
+        "debugging": -0.019571810960769653,
+        "planning": 0.3954658508300781,
+        "casual_chat": 0.0877622663974762,
+        "arithmetic": 0.016609281301498413,
+        "translation": -0.0287559162825346,
+        "factual_retrieval": -0.04567801207304001
+      },
+      "calibrated_scores": {
+        "recommendation": 0.0,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.5584738595145089,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    },
+    {
+      "query": "Suggest a side project avoid startups. tbh idk",
+      "gold_intent": "recommendation",
+      "predicted_intent": "planning",
+      "failure_class": "Calibration Failure",
+      "raw_similarities": {
+        "recommendation": 0.27567026019096375,
+        "explanation": 0.00719637144356966,
+        "debugging": 0.05102136731147766,
+        "planning": 0.46709516644477844,
+        "casual_chat": 0.1591586023569107,
+        "arithmetic": -0.07351980358362198,
+        "translation": -0.008079401217401028,
+        "factual_retrieval": 0.005419047549366951
+      },
+      "calibrated_scores": {
+        "recommendation": 0.2162007434027535,
+        "explanation": 0.0,
+        "debugging": 0.0,
+        "planning": 0.7631290469850811,
+        "casual_chat": 0.0,
+        "arithmetic": 0.0,
+        "translation": 0.0,
+        "factual_retrieval": 0.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,1037 @@
+[
+  {
+    "timestamp": "2026-05-31T04:43:21.412259",
+    "query": "open bbc news",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "bbc news live",
+      "query": "open bbc news"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T04:43:40.612200",
+    "query": "search youtube for python tutorial",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "python tutorial"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T04:44:14.566451",
+    "query": "open the map of paris",
+    "intent": "MAP_FOLLOWUP",
+    "success": true,
+    "metadata": {
+      "intent": "MAP_FOLLOWUP",
+      "action": "general_query",
+      "query": "open the map of paris"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T04:44:47.716367",
+    "query": "open bbc news on youtube",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "bbc news"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T04:45:04.750304",
+    "query": "play the latest video by bbc news",
+    "intent": "LATEST_CREATOR_VIDEO",
+    "success": true,
+    "metadata": {
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "BBC News",
+      "query": "play the latest video by bbc news"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T04:45:18.481772",
+    "query": "open latest video by param vir beniwal",
+    "intent": "LATEST_CREATOR_VIDEO",
+    "success": true,
+    "metadata": {
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "Param Vir Beniwal",
+      "query": "open latest video by param vir beniwal"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:52:32.800990",
+    "query": "open chrome",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:53:04.670307",
+    "query": "explain me quantum mechanics in two lines",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "explain quantum mechanics in two lines"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:53:24.960771",
+    "query": "open c drive",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "c drive"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:53:45.192936",
+    "query": "tell me about tesla",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "tell me about tesla"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:54:12.122809",
+    "query": "who owns tesla",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "who owns Tesla, Inc."
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:54:31.757468",
+    "query": "how old is Elon Musk owns",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "how old is Elon Musk owns"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:55:06.752218",
+    "query": "tell me about paris",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "tell me about paris"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:55:22.240892",
+    "query": "show paris on the map",
+    "intent": "MAP_LOCATION",
+    "success": true,
+    "metadata": {
+      "intent": "MAP_LOCATION",
+      "location": "paris",
+      "query": "show paris on the map"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:55:46.308211",
+    "query": "show paris sir",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "show paris sir"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:56:06.827438",
+    "query": "show Displaying from london to paris",
+    "intent": "MAP_ROUTE",
+    "success": true,
+    "metadata": {
+      "intent": "MAP_ROUTE",
+      "origin": "london",
+      "destination": "paris",
+      "mode": "driving",
+      "query": "show Displaying from london to paris"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:56:25.203029",
+    "query": "how long will london to paris take",
+    "intent": "MAP_FOLLOWUP",
+    "success": true,
+    "metadata": {
+      "intent": "MAP_FOLLOWUP",
+      "action": "eta",
+      "query": "how long will london to paris take"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:57:08.655343",
+    "query": "open the latest video by tanmay",
+    "intent": "LATEST_CREATOR_VIDEO",
+    "success": true,
+    "metadata": {
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "the  tanmay",
+      "query": "open the latest video by tanmay"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:57:31.839852",
+    "query": "search youtube for spacex",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "search youtube for spacex"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:58:00.881448",
+    "query": "what was the latest launch of spacex",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "what was the latest launch of spacex"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:58:23.890863",
+    "query": "i didn't hear FRIDAY tell me again",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "i didn't hear FRIDAY tell me again"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:58:48.361675",
+    "query": "which rocket paris used",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "which rocket paris used"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:59:25.105379",
+    "query": "which rocket by used by spacex in The Ariane latest launch",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "which rocket by used by spacex in The Ariane latest launch"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T05:59:55.490134",
+    "query": "i am asking FRIDAY which rocket wise used by spacex in Ariane latest launch",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "i am asking FRIDAY which rocket wise used by spacex in Ariane latest launch"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:00:07.103235",
+    "query": "wasn't Youtube falcon 9 rocket",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "wasn't Youtube falcon 9 rocket"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:02:05.123800",
+    "query": "open bbc news latest video",
+    "intent": "LATEST_CREATOR_VIDEO",
+    "success": true,
+    "metadata": {
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "bbc news",
+      "query": "open bbc news latest video"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:02:49.881150",
+    "query": "play video driving into canada for the first time",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "driving into canada for the first time",
+      "creator": null,
+      "query": "play video driving into canada for the first time"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:12:43.059437",
+    "query": "what rocket by FRIDAY was used by spacex in latest launch wasn't that falcon 9 friday",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what rocket by FRIDAY was used by spacex in latest launch wasn't that falcon 9 friday"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:13:18.902332",
+    "query": "wedding can FRIDAY open spotify for me",
+    "intent": "MULTI_ACTION",
+    "success": true,
+    "metadata": {
+      "intent": "MULTI_ACTION",
+      "actions": [
+        {
+          "intent": "WINDOW_CONTROL",
+          "command": "minimize",
+          "target": "spotify"
+        },
+        {
+          "intent": "OPEN",
+          "target": "spotify"
+        }
+      ],
+      "query": "wedding can FRIDAY open spotify for me"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:13:28.143081",
+    "query": "open spotify",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "spotify"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:39:58.307309",
+    "query": "open spotify",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "spotify"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:40:38.589727",
+    "query": "open whatsapp",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "whatsapp"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:40:57.055505",
+    "query": "open file explorer",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "file explorer"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:41:09.036248",
+    "query": "open whatsapp web",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "whatsapp"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:41:14.835052",
+    "query": "launch whatsapp",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "whatsapp"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:41:17.332711",
+    "query": "open my whatsapp",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "whatsapp"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:41:43.210704",
+    "query": "tell me about spacex",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "tell me about spacex"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:42:13.354137",
+    "query": "tell me about tesla in one line",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "tell me about Tesla in one line"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:42:36.360749",
+    "query": "who owns set",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "who owns set"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:42:58.612411",
+    "query": "who owns tesla",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "who owns tesla"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:43:17.197124",
+    "query": "how old is Elon Musk",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "how old is Elon Musk"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:43:28.139743",
+    "query": "open latest video by passenger paramveer",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "latest video by passenger paramveer"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:43:45.321232",
+    "query": "open latest video by tanmay",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "latest video by tanmay"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:43:54.991139",
+    "query": "show me the map of paris",
+    "intent": "MAP_FOLLOWUP",
+    "success": true,
+    "metadata": {
+      "intent": "MAP_FOLLOWUP",
+      "action": "general_query",
+      "query": "show me the map of paris"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:44:31.641354",
+    "query": "search youtube for ai news",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "search youtube for ai news"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T06:44:58.185905",
+    "query": "open video driving into canada for the first time",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "video driving into canada for first time"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T07:33:22.902017",
+    "query": "open physics wala",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "physics wala"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T07:33:29.067961",
+    "query": "open pw",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "pw"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T12:57:09.526503",
+    "query": "how r u",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "how are you"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T20:04:10.133996",
+    "query": "open latest video by param vir beniwal",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "latest video by param vir beniwal"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T20:04:41.141896",
+    "query": "video titled house spacex catches rockets",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "video  house spacex catches rockets",
+      "creator": null,
+      "query": "video titled house spacex catches rockets"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T20:05:07.709844",
+    "query": "open video doomsday and spider-man trailers confirmed roast was 171",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "video doomsday and spider-man trailers confirmed roast was 171"
+    }
+  },
+  {
+    "timestamp": "2026-05-31T20:05:16.989471",
+    "query": "show me the map of paris",
+    "intent": "MAP_FOLLOWUP",
+    "success": true,
+    "metadata": {
+      "intent": "MAP_FOLLOWUP",
+      "action": "general_query",
+      "query": "show me the map of paris"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:29:10.601398",
+    "query": "open chrome",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:29:19.088020",
+    "query": "what is 2 plus 2",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what is 2 plus 2"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:29:36.326947",
+    "query": "open chrome",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:29:42.992119",
+    "query": "what is 2 plus 2",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what is 2 plus 2"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:30:00.234014",
+    "query": "open chrome",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:30:06.969720",
+    "query": "what is 2 plus 2",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what is 2 plus 2"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:30:24.100322",
+    "query": "open chrome",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:30:31.412031",
+    "query": "what is 2 plus 2",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what is 2 plus 2"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:30:48.641450",
+    "query": "open chrome",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:30:57.225757",
+    "query": "what is 2 plus 2",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what is 2 plus 2"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:33:58.953359",
+    "query": "how are FRIDAY friday",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "how are FRIDAY friday"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:34:06.066631",
+    "query": "can FRIDAY open chrome for me",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "can FRIDAY open chrome for me"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:34:26.797913",
+    "query": "open chrome",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:34:36.214369",
+    "query": "what is 2 + 2",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what is 2 plus 2"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:36:30.863009",
+    "query": "tell me about apple",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "tell me about apple"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:36:55.827708",
+    "query": "what product do apple really",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "what product does apple really"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:37:20.652649",
+    "query": "who currently runs at",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "who currently runs at"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:38:01.886123",
+    "query": "who is the new ceo of apple",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "who is the new ceo of apple"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:38:25.366583",
+    "query": "tell me about cristiano ronaldo in",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "tell me about cristiano ronaldo in"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:38:50.696131",
+    "query": "how old is",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "how old is"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:39:29.047189",
+    "query": "open video titled why do we dream",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "why do we dream",
+      "creator": null,
+      "query": "open video titled why do we dream"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:40:00.229608",
+    "query": "search youtube for formula 1 highlights",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "search youtube for formula 1 highlights"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:40:26.333690",
+    "query": "show me map route for delhi to jaipur",
+    "intent": "MAP_ROUTE",
+    "success": true,
+    "metadata": {
+      "intent": "MAP_ROUTE",
+      "origin": "show me map  for delhi",
+      "destination": "jaipur",
+      "mode": "driving",
+      "query": "show me map route for delhi to jaipur"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:41:09.929083",
+    "query": "current usd to inr",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "current usd to inr"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:41:39.592549",
+    "query": "today's cricket headlines",
+    "intent": "NEWS",
+    "success": true,
+    "metadata": {
+      "intent": "NEWS",
+      "topic": "",
+      "query": "today's cricket headlines"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:42:01.401276",
+    "query": "today's cricket headlines",
+    "intent": "NEWS",
+    "success": true,
+    "metadata": {
+      "intent": "NEWS",
+      "topic": "",
+      "query": "today's cricket headlines"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:42:11.320385",
+    "query": "open calculator",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "calculator"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:42:19.322257",
+    "query": "open whatsapp",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "whatsapp"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:42:26.173582",
+    "query": "open mocktail",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "mocktail"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:42:31.741056",
+    "query": "open gemini",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "gemini"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:42:37.683400",
+    "query": "open file",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "file"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T10:42:44.651526",
+    "query": "open c drive",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "c drive"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T16:44:48.112281",
+    "query": "explain recursion",
+    "intent": "AI_QUERY",
+    "success": false,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "explain recursion"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T16:45:00.681521",
+    "query": "explain feedback loops",
+    "intent": "AI_QUERY",
+    "success": false,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "explain feedback loops"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T16:45:12.780604",
+    "query": "tell me prepare for finals",
+    "intent": "AI_QUERY",
+    "success": false,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "how to prepare for finals"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T16:46:03.440736",
+    "query": "explain recursion",
+    "intent": "AI_QUERY",
+    "success": false,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "explain recursion"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T16:46:19.101077",
+    "query": "explain feedback loops",
+    "intent": "AI_QUERY",
+    "success": false,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "explain feedback loops"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T16:46:36.037183",
+    "query": "how r u",
+    "intent": "CASUAL_CHAT",
+    "success": false,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "how are you"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T16:46:43.560364",
+    "query": "what is my name",
+    "intent": "AI_QUERY",
+    "success": false,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what is my name"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T16:46:58.462479",
+    "query": "explain rust versus go",
+    "intent": "AI_QUERY",
+    "success": false,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "explain rust versus go"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T16:47:11.026947",
+    "query": "can FRIDAY tell me the capital of japan",
+    "intent": "AI_QUERY",
+    "success": false,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "can Friday tell me the capital of Japan"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T16:47:30.293903",
+    "query": "recommend me a horror movie",
+    "intent": "AI_QUERY",
+    "success": false,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "recommend me a horror movie"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T22:18:06.622304",
+    "query": "explain recursion",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "explain recursion"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T22:18:34.607035",
+    "query": "what are the two rules of it",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "what are the two rules of recursion"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T22:18:54.450315",
+    "query": "what is the capital of japan",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "what is the capital of Japan"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T22:19:09.135063",
+    "query": "what is tell me rust versus python",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "what is tell me rust versus python"
+    }
+  },
+  {
+    "timestamp": "2026-06-01T22:19:21.436855",
+    "query": "rust vs python",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "rust vs python"
+    }
+  }
+]

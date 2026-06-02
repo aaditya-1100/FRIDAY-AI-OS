@@ -2,12 +2,9 @@ import { Canvas } from "@react-three/fiber";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAtom, useAtomValue } from "jotai";
 import { Suspense, useEffect, useState } from "react";
-import { aiStateAtom, commandErrorAtom, wsConnectedAtom, mapModeAtom, mapLocationAtom, type AiState } from "./atoms";
+import { aiStateAtom, commandErrorAtom, wsConnectedAtom, mapModeAtom, mapLocationAtom, mapLatAtom, mapLonAtom, type AiState } from "./atoms";
 import { MicButton } from "./components/MicButton";
 import { ParticleOrb } from "./components/ParticleOrb";
-import { StatusCard } from "./components/StatusCard";
-import { WeatherWidget } from "./components/WeatherWidget";
-import { ClockWidget } from "./components/ClockWidget";
 import { useFridaySocket } from "./hooks/useFridaySocket";
 
 function statusFor(state: AiState, connected: boolean, err: string | null) {
@@ -35,6 +32,8 @@ export default function App() {
   const commandError = useAtomValue(commandErrorAtom);
   const [mapMode, setMapMode] = useAtom(mapModeAtom);
   const [mapLocation, setMapLocation] = useAtom(mapLocationAtom);
+  const mapLat = useAtomValue(mapLatAtom);
+  const mapLon = useAtomValue(mapLonAtom);
   // Globe intro: "globe" phase plays first, then transitions to "map"
   const [mapPhase, setMapPhase] = useState<"globe" | "map">("globe");
   useFridaySocket();
@@ -138,65 +137,228 @@ export default function App() {
 
             {/* ── MAP PHASE ────────────────────────────────────────────────── */}
             <AnimatePresence>
-              {mapPhase === "map" && (
-                <motion.div
-                  key="map-view"
-                  className="absolute inset-0"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  {/* Map iframe zooms in from 1.15 */}
+              {mapPhase === "map" && (() => {
+                const isRoute = mapLocation.startsWith("origin:");
+                let hudTitle = "TACTICAL SATELLITE LINK";
+                let hudLocation = mapLocation || "SCANNING REGION";
+                let originPart = "";
+                let destPart = "";
+
+                if (isRoute) {
+                  const parts = mapLocation.split(",");
+                  originPart = parts.find(p => p.startsWith("origin:"))?.replace("origin:", "") || "";
+                  destPart = parts.find(p => p.startsWith("destination:"))?.replace("destination:", "") || "";
+                  hudTitle = "GEOSPATIAL ROUTE DIRECT";
+                  hudLocation = `${originPart} ➔ ${destPart}`;
+                }
+
+                // Premium dark-themed Leaflet.js tactical map template (completely bypasses iframe restrictions)
+                const mapSrcDoc = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>FRIDAY Tactical Map Link</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #020408;
+    }
+    /* Holographic dark cyan theme filter on basemap tiles */
+    .leaflet-tile-container {
+      filter: invert(1) hue-rotate(180deg) brightness(0.65) contrast(1.3) saturate(1.5);
+    }
+    .pulse-marker {
+      background: rgba(6, 182, 212, 0.4);
+      border: 2px solid #06b6d4;
+      border-radius: 50%;
+      box-shadow: 0 0 12px #06b6d4;
+      animation: pulse 1.8s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.85); opacity: 0.6; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.85); opacity: 0.6; }
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    const map = L.map('map', {
+      zoomControl: false,
+      attributionControl: false
+    }).setView([20, 0], 2);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20
+    }).addTo(map);
+
+    const tacticalIcon = L.divIcon({
+      className: 'pulse-marker',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
+    });
+
+    async function geocode(q) {
+      try {
+        const res = await fetch(\`https://nominatim.openstreetmap.org/search?q=\${encodeURIComponent(q)}&format=json&limit=1\`, {
+          headers: { 'User-Agent': 'FRIDAY-Tactical-Map/1.0' }
+        });
+        const data = await res.json();
+        if (data && data.length > 0) {
+          return {
+            lat: parseFloat(data[0].lat),
+            lon: parseFloat(data[0].lon)
+          };
+        }
+      } catch (e) {
+        console.error("Geocode failed", e);
+      }
+      return null;
+    }
+
+    async function initMap() {
+      const isRoute = ${isRoute};
+      const lat = ${mapLat !== null ? mapLat : "null"};
+      const lon = ${mapLon !== null ? mapLon : "null"};
+      const locationName = \`${mapLocation}\`;
+      const originName = \`${originPart}\`;
+      const destName = \`${destPart}\`;
+
+      if (isRoute) {
+        const start = await geocode(originName);
+        const end = await geocode(destName);
+        if (start && end) {
+          const startMarker = L.marker([start.lat, start.lon], {icon: tacticalIcon}).addTo(map);
+          startMarker.bindPopup("<b>Origin:</b> " + originName).openPopup();
+          
+          const endMarker = L.marker([end.lat, end.lon], {icon: tacticalIcon}).addTo(map);
+          endMarker.bindPopup("<b>Destination:</b> " + destName);
+
+          L.circle([start.lat, start.lon], {radius: 5000, color: '#06b6d4', weight: 1, fillOpacity: 0.05}).addTo(map);
+          L.circle([end.lat, end.lon], {radius: 5000, color: '#06b6d4', weight: 1, fillOpacity: 0.05}).addTo(map);
+
+          try {
+            const routeRes = await fetch(\`https://router.project-osrm.org/route/v1/driving/\${start.lon},\${start.lat};\${end.lon},\${end.lat}?overview=full&geometries=geojson\`);
+            const routeData = await routeRes.json();
+            if (routeData.routes && routeData.routes.length > 0) {
+              const geojson = routeData.routes[0].geometry;
+              const routeLine = L.geoJSON(geojson, {
+                style: {
+                  color: '#06b6d4',
+                  weight: 4,
+                  opacity: 0.8,
+                  dashArray: '8, 8'
+                }
+              }).addTo(map);
+              map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+            } else {
+              const polyline = L.polyline([[start.lat, start.lon], [end.lat, end.lon]], {
+                color: '#06b6d4',
+                weight: 3,
+                opacity: 0.6,
+                dashArray: '5, 10'
+              }).addTo(map);
+              map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+            }
+          } catch (e) {
+            const polyline = L.polyline([[start.lat, start.lon], [end.lat, end.lon]], {
+              color: '#06b6d4',
+              weight: 3,
+              opacity: 0.6,
+              dashArray: '5, 10'
+            }).addTo(map);
+            map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+          }
+        }
+      } else if (lat && lon) {
+        map.setView([lat, lon], 12);
+        const marker = L.marker([lat, lon], {icon: tacticalIcon}).addTo(map);
+        marker.bindPopup("<b>Holographic Pin:</b> " + locationName).openPopup();
+        L.circle([lat, lon], {radius: 2000, color: '#06b6d4', weight: 1, fillOpacity: 0.05}).addTo(map);
+        L.circle([lat, lon], {radius: 4000, color: '#06b6d4', weight: 0.5, fillOpacity: 0.02}).addTo(map);
+      } else if (locationName) {
+        const pt = await geocode(locationName);
+        if (pt) {
+          map.setView([pt.lat, pt.lon], 12);
+          const marker = L.marker([pt.lat, pt.lon], {icon: tacticalIcon}).addTo(map);
+          marker.bindPopup("<b>Holographic Pin:</b> " + locationName).openPopup();
+          L.circle([pt.lat, pt.lon], {radius: 2000, color: '#06b6d4', weight: 1, fillOpacity: 0.05}).addTo(map);
+        }
+      }
+    }
+
+    initMap();
+  </script>
+</body>
+</html>
+`;
+
+                return (
                   <motion.div
+                    key="map-view"
                     className="absolute inset-0"
-                    initial={{ scale: 1.15, filter: "blur(6px) brightness(0.2)" }}
-                    animate={{ scale: 1,    filter: "blur(0px) brightness(1)"  }}
-                    transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    <iframe
-                      title="Tactical Map"
-                      src={`https://maps.google.com/maps?q=${encodeURIComponent(mapLocation || "Earth")}&t=k&z=12&ie=UTF8&iwloc=&output=embed`}
-                      className="h-full w-full border-none"
-                      style={{ filter: "invert(88%) hue-rotate(180deg) brightness(80%) contrast(120%) saturate(70%)" }}
-                    />
+                    {/* Map iframe zooms in from 1.15 */}
+                    <motion.div
+                      className="absolute inset-0"
+                      initial={{ scale: 1.15, filter: "blur(6px) brightness(0.2)" }}
+                      animate={{ scale: 1,    filter: "blur(0px) brightness(1)"  }}
+                      transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <iframe
+                        title="Tactical Map"
+                        srcDoc={mapSrcDoc}
+                        className="h-full w-full border-none"
+                        style={{ opacity: 0.92 }}
+                      />
+                    </motion.div>
+
+                    {/* Vignette */}
+                    <div className="pointer-events-none absolute inset-0" style={{ boxShadow: "inset 0 0 120px rgba(0,0,0,0.75)" }} />
+
+                    {/* Scanlines */}
+                    <div className="pointer-events-none absolute inset-0 opacity-10"
+                      style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 4px)" }} />
+
+                    {/* HUD corners */}
+                    {["top-4 left-4 border-t border-l","top-4 right-4 border-t border-r",
+                      "bottom-4 left-4 border-b border-l","bottom-4 right-4 border-b border-r"
+                    ].map((cls, i) => (
+                      <motion.div key={i}
+                        className={`pointer-events-none absolute h-8 w-8 border-cyan-400/40 ${cls}`}
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 + i * 0.06 }} />
+                    ))}
+
+                    {/* HUD Header */}
+                    <motion.div
+                      className="pointer-events-none absolute inset-x-0 top-0 z-50 px-6 pt-8 flex flex-col items-center"
+                      initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25 }}
+                    >
+                      <span className="text-[9px] font-black tracking-[0.5em] text-cyan-400/70 mb-1">{hudTitle}</span>
+                      <h2 className="text-xl font-bold tracking-[0.2em] text-white uppercase">{hudLocation}</h2>
+                      <motion.div className="mt-2 h-px w-40 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
+                        animate={{ scaleX: [0.3, 1, 0.3], opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} />
+                    </motion.div>
+
+                    {/* Bottom HUD */}
+                    <div className="pointer-events-none absolute inset-x-0 bottom-5 flex justify-center">
+                      <span className="text-[9px] font-mono tracking-widest text-cyan-400/35">SYS:MAPLINK ● ENCRYPTED ● LIVE FEED</span>
+                    </div>
                   </motion.div>
-
-                  {/* Vignette */}
-                  <div className="pointer-events-none absolute inset-0" style={{ boxShadow: "inset 0 0 120px rgba(0,0,0,0.75)" }} />
-
-                  {/* Scanlines */}
-                  <div className="pointer-events-none absolute inset-0 opacity-10"
-                    style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 4px)" }} />
-
-                  {/* HUD corners */}
-                  {["top-4 left-4 border-t border-l","top-4 right-4 border-t border-r",
-                    "bottom-4 left-4 border-b border-l","bottom-4 right-4 border-b border-r"
-                  ].map((cls, i) => (
-                    <motion.div key={i}
-                      className={`pointer-events-none absolute h-8 w-8 border-cyan-400/40 ${cls}`}
-                      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 + i * 0.06 }} />
-                  ))}
-
-                  {/* Top HUD */}
-                  <motion.div
-                    className="pointer-events-none absolute inset-x-0 top-0 z-50 px-6 pt-8 flex flex-col items-center"
-                    initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25 }}
-                  >
-                    <span className="text-[9px] font-black tracking-[0.5em] text-cyan-400/70 mb-1">TACTICAL SATELLITE LINK</span>
-                    <h2 className="text-xl font-bold tracking-[0.2em] text-white uppercase">{mapLocation || "SCANNING REGION"}</h2>
-                    <motion.div className="mt-2 h-px w-40 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
-                      animate={{ scaleX: [0.3, 1, 0.3], opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} />
-                  </motion.div>
-
-                  {/* Bottom HUD */}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-5 flex justify-center">
-                    <span className="text-[9px] font-mono tracking-widest text-cyan-400/35">SYS:MAPLINK ● ENCRYPTED ● LIVE FEED</span>
-                  </div>
-                </motion.div>
-              )}
+                );
+              })()}
             </AnimatePresence>
 
             {/* Close button — always visible */}
@@ -230,7 +392,7 @@ export default function App() {
       </header>
 
       <div className="relative z-0 min-h-0 flex-1 flex items-center justify-center">
-        <div style={{ width: "min(100%, 100vh - 220px)", aspectRatio: "1 / 1" }}>
+        <div className="w-[300px] sm:w-[380px] md:w-[500px]" style={{ width: "min(100%, 100vh - 220px)", aspectRatio: "1 / 1" }}>
           <Canvas camera={{ position: [0, 0, 2.5], fov: 45 }} gl={{ alpha: true, antialias: true }}>
             <ambientLight intensity={0.35} />
             <Suspense fallback={null}>
@@ -239,15 +401,6 @@ export default function App() {
           </Canvas>
         </div>
       </div>
-
-      {/* Floating status panel */}
-      <StatusCard />
-
-      {/* Realtime weather widget — Kashipur, India */}
-      <WeatherWidget />
-
-      {/* Holographic live clock widget */}
-      <ClockWidget />
 
       <footer className="relative z-10 flex flex-none flex-col items-center pb-12 md:pb-16">
         <motion.p
