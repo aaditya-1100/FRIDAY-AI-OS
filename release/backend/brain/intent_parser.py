@@ -71,6 +71,7 @@ SET_RECURRING_REMINDER → set a repeating daily/weekly reminder (e.g. "remind m
 LIST_REMINDERS   → list all active reminders, timers, and alarms (e.g. "what are my active reminders?")
 CANCEL_REMINDER  → cancel/delete an active reminder or timer by description (e.g. "cancel reminder to drink water")
 CASUAL_CHAT      → conversational greetings, hello, how are you, greeting check-ins, simple casual chat (e.g. "hello", "hi friday", "good morning", "friday are you there", "hello friday")
+SET_FACT         → remember a fact about the user or project (e.g. "Remember FRIDAY is my AI project", "Remember my JEE rank is 42", "Remember that the capital of France is Paris")
 
 == STATEFUL & PRONOUN CONTEXT RESOLUTION ==
 You are provided with CONVERSATION HISTORY showing the latest turns. Use this history to resolve pronouns ("it", "that", "there", "them", "him", "her") or contextual commands:
@@ -135,9 +136,11 @@ Use AI_QUERY for: math, coding, definitions, how-things-work, creative writing, 
 == WINDOW_CONTROL FORMAT ==
 { "intent": "WINDOW_CONTROL", "command": "<minimize | maximize | close>", "target": "<app name or empty string if active window>" }
 
-== SEARCH platform detection ==
-- "search X on youtube" / "search X" (default=youtube) → SEARCH platform=youtube
-- "search X on google" → SEARCH platform=google  
+== SEARCH AND RETRIEVAL CONTRACTS ==
+- "search X" (without YouTube, Chrome, Google, or Spotify) → REALTIME_QUERY
+  Use this for general info retrieval (e.g. "Search OpenAI", "Search Rust ownership model").
+- "open Chrome and search X" / "search X on google" → WEB_SEARCH
+- "open YouTube and search X" / "search X on youtube" → YOUTUBE_TOPIC_SEARCH
 - "search X on spotify" → SEARCH platform=spotify
 
 == PLAY_MEDIA FORMAT ==
@@ -145,7 +148,7 @@ Use AI_QUERY for: math, coding, definitions, how-things-work, creative writing, 
   "intent": "PLAY_MEDIA",
   "creator": "<creator, artist, or band name, or null>",
   "title": "<song or video title, or null>",
-  "platform": "spotify",
+  "platform": "youtube",
   "query": "<clean query>"
 }
 
@@ -211,7 +214,7 @@ ALLOWED_INTENTS = frozenset({
     "SCREEN_UNDERSTANDING", "MAP_FOLLOWUP",
     "YOUTUBE_TOPIC_SEARCH", "LATEST_CREATOR_VIDEO", "LATEST_CREATOR_SHORT",
     "VIDEO_BY_TITLE", "CHANNEL_OPEN", "PLAY_SEARCH_RESULT", "MAP_LOCATION",
-    "CASUAL_CHAT"
+    "CASUAL_CHAT", "SET_FACT"
 })
 
 # Universal recency/currency signals — any of these means the answer may have
@@ -279,6 +282,10 @@ def _keyword_fallback(query: str, history: list | None = None) -> dict:
     greeting_words = {"hello", "hi", "hey", "sup", "yo", "good morning", "good afternoon", "good evening", "good night", "friday are you there", "are you there", "are you awake", "you there", "hello friday", "hi friday", "hey friday"}
     if q in greeting_words or q.replace("?", "").strip() in greeting_words or q.rstrip("!").strip() in greeting_words:
         return {"intent": "CASUAL_CHAT", "query": query}
+        
+    # ── Memory / Fact Fallbacks ─────────────────────────────────────────────
+    if q.startswith("remember ") or q.startswith("save fact ") or q.startswith("store fact "):
+        return {"intent": "SET_FACT", "query": query}
     
     # ── Temporal Systems Fallbacks ──────────────────────────────────────────
     # Recurring reminder
@@ -464,7 +471,19 @@ def _keyword_fallback(query: str, history: list | None = None) -> dict:
         return {"intent": "CLARIFICATION", "question": "What would you like me to play sir?"}
 
     # 3. YOUTUBE CAPABILITY MATCHING
-    is_youtube = any(w in q_clean for w in ("youtube", "yt", "video", "short", "shorts", "reel", "channel", "play", "watch", "look up", "upload", "uploads", "lecture", "lectures", "song", "songs", "clip", "clips", "highlight", "highlights", "trailer", "trailers", "tutorial", "tutorials", "show me"))
+    comparison_words = {"vs", "compare", "difference between", "differences between"}
+    is_comparison = any(re.search(rf"\b{w}\b", q_clean) for w in comparison_words)
+    has_explicit_media_verb = any(re.search(rf"\b{w}\b", q_clean) for w in ("play", "watch", "open youtube", "search youtube"))
+    
+    is_youtube = False
+    if not (is_comparison and not has_explicit_media_verb):
+        if "youtube" in q_clean or re.search(r"\byt\b", q_clean):
+            is_youtube = True
+        elif "chrome" in q_clean or "google" in q_clean:
+            is_youtube = False
+        else:
+            is_youtube = any(w in q_clean for w in ("video", "short", "shorts", "reel", "channel", "play", "watch", "look up", "upload", "uploads", "lecture", "lectures", "song", "songs", "clip", "clips", "highlight", "highlights", "trailer", "trailers", "tutorial", "tutorials", "show me"))
+                      
     if is_youtube:
         # A. Shorts Capability
         if any(w in q_clean for w in ("short", "shorts", "reel")):
@@ -482,21 +501,7 @@ def _keyword_fallback(query: str, history: list | None = None) -> dict:
             creator = re.sub(r"[^\w\s]", "", creator).strip()
             return {"intent": "LATEST_CREATOR_VIDEO", "creator": creator}
 
-        # C. Video By Title Capability
-        elif "titled" in q_clean or "called" in q_clean or "named" in q_clean or q_clean.startswith("play video ") or q_clean.startswith("open video ") or "youtube video" in q_clean:
-            title = q_clean
-            creator = None
-            by_match = re.search(r"(?:titled|called|named)\s+(.+?)\s+\b(by|from)\s+(.+)", q_clean, re.IGNORECASE)
-            if by_match:
-                title = by_match.group(1).strip()
-                creator = by_match.group(3).strip()
-            else:
-                for term in ("play video titled", "open video titled", "play video called", "open video called", "play video named", "open video named", "play video", "open video", "play the youtube video", "play youtube video", "youtube video", "find the", "find", "titled", "called", "named"):
-                    title = re.sub(rf"\b{term}\b", "", title, flags=re.IGNORECASE)
-            title = re.sub(r"[^\w\s]", "", title).strip()
-            return {"intent": "VIDEO_BY_TITLE", "title": title, "creator": creator}
-
-        # D. Channel Open Capability
+        # C. Channel Open Capability
         elif "channel" in q_clean or "page" in q_clean:
             creator = q_clean
             for term in ("open", "go to", "show", "channel", "page", "youtube channel", "youtube page"):
@@ -504,7 +509,7 @@ def _keyword_fallback(query: str, history: list | None = None) -> dict:
             creator = re.sub(r"[^\w\s]", "", creator).strip()
             return {"intent": "CHANNEL_OPEN", "creator": creator}
 
-        # E. Play Search Result Capability
+        # D. Play Search Result Capability
         elif any(w in q_clean for w in ("first", "second", "third", "1st", "2nd", "3rd")) and "result" in q_clean:
             idx = 0
             if "second" in q_clean or "2nd" in q_clean:
@@ -513,26 +518,53 @@ def _keyword_fallback(query: str, history: list | None = None) -> dict:
                 idx = 2
             return {"intent": "PLAY_SEARCH_RESULT", "query": q_clean, "index": idx}
 
-        # F. YouTube Topic Search Capability
-        else:
+        # E. Explicit Search Verb Check (must override general playback fallback)
+        elif any(re.search(rf"\b{w}\b", q_clean) for w in ("search", "find", "look up", "results", "videos about", "videos covering")):
             clean_search = q_clean
             verbs = [
                 "open youtube results for", "search youtube for", "videos covering",
                 "search youtube", "videos about", "youtube for", "on youtube",
                 "videos of", "videos on", "video about", "video of", "video on",
-                "show me", "look up", "videos", "search", "video", "find", "show"
+                "open youtube and", "open youtube", "open yt and", "open yt",
+                "show me", "look up", "videos", "search", "video", "find", "show",
+                "youtube", "yt"
             ]
             for verb in sorted(verbs, key=len, reverse=True):
                 clean_search = re.sub(rf"\b{verb}\b", "", clean_search, flags=re.IGNORECASE)
             clean_search = re.sub(r"[^\w\s]", "", clean_search).strip()
+            clean_search = re.sub(r"\s+", " ", clean_search).strip()
             return {"intent": "YOUTUBE_TOPIC_SEARCH", "query": clean_search}
+
+        # F. Video By Title / Direct Play playback fallback
+        else:
+            title = q_clean
+            creator = None
+            by_match = re.search(r"(.+?)\s+\b(by|from)\s+(.+)", q_clean, re.IGNORECASE)
+            if by_match:
+                title = by_match.group(1).strip()
+                creator = by_match.group(3).strip()
+            
+            for term in ("play video titled", "open video titled", "play video called", "open video called", "play video named", "open video named", "play video", "open video", "play the youtube video", "play youtube video", "youtube video", "find the", "find", "titled", "called", "named", "play", "watch", "listen to", "put on"):
+                title = re.sub(rf"\b{term}\b", "", title, flags=re.IGNORECASE)
+                if creator:
+                    creator = re.sub(rf"\b{term}\b", "", creator, flags=re.IGNORECASE)
+            
+            title = re.sub(r"[^\w\s]", "", title).strip()
+            if creator:
+                creator = re.sub(r"[^\w\s]", "", creator).strip()
+                
+            return {"intent": "VIDEO_BY_TITLE", "title": title, "creator": creator}
 
     # 4. GENERAL OPEN / PLAY / SEARCH FALLBACKS
     # Simple compound: "open X and search Y"
     if "open " in q and ("and search" in q or "then search" in q):
         parts = re.split(r"\band\b|\bthen\b", q, maxsplit=1)
-        target = parts[0].replace("open", "").strip()
+        target = parts[0].replace("open", "").strip().strip("’'\"").lower()
         search_q = re.sub(r"search\s+(for\s+)?", "", parts[1]).strip() if len(parts) > 1 else ""
+        if target in ("chrome", "google"):
+            return {"intent": "WEB_SEARCH", "query": search_q}
+        elif target in ("youtube", "yt"):
+            return {"intent": "YOUTUBE_TOPIC_SEARCH", "query": search_q}
         return {
             "intent": "MULTI_ACTION",
             "actions": [
@@ -550,15 +582,55 @@ def _keyword_fallback(query: str, history: list | None = None) -> dict:
         if target == "spotify":
             return {"intent": "SPOTIFY_CONTROL", "command": "play"}
         return {"intent": "PLAY_MEDIA", "query": target}
-    if "search " in q:
-        sq = re.sub(r"^search\s+(for\s+)?", "", q).strip()
-        platform = "youtube"  # default
-        for _p in ("youtube", "yt", "google", "spotify"):
-            if sq.lower().startswith(_p):
-                platform = "youtube" if _p in ("youtube", "yt") else _p
-                sq = re.sub(rf"^{_p}\s+(for\s+)?", "", sq, flags=re.IGNORECASE).strip()
-                break
-        return {"intent": "SEARCH", "platform": platform, "query": sq}
+    if q.startswith("search ") or " search " in q:
+        q_lower = q.lower()
+        if "youtube" in q_lower or "yt" in q_lower:
+            clean_search = q
+            verbs = [
+                "open youtube results for", "search youtube for", "videos covering",
+                "search youtube", "videos about", "youtube for", "on youtube",
+                "videos of", "videos on", "video about", "video of", "video on",
+                "open youtube and", "open youtube", "open yt and", "open yt",
+                "show me", "look up", "videos", "search", "video", "find", "show",
+                "youtube", "yt"
+            ]
+            for verb in sorted(verbs, key=len, reverse=True):
+                clean_search = re.sub(rf"\b{verb}\b", "", clean_search, flags=re.IGNORECASE)
+            clean_search = re.sub(r"[^\w\s]", "", clean_search).strip()
+            clean_search = re.sub(r"\s+", " ", clean_search).strip()
+            return {"intent": "YOUTUBE_TOPIC_SEARCH", "query": clean_search}
+        
+        elif "chrome" in q_lower or "google" in q_lower:
+            clean_search = q
+            verbs = [
+                "open chrome and search for", "open chrome and search", "search google for",
+                "search chrome for", "search for", "search google", "search chrome",
+                "on google", "on chrome", "open chrome", "open google", "search", "google", "chrome"
+            ]
+            for verb in sorted(verbs, key=len, reverse=True):
+                clean_search = re.sub(rf"\b{verb}\b", "", clean_search, flags=re.IGNORECASE)
+            clean_search = re.sub(r"[^\w\s]", "", clean_search).strip()
+            clean_search = re.sub(r"\s+", " ", clean_search).strip()
+            return {"intent": "WEB_SEARCH", "query": clean_search}
+            
+        elif "spotify" in q_lower:
+            clean_search = q
+            verbs = ["search spotify for", "search spotify", "on spotify", "search for", "search", "spotify"]
+            for verb in sorted(verbs, key=len, reverse=True):
+                clean_search = re.sub(rf"\b{verb}\b", "", clean_search, flags=re.IGNORECASE)
+            clean_search = re.sub(r"[^\w\s]", "", clean_search).strip()
+            clean_search = re.sub(r"\s+", " ", clean_search).strip()
+            return {"intent": "SEARCH", "platform": "spotify", "query": clean_search}
+            
+        else:
+            # Web Retrieval (Type 1 Search) -> Always routes to REALTIME_QUERY
+            clean_search = q
+            verbs = ["search for", "search"]
+            for verb in sorted(verbs, key=len, reverse=True):
+                clean_search = re.sub(rf"\b{verb}\b", "", clean_search, flags=re.IGNORECASE)
+            clean_search = re.sub(r"[^\w\s]", "", clean_search).strip()
+            clean_search = re.sub(r"\s+", " ", clean_search).strip()
+            return {"intent": "REALTIME_QUERY", "query": clean_search}
 
     # ── GENERAL KEYWORD FALLBACKS (LOW-PRIORITY) ───────────────────────────
     if any(w in q for w in ("weather", "temperature", "forecast", "rain", "humidity")):
@@ -613,6 +685,11 @@ def parse_intent(query: str, history: list | None = None, preferences: dict | No
     try:
         # Direct check for Memory/Identity routing bypass
         if planner_hint == "MEMORY":
+            q_clean = query.lower().strip()
+            is_write = q_clean.startswith("remember ") or any(q_clean.startswith(w) for w in ("save fact ", "store fact ", "always remember "))
+            if is_write:
+                print("[INTENT FAST-PATH] Memory-First Write matched. Routing to SET_FACT.")
+                return {"intent": "SET_FACT", "query": query}
             print("[INTENT FAST-PATH] Direct Memory-First Gate matched. Routing to AI_QUERY.")
             return {"intent": "AI_QUERY", "query": query}
 
@@ -713,6 +790,7 @@ Return only JSON."""
         if not response:
             res = _keyword_fallback(query, history)
             res["query"] = query
+            res = validate_intent_sanity(res, query, planner_hint)
             return res
 
         # If Groq returned a quota exhaustion message, fall back to keyword routing
@@ -721,6 +799,7 @@ Return only JSON."""
             print(f"[INTENT QUOTA FALLBACK] Groq quota hit — routing via keyword fallback for: '{query}'")
             res = _keyword_fallback(query, history)
             res["query"] = query
+            res = validate_intent_sanity(res, query, planner_hint)
             # Mark as quota-limited so pipeline can relay the quota message to TTS
             res["_quota_limited"] = True
             return res
@@ -775,7 +854,7 @@ Return only JSON."""
         if "query" not in parsed or not parsed["query"]:
             parsed["query"] = query
             
-        parsed = validate_intent_sanity(parsed, query)
+        parsed = validate_intent_sanity(parsed, query, planner_hint)
         print(f"[INTENT] {parsed}")
         return parsed
 
@@ -783,11 +862,11 @@ Return only JSON."""
         print(f"[INTENT PARSER ERROR] {e}")
         res = _keyword_fallback(query, history)
         res["query"] = query
-        res = validate_intent_sanity(res, query)
+        res = validate_intent_sanity(res, query, planner_hint)
         return res
 
 
-def validate_intent_sanity(intent_data: dict, query: str) -> dict:
+def validate_intent_sanity(intent_data: dict, query: str, planner_hint: str | None = None) -> dict:
     """
     Validates the resolved intent against the raw query.
     Protects against false positives and dangerous actions (e.g. closing window on brightness query).
@@ -798,7 +877,60 @@ def validate_intent_sanity(intent_data: dict, query: str) -> dict:
     if not intent:
         return intent_data
         
+    # ── Recursive MULTI_ACTION Sanity Gate ──
+    if intent == "MULTI_ACTION":
+        sanitized_actions = []
+        for act in intent_data.get("actions", []):
+            sub_q = query
+            if act.get("intent") == "OPEN" and act.get("target"):
+                sub_q = f"open {act['target']}"
+            elif act.get("intent") == "SEARCH" and act.get("query"):
+                sub_q = f"search {act['query']} on {act.get('platform', 'google')}"
+            elif act.get("intent") == "PLAY_MEDIA" and act.get("query"):
+                sub_q = f"play {act['query']}"
+            elif act.get("query"):
+                sub_q = act["query"]
+            sanitized_actions.append(validate_intent_sanity(act, sub_q, planner_hint))
+        intent_data["actions"] = sanitized_actions
+        return intent_data
+        
     q = query.lower().strip()
+    
+    # ── Comparison Query Guard ──
+    comparison_words = {"vs", "compare", "difference between", "differences between"}
+    is_comparison = any(re.search(rf"\b{w}\b", q) for w in comparison_words)
+    has_explicit_media_verb = any(re.search(rf"\b{w}\b", q) for w in ("play", "watch", "open youtube", "search youtube"))
+    
+    if is_comparison and not has_explicit_media_verb:
+        if intent in ("PLAY_MEDIA", "SPOTIFY_CONTROL", "SEARCH", "OPEN", "WINDOW_CONTROL", "MAP_LOCATION", "MAP_ROUTE", "YOUTUBE_TOPIC_SEARCH", "VIDEO_BY_TITLE"):
+            print(f"[SANITY INTENT FILTER] Comparison query detected: '{query}' re-routed from '{intent}' to AI_QUERY.")
+            target_intent = "REALTIME_QUERY" if _is_realtime(query) else "AI_QUERY"
+            return {"intent": target_intent, "query": query}
+
+    # ── Intent Contract Enforcement: SEARCH_WEB vs OPEN_BROWSER_SEARCH vs YOUTUBE_SEARCH ──
+    if intent in ("SEARCH", "YOUTUBE_TOPIC_SEARCH"):
+        platform_keywords = {"chrome", "google", "youtube", "yt", "spotify"}
+        has_platform = any(w in q for w in platform_keywords)
+        if not has_platform:
+            print(f"[SEARCH CONTRACT] Re-routing general search query '{query}' to background Web Retrieval.")
+            target_intent = "REALTIME_QUERY" if _is_realtime(query) else "AI_QUERY"
+            return {"intent": target_intent, "query": query}
+
+    
+    # ── Planner Sovereignty Rule Enforcement ──
+    if planner_hint == "LLM":
+        non_llm_intents = {
+            "YOUTUBE_TOPIC_SEARCH", "LATEST_CREATOR_VIDEO", "LATEST_CREATOR_SHORT", 
+            "VIDEO_BY_TITLE", "CHANNEL_OPEN", "PLAY_SEARCH_RESULT", "PLAY_MEDIA", 
+            "SEARCH", "OPEN", "WINDOW_CONTROL", "SPOTIFY_CONTROL", "MAP_LOCATION", "MAP_ROUTE"
+        }
+        if intent in non_llm_intents:
+            explicit_verbs = ("play", "open", "launch", "start", "show map", "route", "directions", "navigate")
+            if not any(q.startswith(v) for v in explicit_verbs):
+                print(f"[PLANNER SOVEREIGNTY] Forcing non-LLM intent '{intent}' back to LLM domain for query: '{query}'")
+                target_intent = "REALTIME_QUERY" if _is_realtime(query) else "AI_QUERY"
+                return {"intent": target_intent, "query": query}
+
     
     # Conversational follow-up safety override
     conversational_followup_indicators = [
@@ -888,11 +1020,11 @@ def validate_intent_sanity(intent_data: dict, query: str) -> dict:
             print(f"[SANITY INTENT FILTER] Rejected SPOTIFY_CONTROL for query '{query}'")
             return {"intent": "AI_QUERY", "query": query}
 
-    # 3. YOUTUBE CAPABILITIES DETERMINISTIC ROUTING & SEPARATION
     youtube_intents = {"YOUTUBE_TOPIC_SEARCH", "LATEST_CREATOR_VIDEO", "LATEST_CREATOR_SHORT", "VIDEO_BY_TITLE", "CHANNEL_OPEN", "PLAY_SEARCH_RESULT"}
-    if intent in youtube_intents or any(w in q for w in ("youtube", "yt", "video", "short", "shorts", "reel", "channel", "play", "watch")):
+    if (intent in youtube_intents or any(re.search(rf"\b{w}\b", q) for w in ("youtube", "yt", "video", "short", "shorts", "reel", "channel", "play", "watch"))) and intent != "OPEN":
         # Let's clean the query for classification
         q_clean = q.replace("'s", "").replace("’s", "").strip()
+
         
         # A. Shorts Capability Separation
         if any(w in q_clean for w in ("short", "shorts", "reel")):
@@ -955,9 +1087,10 @@ def validate_intent_sanity(intent_data: dict, query: str) -> dict:
         # F. YouTube Topic Search Capability Separation (Open search results only)
         else:
             # Check if this is a search intent or contains youtube/yt search keywords
-            if intent == "YOUTUBE_TOPIC_SEARCH" or any(w in q_clean for w in ("youtube", "yt", "search", "find", "videos", "show")):
+            if intent == "YOUTUBE_TOPIC_SEARCH" or any(re.search(rf"\b{w}\b", q_clean) for w in ("youtube", "yt", "search", "find", "videos", "show")):
                 print(f"[SANITY INTENT FILTER] Re-routed to YOUTUBE_TOPIC_SEARCH: query='{query}'")
                 return {"intent": "YOUTUBE_TOPIC_SEARCH", "query": query}
+
 
 
     if intent == "OPEN":

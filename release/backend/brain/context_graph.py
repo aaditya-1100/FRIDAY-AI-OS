@@ -31,6 +31,7 @@ import time
 from dataclasses import dataclass, field
 from collections import deque
 from typing import Optional
+from brain.entity_tracker import _TAXONOMY
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -233,10 +234,10 @@ class TopicSession:
 
 # Maps pronoun → ordered list of entity_types to check (highest priority first)
 _PRONOUN_PRIORITY: dict[str, list[str]] = {
-    "it":     ["video", "app", "website", "file", "route", "person", "location", "media", "topic"],
-    "that":   ["video", "app", "website", "file", "route", "person", "location", "topic"],
-    "this":   ["video", "app", "website", "file", "route", "person", "location", "topic"],
-    "its":    ["app", "website", "person", "location", "topic"],
+    "it":     ["video", "app", "website", "file", "route", "person", "location", "media", "topic", "company", "brand"],
+    "that":   ["video", "app", "website", "file", "route", "person", "location", "topic", "company", "brand"],
+    "this":   ["video", "app", "website", "file", "route", "person", "location", "topic", "company", "brand"],
+    "its":    ["app", "website", "person", "location", "topic", "company", "brand"],
     "there":  ["location"],
     "here":   ["location"],
     "he":     ["person"],

@@ -198,9 +198,9 @@ class TemporalEngine:
         if not target_time:
             return "I could not resolve that time expression, sir."
         
-        item_id = str(uuid.uuid4())[:8]
+        new_id = str(uuid.uuid4())[:8]
         new_item = {
-            "id": item_id,
+            "id": new_id,
             "type": item_type,
             "text": text,
             "created_at": now.isoformat(),
@@ -213,6 +213,12 @@ class TemporalEngine:
         async with self._lock:
             self.reminders.append(new_item)
             self.save_state()
+
+        # Broadcast updated list to frontend
+        try:
+            await self._emit_reminder_list()
+        except Exception as e_emit:
+            print(f"[TEMPORAL] Failed to emit reminder_list after add: {e_emit}")
 
         time_str = target_time.strftime("%I:%M %p")
         if item_type == "timer" and duration:
@@ -242,18 +248,19 @@ class TemporalEngine:
             time_str = t.strftime("%I:%M %p")
             text = it.get("text", "").strip()
             
+            short_id = it['id'][:6]
             if it["type"] == "timer":
                 rem_seconds = int((t - datetime.now()).total_seconds())
                 if rem_seconds > 0:
-                    out.append(f"• Timer ({item_id_prefix(it['id'])}): {self._format_seconds(rem_seconds)} remaining")
+                    out.append(f"• Timer [{short_id}]: {self._format_seconds(rem_seconds)} remaining")
                 else:
-                    out.append(f"• Timer ({item_id_prefix(it['id'])}): completed")
+                    out.append(f"• Timer [{short_id}]: completed")
             elif it["type"] == "recurring":
-                out.append(f"• Daily reminder ({item_id_prefix(it['id'])}): \"{text}\" at {time_str}")
+                out.append(f"• Daily reminder [{short_id}]: \"{text}\" at {time_str}")
             elif it["type"] == "alarm":
-                out.append(f"• Alarm ({item_id_prefix(it['id'])}): set for {time_str}")
+                out.append(f"• Alarm [{short_id}]: set for {time_str}")
             else:
-                out.append(f"• Reminder ({item_id_prefix(it['id'])}): \"{text}\" at {time_str}")
+                out.append(f"• Reminder [{short_id}]: \"{text}\" at {time_str}")
                 
         return "Here is your active schedule, sir:\n" + "\n".join(out)
 
@@ -263,6 +270,7 @@ class TemporalEngine:
         if not q:
             return "Please specify which reminder to cancel, sir."
             
+        response_text = "I couldn't find a matching active reminder to cancel, sir."
         async with self._lock:
             active_items = [r for r in self.reminders if r.get("active", True)]
             match = None
@@ -280,9 +288,15 @@ class TemporalEngine:
                 match["active"] = False
                 self.save_state()
                 name = match.get("text") or match["type"]
-                return f"Stood down the {name} schedule, sir."
-                
-        return "I couldn't find a matching active reminder to cancel, sir."
+                response_text = f"Stood down the {name} schedule, sir."
+        
+        # Broadcast updated list to frontend
+        try:
+            await self._emit_reminder_list()
+        except Exception as e_emit:
+            print(f"[TEMPORAL] Failed to emit reminder_list after cancel: {e_emit}")
+        
+        return response_text
 
     # ─── STOPWATCH SYSTEM ─────────────────────────────────────────────────────
 
@@ -400,6 +414,10 @@ class TemporalEngine:
                     # Reschedule for tomorrow
                     next_target = datetime.fromisoformat(it["target_time"]) + timedelta(days=1)
                     it["target_time"] = next_target.isoformat()
+                elif it["recurrence"] == "weekly":
+                    # Reschedule for next week
+                    next_target = datetime.fromisoformat(it["target_time"]) + timedelta(weeks=1)
+                    it["target_time"] = next_target.isoformat()
                 else:
                     it["active"] = False
             
@@ -407,19 +425,44 @@ class TemporalEngine:
                 self.save_state()
 
     async def _trigger_item(self, item):
-        """Triggers direct TTS and visual sync via safe_speak."""
+        """Triggers direct TTS, visual sync, and WebSocket event on reminder fire."""
         it_type = item["type"]
         text = item.get("text", "").strip()
+        target_time = datetime.fromisoformat(item["target_time"])
+        time_str = target_time.strftime("%I:%M %p")
         
         if it_type == "timer" and item.get("duration_seconds"):
             dur_str = self._format_seconds(item["duration_seconds"])
-            speech = f"Sir, your timer for {dur_str} is up."
+            speech = f"Sir, your {dur_str} timer is up."
+            toast_title = "Timer Complete"
+            toast_body = f"{dur_str} timer finished."
         elif it_type == "alarm":
-            speech = "Sir, this is your alarm speaking. Time to wake up."
+            speech = f"Sir, your alarm is going off. The time is {time_str}."
+            toast_title = "Alarm"
+            toast_body = f"Alarm set for {time_str}."
+        elif it_type == "recurring":
+            speech = f"Sir, your daily reminder: {text}."
+            toast_title = "Daily Reminder"
+            toast_body = text
         else:
-            speech = f"Sir, this is your reminder to {text}."
+            speech = f"Sir, reminder: {text}."
+            toast_title = "Reminder"
+            toast_body = text
             
         print(f"[TEMPORAL TRIGGER] Firing schedule: {it_type} - {text!r}")
+        
+        # Emit reminder_fired event to all connected WebSocket clients
+        try:
+            from core.realtime_emit import emit_json
+            await emit_json({
+                "type": "reminder_fired",
+                "item_type": it_type,
+                "title": toast_title,
+                "body": toast_body,
+                "id": item.get("id", ""),
+            })
+        except Exception as e_ws:
+            print(f"[TEMPORAL TRIGGER] WS emit failed: {e_ws}")
         
         try:
             # Dynamically import to prevent circular import chain
@@ -427,6 +470,36 @@ class TemporalEngine:
             await safe_speak(speech)
         except Exception as e:
             print(f"[TEMPORAL TRIGGER ERROR] safe_speak call failed: {e}")
+        
+        # After firing, broadcast updated reminder list
+        try:
+            await self._emit_reminder_list()
+        except Exception as e_list:
+            print(f"[TEMPORAL TRIGGER] Failed to emit updated reminder list: {e_list}")
+
+    async def _emit_reminder_list(self):
+        """Broadcasts the current active reminder list to all WS clients."""
+        try:
+            from core.realtime_emit import emit_json
+            async with self._lock:
+                active = [r for r in self.reminders if r.get("active", True)]
+            items = []
+            now = datetime.now()
+            for it in active:
+                t = datetime.fromisoformat(it["target_time"])
+                rem_secs = max(0, int((t - now).total_seconds()))
+                items.append({
+                    "id": it["id"],
+                    "type": it["type"],
+                    "text": it.get("text", ""),
+                    "target_time": it["target_time"],
+                    "recurrence": it.get("recurrence"),
+                    "duration_seconds": it.get("duration_seconds"),
+                    "remaining_seconds": rem_secs,
+                })
+            await emit_json({"type": "reminder_list", "items": items})
+        except Exception as e:
+            print(f"[TEMPORAL] _emit_reminder_list error: {e}")
 
     # ─── UTILITIES ────────────────────────────────────────────────────────────
 

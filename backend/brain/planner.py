@@ -291,7 +291,7 @@ class PlannerBrain:
             "built by"
         )
         for kw in creator_keys:
-            if kw in q_lower:
+            if re.search(r'\b' + re.escape(kw) + r'\b', q_lower):
                 score = max(score, 10.0)
                 matched.append(kw)
 
@@ -329,7 +329,7 @@ class PlannerBrain:
             "know of me", "favorite"
         )
         for kw in memory_keys:
-            if kw in q_lower:
+            if re.search(r'\b' + re.escape(kw) + r'\b', q_lower):
                 score = max(score, 9.8)
                 matched.append(kw)
 

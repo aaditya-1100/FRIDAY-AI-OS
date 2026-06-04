@@ -144,6 +144,7 @@ _STOP_EVENT = threading.Event()
 _MIC_ENABLED = False
 _MIC_LOCK = threading.Lock()
 _listen_execution_lock = threading.Lock() # Strict concurrency guard
+_mic_open_lock = threading.Lock() # Guard against concurrent microphone stream initialization
 
 def is_mic_enabled() -> bool:
     with _MIC_LOCK:
@@ -167,7 +168,7 @@ def _get_recognizer() -> sr.Recognizer:
     global _recognizer
     if _recognizer is None:
         _recognizer = sr.Recognizer()
-        _recognizer.energy_threshold = 300
+        _recognizer.energy_threshold = 120
         # CRITICAL: Keep dynamic_energy_threshold ON only during calibration.
         # After calibration we pin it OFF to prevent session-to-session drift.
         # The adaptive pause engine handles per-utterance timing independently.
@@ -221,34 +222,65 @@ def _is_device_active(pa, idx, rate=16000) -> bool:
     """Verify if a microphone index physically records any audio signal and isn't a dead virtual/cached device or static-heavy empty jack."""
     import pyaudio
     import audioop
+    import time
     try:
+        dev_name = pa.get_device_info_by_index(idx).get("name", "unknown")
+        print(f"[E2E_TRACE] [STAGE 1: Microphone Capture] Testing device index {idx} ('{dev_name}') signal activity (non-blocking callback)...", flush=True)
+        rms_list = []
+        
+        def callback(in_data, frame_count, time_info, status):
+            if in_data:
+                try:
+                    rms = audioop.rms(in_data, 2)
+                    rms_list.append(rms)
+                except Exception:
+                    pass
+            return (None, pyaudio.paContinue)
+
         stream = pa.open(format=pyaudio.paInt16, channels=1, rate=rate,
                          input=True, input_device_index=idx,
-                         frames_per_buffer=256)
-        rms_list = []
-        # Read 80 chunks (approx 1.28s) to allow Bluetooth devices and OS routers to fully wake up and stabilize
-        for i in range(80):
-            try:
-                data = stream.read(256, exception_on_overflow=False)
-                if data:
-                    rms = audioop.rms(data, 2)
-                    rms_list.append(rms)
-            except Exception:
-                pass
-        stream.close()
+                         frames_per_buffer=256,
+                         stream_callback=callback)
         
+        stream.start_stream()
+        
+        # Wait up to 1.6 seconds for chunks (16ms * 80 = 1.28s nominal)
+        start_time = time.time()
+        while len(rms_list) < 80 and (time.time() - start_time) < 1.6:
+            time.sleep(0.02)
+            
+        try:
+            stream.stop_stream()
+        except Exception:
+            pass
+        try:
+            stream.close()
+        except Exception:
+            pass
+            
         if len(rms_list) >= 80:
             # Measure steady-state RMS of the last 30 chunks (chunks 50-79) to bypass initial warmup transients/silence
             steady_chunks = rms_list[50:80]
             steady_rms = sum(steady_chunks) / len(steady_chunks)
-            print(f"[MIC_CHECK] Device [{idx}] signal test: steady_state_rms={steady_rms:.1f}")
-            # Real physical active microphones (built-in or Bluetooth) record ambient room noise between 1.0 and 25000.0.
-            # Silent empty jacks or dead lines record <= 0.8.
-            # Empty jacks under DirectSound record continuous electromagnetic static/hum >= 25000.0.
-            return 1.0 < steady_rms < 25000.0
+            print(f"[MIC_CHECK] Device [{idx}] signal test: steady_state_rms={steady_rms:.1f} | chunks={len(rms_list)}")
+            is_active = 1.0 < steady_rms < 25000.0
+            print(f"[E2E_TRACE] [STAGE 1: Microphone Capture] Device index {idx} checked. steady_rms={steady_rms:.1f} | is_active={is_active}", flush=True)
+            return is_active
+            
+        # If we got some chunks but less than 80, still check them if we ran out of time
+        if len(rms_list) > 10:
+            steady_chunks = rms_list[min(50, len(rms_list)-1):]
+            steady_rms = sum(steady_chunks) / len(steady_chunks)
+            print(f"[MIC_CHECK] Device [{idx}] partial signal test: steady_state_rms={steady_rms:.1f} | chunks={len(rms_list)}")
+            is_active = 1.0 < steady_rms < 25000.0
+            print(f"[E2E_TRACE] [STAGE 1: Microphone Capture] Device index {idx} checked (partial). steady_rms={steady_rms:.1f} | is_active={is_active}", flush=True)
+            return is_active
+            
+        print(f"[E2E_TRACE] [STAGE 1: Microphone Capture] Device index {idx} failed (insufficient RMS chunks: {len(rms_list)}).", flush=True)
         return False
     except Exception as e:
         print(f"[MIC_CHECK] Device [{idx}] failed to open: {e}")
+        print(f"[E2E_TRACE] [STAGE 1: Microphone Capture] Device index {idx} failed to open: {e}", flush=True)
         return False
 
 
@@ -405,17 +437,25 @@ def set_mic_enabled(enabled: bool) -> None:
         _MIC_ENABLED = enabled
     if not enabled:
         _STOP_EVENT.set()
-        if _microphone is not None and _microphone.stream is not None:
-            try:
-                print("[TRACE] [MIC_CONTROL] Closing active microphone stream to release port...")
-                _microphone.__exit__(None, None, None)
-            except Exception as e_close:
-                print(f"[TRACE] [MIC_CLOSE_ERROR] Failed to close active stream: {e_close}")
-        from core.state_manager import set_state, AssistantState
-        set_state(AssistantState.IDLE, force=True)
+        # Safely acquire _listen_execution_lock to ensure listen thread stops reading before stream close
+        acquired = _listen_execution_lock.acquire(timeout=2.0)
+        try:
+            if _microphone is not None and _microphone.stream is not None:
+                try:
+                    print("[TRACE] [MIC_CONTROL] Closing active microphone stream to release port...")
+                    _microphone.__exit__(None, None, None)
+                except Exception as e_close:
+                    print(f"[TRACE] [MIC_CLOSE_ERROR] Failed to close active stream: {e_close}")
+        finally:
+            if acquired:
+                _listen_execution_lock.release()
+        from core.state_manager import set_state, AssistantState, get_state
+        if get_state() != AssistantState.SPEAKING:
+            set_state(AssistantState.IDLE, force=True)
     else:
-        from core.state_manager import set_state, AssistantState
-        set_state(AssistantState.LISTENING, force=True)
+        from core.state_manager import set_state, AssistantState, get_state
+        if get_state() != AssistantState.SPEAKING:
+            set_state(AssistantState.LISTENING, force=True)
 
 
 def request_stop() -> None:
@@ -423,12 +463,17 @@ def request_stop() -> None:
     global _microphone
     print("[TRACE] [MIC_CONTROL] request_stop() called — terminating PyAudio")
     _STOP_EVENT.set()
-    if _microphone is not None and _microphone.stream is not None:
-        try:
-            print("[TRACE] [MIC_CLOSE] Closing persistent microphone stream context...")
-            _microphone.__exit__(None, None, None)
-        except Exception as e:
-            print(f"[TRACE] [MIC_CLOSE_ERROR] Error closing stream during shutdown: {e}")
+    acquired = _listen_execution_lock.acquire(timeout=2.0)
+    try:
+        if _microphone is not None and _microphone.stream is not None:
+            try:
+                print("[TRACE] [MIC_CLOSE] Closing persistent microphone stream context...")
+                _microphone.__exit__(None, None, None)
+            except Exception as e:
+                print(f"[TRACE] [MIC_CLOSE_ERROR] Error closing stream during shutdown: {e}")
+    finally:
+        if acquired:
+            _listen_execution_lock.release()
     ResilientMicrophone.terminate_shared()
 
 
@@ -438,6 +483,73 @@ def reset_stop() -> None:
     _STOP_EVENT.clear()
     with _MIC_LOCK:
         _MIC_ENABLED = True
+
+
+def _force_calibration() -> None:
+    """Run microphone calibration eagerly during startup, before TTS plays.
+    This ensures ambient RMS is measured in true silence rather than during
+    speaker playback of the startup greeting."""
+    global _ambient_calibrated
+    import audioop
+
+    if _ambient_calibrated:
+        print("[TRACE] [MIC_CAL] Already calibrated, skipping forced calibration.")
+        return
+
+    recognizer = _get_recognizer()
+    try:
+        mic = get_open_microphone()
+        source = mic
+    except Exception as e:
+        print(f"[TRACE] [MIC_CAL] Failed to open mic for pre-calibration: {e}")
+        return
+
+    # Extended warmup: read and discard 64 chunks (~4s at 16kHz) to let the
+    # audio driver fully settle. Cirrus Logic and similar USB/BT codecs produce
+    # high transient RMS (1000-3000) during the first 2-3s after init.
+    print("[TRACE] [MIC_CAL] Warming up microphone stream for ~4s...")
+    try:
+        for _ in range(64):
+            source.stream.read(source.CHUNK, exception_on_overflow=False)
+    except Exception as e:
+        print(f"[TRACE] [MIC_CAL] Stream warmup trace: {e}")
+
+    # Measure ambient RMS over 1.5s with extended sampling.
+    # Use the 10th percentile (not median) to capture the TRUE noise floor.
+    # Transient pops, driver glitches, and settling artifacts all produce
+    # outlier-high RMS values that would inflate even the median.
+    print("[TRACE] [MIC_CAL] Measuring ambient RMS (1.5s)...")
+    rms_samples = []
+    chunks_to_read = int(1.5 * source.SAMPLE_RATE / source.CHUNK)
+    for _ in range(max(chunks_to_read, 24)):
+        try:
+            chunk = source.stream.read(source.CHUNK, exception_on_overflow=False)
+            rms_samples.append(audioop.rms(chunk, source.SAMPLE_WIDTH))
+        except Exception:
+            break
+
+    if rms_samples:
+        rms_samples.sort()
+        # 10th percentile: index at 10% of the sorted array
+        p10_idx = max(0, len(rms_samples) // 10)
+        ambient_rms = rms_samples[p10_idx]
+        print(f"[TRACE] [MIC_CAL] RMS samples (sorted): min={rms_samples[0]:.0f} p10={ambient_rms:.0f} median={rms_samples[len(rms_samples)//2]:.0f} max={rms_samples[-1]:.0f} count={len(rms_samples)}")
+    else:
+        ambient_rms = 10.0
+
+    # Threshold = 6x ambient gives strong SNR margin.
+    # Floor at 80 ensures speech detection on very quiet mics.
+    # Ceiling at 400 prevents extreme environments from locking out detection.
+    floor_threshold = max(ambient_rms * 6.0, 80.0)
+    floor_threshold = min(floor_threshold, 400.0)
+
+    recognizer.energy_threshold = floor_threshold
+    _ambient_calibrated = True
+    recognizer.dynamic_energy_threshold = False
+
+    print(f"[TRACE] [MIC_CAL] Pre-calibration COMPLETE. AmbientRMS={ambient_rms:.1f} -> Threshold={floor_threshold:.1f}")
+    print(f"MIC_SELECTED:\nIndex={_resolved_device_index}\nName={_resolved_device_name}\nRMS={ambient_rms:.1f}\n")
+    print(f"VAD_CALIBRATION:\nRawThreshold=N/A\nFinalThreshold={floor_threshold:.1f}\nAmbientRMS={ambient_rms:.1f}\n")
 
 
 # ── Async wrapper ─────────────────────────────────────────────────────────────
@@ -465,11 +577,12 @@ async def listen() -> str | None:
 def get_open_microphone() -> ResilientMicrophone:
     """Obtain the microphone, ensuring the persistent stream is entered and active."""
     global _microphone
-    mic = _get_microphone()
-    if mic.stream is None:
-        print("[TRACE] [MIC_OPEN] Opening persistent microphone stream context...")
-        mic.__enter__()
-    return mic
+    with _mic_open_lock:
+        mic = _get_microphone()
+        if mic.stream is None:
+            print("[TRACE] [MIC_OPEN] Opening persistent microphone stream context...")
+            mic.__enter__()
+        return mic
 
 
 def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout: float = None, phrase_time_limit: float = None, state: str = "CASUAL_CHAT", generation_id: int = 0) -> sr.AudioData | None:
@@ -527,6 +640,9 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
             pass  # Never let WS emission crash the audio capture loop
 
     # Phase 1: Wait for phrase to start
+    print("[E2E_TRACE] [STAGE 2: Raw Audio Received] listen() started. Awaiting voice input...", flush=True)
+    first_chunk_logged = False
+    
     while True:
         if _STOP_EVENT.is_set():
             return None
@@ -541,16 +657,22 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
 
         elapsed_time += seconds_per_buffer
         if timeout and elapsed_time > timeout:
+            print("[E2E_TRACE] [STAGE 3: VAD Triggered] FAIL. WaitTimeoutError - no speech detected above threshold.", flush=True)
             raise sr.WaitTimeoutError("listening timed out while waiting for phrase to start")
 
         buffer = source.stream.read(source.CHUNK)
         if len(buffer) == 0:
             break
+        
+        energy = audioop.rms(buffer, source.SAMPLE_WIDTH)
+        
+        if not first_chunk_logged:
+            first_chunk_logged = True
+            print(f"[E2E_TRACE] [STAGE 2: Raw Audio Received] PASS. Read first audio chunk: {len(buffer)} bytes | initial RMS={energy:.1f}", flush=True)
+            
         frames.append(buffer)
         if len(frames) > non_speaking_buffer_count:
             frames.popleft()
-
-        energy = audioop.rms(buffer, source.SAMPLE_WIDTH)
 
         # ── Emit mic level to frontend every N chunks ─────────────────────
         _mic_level_chunk_count += 1
@@ -558,13 +680,19 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
             _mic_level_chunk_count = 0
             _emit_mic_level(energy)
 
+        # Log ambient energy periodically to trace active levels
+        if elapsed_time % 1.5 < seconds_per_buffer:
+            print(f"[E2E_TRACE] [VAD_AWAITING] Ambient RMS={energy:.1f} | Threshold={recognizer.energy_threshold:.1f}", flush=True)
+
         # Adjust speaking threshold dynamically while silent
         if energy > recognizer.energy_threshold:
+            print(f"[TRACE] [MIC_VAD] Speech detected! energy={energy:.1f} vs threshold={recognizer.energy_threshold:.1f} (accepted)")
+            print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] PASS. Speech detected! energy={energy:.1f} > threshold={recognizer.energy_threshold:.1f}", flush=True)
             break
 
         # NOTE: dynamic_energy_threshold is now FROZEN after calibration.
         # No threshold adjustment here — it would undo the calibration lock.
-        # Log only significant deviations (>20% from threshold) for debugging.
+        # Log only significant deviations (>50% from threshold) for debugging.
         if abs(energy - recognizer.energy_threshold) / max(recognizer.energy_threshold, 1) > 0.5:
             if elapsed_time % 2.0 < seconds_per_buffer:
                 print(f"[TRACE] [MIC_VAD] Ambient energy={energy:.1f} vs threshold={recognizer.energy_threshold:.1f}")
@@ -685,6 +813,8 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
     phrase_count -= pause_count
     if phrase_count < phrase_buffer_count and len(buffer) > 0:
         # Phrase was too short to be speech, return None
+        print(f"[TRACE] [MIC_VAD] Phrase duration too short ({phrase_count * seconds_per_buffer:.2f}s < {phrase_threshold}s), rejected as noise pulse.")
+        print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] FAIL. Rejected as noise pulse. Duration={phrase_count * seconds_per_buffer:.2f}s < threshold={phrase_threshold}s", flush=True)
         return None
 
     # Remove extra non-speaking frames at the end
@@ -693,6 +823,8 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
             frames.pop()
 
     frame_data = b"".join(frames)
+    audio_duration_s = len(frame_data) / (source.SAMPLE_RATE * source.SAMPLE_WIDTH)
+    print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] PASS. Audio phrase captured! duration={audio_duration_s:.2f}s", flush=True)
     return sr.AudioData(frame_data, source.SAMPLE_RATE, source.SAMPLE_WIDTH)
 
 
@@ -720,56 +852,75 @@ def sync_listen() -> str | None:
         print(f"[TRACE] [MIC_SYNC] Recognizer energy_threshold={recognizer.energy_threshold:.1f}")
 
         print("[TRACE] [MIC_SYNC] Resolving microphone...")
+        print("[E2E_TRACE] [STAGE 1: Microphone Capture] Resolving active microphone...", flush=True)
         try:
             mic = get_open_microphone()
             source = mic
             print(f"[TRACE] [MIC_SYNC] Persistent microphone resolved: index={_resolved_device_index} name='{_resolved_device_name}'")
+            print(f"[E2E_TRACE] [STAGE 1: Microphone Capture] PASS. Active mic resolved: index={_resolved_device_index} name='{_resolved_device_name}'", flush=True)
         except Exception as e_open:
             print(f"[TRACE] [MIC_SYNC_ERROR] Failed to obtain open microphone: {e_open}. Invalidating and retrying.")
+            print(f"[E2E_TRACE] [STAGE 1: Microphone Capture] FAIL. Failed to resolve mic: {e_open}", flush=True)
             _invalidate_microphone()
             return None
 
         # Calibrate ambient noise exactly ONCE per device to establish baseline.
         # Because recognizer is now persistent, the calibrated threshold is retained.
         if not _ambient_calibrated:
-            print("[TRACE] [MIC_SYNC] Warming up microphone stream for 1.8s to bypass driver startup delay...")
+            print("[TRACE] [MIC_SYNC] Warming up microphone stream for ~4s to bypass driver startup delay...")
             try:
-                # Read and discard 30 chunks of 1024 frames (~1.8s at 16kHz) to let the audio driver spin up and settle
-                for _ in range(30):
+                # Read and discard 64 chunks (~4s at 16kHz) to let the audio driver fully settle
+                for _ in range(64):
                     if _STOP_EVENT.is_set():
                         break
                     _ = source.stream.read(source.CHUNK, exception_on_overflow=False)
             except Exception as e_warm:
                 print(f"[TRACE] [MIC_SYNC_WARNING] Stream warmup trace: {e_warm}")
 
-            print("[TRACE] [MIC_SYNC] Running one-time ambient noise calibration (1.2s)...")
+            print("[TRACE] [MIC_SYNC] Running one-time ambient noise calibration (1.5s)...")
+            print("[E2E_TRACE] [STAGE 1: Microphone Capture] Running ambient noise calibration...", flush=True)
             try:
-                recognizer.adjust_for_ambient_noise(source, duration=1.2)
+                import audioop
+
+                # Measure ambient RMS over 1.5s. Use 10th percentile to ignore
+                # driver transients that inflate readings during early init.
+                rms_samples = []
+                chunks_to_read = int(1.5 * source.SAMPLE_RATE / source.CHUNK)
+                for _ in range(max(chunks_to_read, 24)):
+                    try:
+                        chunk = source.stream.read(source.CHUNK, exception_on_overflow=False)
+                        rms_samples.append(audioop.rms(chunk, source.SAMPLE_WIDTH))
+                    except Exception:
+                        break
+
+                if rms_samples:
+                    rms_samples.sort()
+                    p10_idx = max(0, len(rms_samples) // 10)
+                    ambient_rms = rms_samples[p10_idx]
+                    print(f"[TRACE] [MIC_SYNC] RMS samples: min={rms_samples[0]:.0f} p10={ambient_rms:.0f} median={rms_samples[len(rms_samples)//2]:.0f} max={rms_samples[-1]:.0f} count={len(rms_samples)}")
+                else:
+                    ambient_rms = 10.0
+
+                selected_rms = ambient_rms
+
+                floor_threshold = max(ambient_rms * 6.0, 80.0)
+                floor_threshold = min(floor_threshold, 400.0)
+
                 raw_threshold = recognizer.energy_threshold
-                floor_threshold = max(raw_threshold * 1.3, 300)
                 recognizer.energy_threshold = floor_threshold
                 _ambient_calibrated = True
-                # CRITICAL: Freeze the threshold now. Pin dynamic_energy_threshold=False
-                # so the calibrated value cannot drift across turns or sessions.
-                # The adaptive pause engine handles per-utterance timing independently.
                 recognizer.dynamic_energy_threshold = False
-                
-                # Measure a quick 1-chunk RMS from the selected mic for live telemetry
-                try:
-                    import audioop
-                    tmp_chunk = source.stream.read(source.CHUNK, exception_on_overflow=False)
-                    selected_rms = audioop.rms(tmp_chunk, source.SAMPLE_WIDTH)
-                except Exception:
-                    selected_rms = 0.0
 
                 print(f"MIC_SELECTED:\nIndex={_resolved_device_index}\nName={_resolved_device_name}\nRMS={selected_rms:.1f}\n")
-                print(f"VAD_CALIBRATION:\nRawThreshold={raw_threshold:.1f}\nFinalThreshold={floor_threshold:.1f}\n")
-                
+                print(f"VAD_CALIBRATION:\nRawThreshold={raw_threshold:.1f}\nFinalThreshold={floor_threshold:.1f}\nAmbientRMS={ambient_rms:.1f}\n")
+                print(f"[E2E_TRACE] [STAGE 1: Microphone Capture] Calibration completed. AmbientRMS={ambient_rms:.1f} -> EnforcedThreshold={floor_threshold:.1f} | dynamic_energy_threshold=False (frozen)", flush=True)
+
                 print(f"[TRACE] [MIC_SYNC] Calibration done + threshold FROZEN. "
-                      f"raw_threshold={raw_threshold:.1f} -> enforced_threshold={recognizer.energy_threshold:.1f} "
+                      f"ambient_rms={ambient_rms:.1f} -> enforced_threshold={recognizer.energy_threshold:.1f} "
                       f"| dynamic_energy_threshold=False (locked)")
             except Exception as e_cal:
                 print(f"[TRACE] [MIC_SYNC_ERROR] Ambient noise calibration failed: {e_cal}. Re-calibrating next turn.")
+                print(f"[E2E_TRACE] [STAGE 1: Microphone Capture] FAIL. Ambient noise calibration failed: {e_cal}", flush=True)
                 return None
 
         # Get active conversational state
@@ -808,7 +959,7 @@ def sync_listen() -> str | None:
             t_captured = time.monotonic() - t_start
             print(f"[TRACE] [MIC_SYNC] Audio phrase captured! duration={t_captured:.2f}s")
         except sr.WaitTimeoutError:
-            print(f"[TRACE] [MIC_SYNC] recognizer.listen timeout ({LISTEN_TIMEOUT}s) — no speech detected above threshold={recognizer.energy_threshold:.1f}")
+            print(f"[TRACE] [MIC_SYNC] recognizer.listen timeout ({LISTEN_TIMEOUT}s) — no speech detected above threshold={recognizer.energy_threshold:.1f} (rejected)")
             return None
 
         # ── Audio quality diagnostics ──────────────────────────────────────────
@@ -847,20 +998,23 @@ def sync_listen() -> str | None:
                 return None
 
         print("[TRACE] [MIC_SYNC] Sending audio to Google Speech Recognition...")
+        print(f"[E2E_TRACE] [STAGE 4: Speech Recognition Executed] Sending {audio_duration_s:.2f}s of captured audio (RMS={rms:.1f}) to Google Speech Recognition...", flush=True)
         try:
             query = recognizer.recognize_google(audio, language="en-IN").lower().strip()
-            print(f"[TRACE] [MIC_SYNC] ✓ TRANSCRIPT: '{query}'")
+            print(f"[TRACE] [MIC_SYNC] ✓ TRANSCRIPT: '{query}' (speech accepted)")
+            print(f"[E2E_TRACE] [STAGE 5: Transcript Generated] PASS. Transcript: '{query}'", flush=True)
             if query:
                 print(f"Sir: {query}")
             return query or None
         except sr.UnknownValueError:
             print(f"[TRACE] [MIC_SYNC] Google could not understand audio "
                   f"(RMS={rms:.1f}, duration={audio_duration_s:.2f}s, "
-                  f"threshold={recognizer.energy_threshold:.1f}). "
-                  f"[Likely silence or below-threshold audio passed through]")
+                  f"threshold={recognizer.energy_threshold:.1f}, speech rejected)")
+            print(f"[E2E_TRACE] [STAGE 5: Transcript Generated] FAIL (UnknownValueError). Google SR did not understand the audio (likely empty or background noise).", flush=True)
             return None
         except sr.RequestError as e:
-            print(f"[TRACE] [MIC_SYNC] [SR API ERROR] Google SR request failed: {e}")
+            print(f"[TRACE] [MIC_SYNC] [SR API ERROR] Google SR request failed: {e} (rejected)")
+            print(f"[E2E_TRACE] [STAGE 5: Transcript Generated] FAIL (RequestError). Google SR request failed: {e}", flush=True)
             return None
 
     except sr.WaitTimeoutError:

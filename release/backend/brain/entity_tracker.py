@@ -5,6 +5,10 @@ Tracks: locations, people, apps, videos, websites, files, media, topics.
 from __future__ import annotations
 
 import re
+from brain.semantic_taxonomy import SemanticTaxonomy
+
+_TAXONOMY = SemanticTaxonomy()
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -304,7 +308,28 @@ def extract_all_entities(query: str) -> list[tuple[str, str]]:
                 if any(w not in _STOPWORDS for w in words):
                     _add(vname, "video")
 
+    # 8.5 Dynamic Taxonomy Lookup (First-class developer & brand entities)
+    for word in q_lower.split():
+        clean_w = "".join(c for c in word if c.isalnum() or c in ("-", "_", "."))
+        if clean_w:
+            canonical_lower = _TAXONOMY.translate_synonym(clean_w)
+            matched_node = None
+            for node_key in _TAXONOMY.nodes.keys():
+                if node_key.lower() == canonical_lower:
+                    matched_node = node_key
+                    break
+            if matched_node:
+                # Find parent category of this node in the taxonomy DAG to resolve the entity type
+                entity_type = matched_node
+                for parent_key, parent_meta in _TAXONOMY.nodes.items():
+                    if matched_node in parent_meta.get("children", []) or any(matched_node.lower() == child.lower() for child in parent_meta.get("children", [])):
+                        entity_type = parent_key
+                        break
+                _add(word.title(), entity_type)
+
+
     # 9. Proper noun fallback for topic (only if nothing else extracted)
+
     if len([r for r in results if r[1] not in ("assistant",)]) == 0:
         matches = _PROPER_NOUN.findall(q)
         for m_text in matches:

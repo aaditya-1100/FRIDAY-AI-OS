@@ -237,15 +237,8 @@ def cancel_speak() -> None:
     from voice.listen import is_mic_enabled
     target_state = AssistantState.LISTENING if is_mic_enabled() else AssistantState.IDLE
     set_state(target_state)
-    
-    # Pre-warm the persistent microphone stream context in a background thread ONLY if mic is active
-    if is_mic_enabled():
-        try:
-            from voice.listen import get_open_microphone
-            import threading
-            threading.Thread(target=get_open_microphone, daemon=True).start()
-        except Exception as e_warm:
-            print(f"[TRACE] [MIC_WARM] Failed to pre-warm microphone: {e_warm}")
+    # Microphone activation must happen only through the main listening lifecycle.
+    pass
 
 
 _original_spotify_volume = None
@@ -284,6 +277,7 @@ async def safe_speak(text: str, web_mode: bool | None = None) -> None:
     global is_speaking, _speak_cancelled
     import uuid
     response_id = str(uuid.uuid4())[:8]
+    mic_was_enabled = False  # Initialize early so finally block never hits UnboundLocalError
     
     try:
         if not text:
@@ -302,6 +296,7 @@ async def safe_speak(text: str, web_mode: bool | None = None) -> None:
             web_mode = has_emitters()
 
         print(f"[TRACE] [SPEAK] [{response_id}] ENTERED SAFE_SPEAK | text='{text[:80]}...' | web_mode={web_mode} | text_len={len(text)}")
+        print(f"[E2E_TRACE] [STAGE 9: Response Generated] PASS. Text response formulated: '{text[:80]}...' | web_mode={web_mode} | response_id={response_id}", flush=True)
 
         if _speak_cancelled:
             print(f"[TRACE] [SPEAK] [{response_id}] Clearing stale _speak_cancelled flag — was set by previous cancel")
@@ -322,9 +317,25 @@ async def safe_speak(text: str, web_mode: bool | None = None) -> None:
         duck_spotify()
         print(f"[TRACE] [SPEAK] [{response_id}] Spotify ducking complete")
         
-        print(f"[TRACE] [SPEAK] [{response_id}] CALLING voice.speak.speak(...) with response_id")
-        await speak(text, web_mode=web_mode, response_id=response_id)
-        print(f"[TRACE] [SPEAK] [{response_id}] voice.speak.speak(...) returned successfully")
+        # Release microphone to allow Bluetooth device to switch to high-fidelity A2DP Stereo mode
+        from voice.listen import is_mic_enabled, set_mic_enabled, request_stop
+        mic_was_enabled = is_mic_enabled()
+        if mic_was_enabled:
+            print(f"[BLUETOOTH HFP FIX] [{response_id}] Disabling mic stream to unlock A2DP Stereo mode")
+            set_mic_enabled(False)
+            # Re-enforce SPEAKING state because set_mic_enabled(False) overrides it to IDLE
+            set_state(AssistantState.SPEAKING, force=True)
+            # NOTE: Removed 1.5s asyncio.sleep here. The delay caused state drift from SPEAKING
+            # to LISTENING (listen loop timeout fires) during the wait window, causing the
+            # subsequent TTS synthesis result to be discarded by the old state check.
+        
+        try:
+            print(f"[TRACE] [SPEAK] [{response_id}] CALLING voice.speak.speak(...) with response_id")
+            await speak(text, web_mode=web_mode, response_id=response_id)
+            print(f"[TRACE] [SPEAK] [{response_id}] voice.speak.speak(...) returned successfully")
+        except Exception as e_speak:
+            print(f"[TRACE] [SPEAK] [{response_id}] speak call failed: {e_speak}")
+            raise e_speak
 
     except asyncio.CancelledError:
         print(f"[TRACE] [SPEAK] [{response_id}] safe_speak task cancelled")
@@ -339,6 +350,14 @@ async def safe_speak(text: str, web_mode: bool | None = None) -> None:
         # unduck held the lock for 500ms-2s, causing first-attempt command failures.
         _speak_cancelled = False
         is_speaking = False
+        
+        # Restore microphone stream if it was active before voice playback
+        if mic_was_enabled:
+            print(f"[BLUETOOTH HFP FIX] [{response_id}] Restoring mic stream context")
+            from voice.listen import reset_stop, set_mic_enabled
+            reset_stop()
+            set_mic_enabled(True)
+            
         from voice.listen import is_mic_enabled
         target_idle_state = AssistantState.LISTENING if is_mic_enabled() else AssistantState.IDLE
         set_state(target_idle_state)
@@ -362,6 +381,7 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None) ->
     global active, last_query, _last_interaction_time
     import time
     _last_interaction_time = time.time()
+    print(f"[E2E_TRACE] [STAGE 6: process_transcript Called] raw_query='{raw_query}' | web_mode={web_mode}", flush=True)
 
     # Auto-detect web_mode: if any WS client is connected, treat as web session
     # so the active-gate bypass works correctly for the packaged app.
@@ -442,15 +462,18 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None) ->
             print("[TRACE] [PIPELINE] Stage: detect_wake_word checking...")
             if detect_wake_word(raw_query):
                 print("[TRACE] [PIPELINE] Wake word 'Friday' detected!")
+                print(f"[E2E_TRACE] [WAKE_WORD_CHECK] PASS. Wake word 'Friday' detected.", flush=True)
                 cleaned_without_wake = remove_wake_word(raw_query).strip()
                 _last_interaction_time = time.time()
                 
                 if not active:
                     active = True
                     print("[TRACE] [PIPELINE] Activation complete.")
+                    print("[E2E_TRACE] [WAKE_WORD_CHECK] PASS. Activation complete (active=True).", flush=True)
                 
                 # If standalone wake word, always respond
                 if not cleaned_without_wake:
+                    print("[E2E_TRACE] [STAGE 9: Response Generated] Standalone wake word response triggered.", flush=True)
                     await safe_speak(random.choice(WAKE_RESPONSES))
                     print("[TRACE] [PIPELINE] Standalone wake word processed. Exiting process_transcript.")
                     return
@@ -460,6 +483,7 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None) ->
 
             if not active and not web_mode:
                 print("[TRACE] [PIPELINE] Assistant inactive and web_mode=False. Emitting UI wake hint.")
+                print("[E2E_TRACE] [WAKE_WORD_CHECK] FAIL. Assistant inactive and web_mode=False. Wake word required.", flush=True)
                 # Emit a UI hint so the user knows FRIDAY is waiting for wake word.
                 await emit_json({"type": "hint", "text": "Say 'Friday' to wake me up"})
                 return
@@ -477,6 +501,7 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None) ->
             if cleaned_query in _PRESENCE_GREETINGS:
                 reply = random.choice(_PRESENCE_GREETING_REPLIES)
                 print(f"[TRACE] [PIPELINE] Presence greeting fast-path: '{query}' → '{reply}'")
+                print(f"[E2E_TRACE] [STAGE 9: Response Generated] PASS. Fast-path greeting reply triggered: '{reply}'", flush=True)
                 await safe_speak(reply)
                 short_term_memory.add("user", query)
                 short_term_memory.add("assistant", reply)
@@ -485,16 +510,19 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None) ->
             if cleaned_query in _PRESENCE_ACKS:
                 reply = random.choice(_PRESENCE_ACK_REPLIES)
                 print(f"[TRACE] [PIPELINE] Presence ack fast-path: '{query}' → '{reply}'")
+                print(f"[E2E_TRACE] [STAGE 9: Response Generated] PASS. Fast-path ack reply triggered: '{reply}'", flush=True)
                 await safe_speak(reply)
                 short_term_memory.add("user", query)
                 short_term_memory.add("assistant", reply)
                 return
 
             print(f"[TRACE] [PIPELINE] Stage: PlannerBrain analyzing query='{query}'...")
+            print(f"[E2E_TRACE] [STAGE 7: Planner Invoked] routing/planning started for: '{query}'", flush=True)
             # Let the PlannerBrain analyze the query, resolve references, and suggest the target brain
             plan = planner.plan(query, context_manager, preference_memory, episodic_memory)
             query = plan.enriched_query
             print(f"[TRACE] [PIPELINE] PlannerBrain output: target_brain={plan.target_brain} | enriched_query='{query}'")
+            print(f"[E2E_TRACE] [STAGE 7: Planner Invoked] PASS. target_brain='{plan.target_brain}' | enriched_query='{query}'", flush=True)
 
             # Determine and set initial conversational state
             if _is_emotional(query):
@@ -555,11 +583,14 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None) ->
                     )
                 except asyncio.TimeoutError:
                     print("[TRACE] [PIPELINE] IntentParser timed out after 10.0s! Applying resilient keyword fallback.")
-                    from brain.intent_parser import _keyword_fallback
+                    print("[E2E_TRACE] [STAGE 8: Intent Generated] WARNING. IntentParser timed out. Applying fallback.", flush=True)
+                    from brain.intent_parser import _keyword_fallback, validate_intent_sanity
                     intent_data = _keyword_fallback(query, short_term_memory.get())
                     intent_data["query"] = query
+                    intent_data = validate_intent_sanity(intent_data, query, plan.target_brain)
             intent = intent_data.get("intent")
             print(f"[TRACE] [PIPELINE] IntentParser resolved intent: {intent} | intent_data={intent_data}")
+            print(f"[E2E_TRACE] [STAGE 8: Intent Generated] PASS. Resolved intent: '{intent}' | intent_data={intent_data}", flush=True)
 
             # ── Post-LLM safety net: LLM sometimes misclassifies "open X" ────
             # as WINDOW_CONTROL with command="open" instead of OPEN intent.

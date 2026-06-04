@@ -98,6 +98,21 @@ class TelemetryEngine:
             )
             """)
             
+            # 4. Voice / TTS Telemetry table
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS voice_telemetry (
+                id TEXT PRIMARY KEY,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                response_id TEXT NOT NULL,
+                text TEXT NOT NULL,
+                requested_voice TEXT NOT NULL,
+                provider_switched_from TEXT,
+                provider_switched_to TEXT NOT NULL,
+                reason TEXT NOT NULL,
+                latency_ms INTEGER
+            )
+            """)
+            
             conn.commit()
             conn.close()
 
@@ -254,6 +269,38 @@ class TelemetryEngine:
             except Exception as e:
                 print(f"[TELEMETRY ERROR] Failed to fetch KPIs: {e}")
                 return {}
+            finally:
+                conn.close()
+
+    def log_voice_switch(
+        self,
+        response_id: str,
+        text: str,
+        requested_voice: str,
+        switched_from: Optional[str],
+        switched_to: str,
+        reason: str,
+        latency_ms: Optional[int] = None
+    ) -> None:
+        """Commits a voice provider switch event to the telemetry database."""
+        voice_id = str(uuid.uuid4())
+        with self._lock:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                INSERT INTO voice_telemetry (
+                    id, response_id, text, requested_voice,
+                    provider_switched_from, provider_switched_to, reason, latency_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    voice_id, response_id, text, requested_voice,
+                    switched_from, switched_to, reason, latency_ms
+                ))
+                conn.commit()
+                print(f"[TELEMETRY] Voice switch successfully logged: {switched_from} -> {switched_to} for {response_id}")
+            except Exception as e:
+                print(f"[TELEMETRY ERROR] Voice switch log failed: {e}")
             finally:
                 conn.close()
 

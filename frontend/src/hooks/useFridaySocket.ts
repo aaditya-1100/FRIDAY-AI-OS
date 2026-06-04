@@ -14,7 +14,11 @@ import {
   mapLatAtom,
   mapLonAtom,
   transcriptAtom,
-  speakTextAtom
+  speakTextAtom,
+  remindersAtom,
+  reminderToastAtom,
+  type ReminderItem,
+  type ReminderToast,
 } from "../atoms";
 
 // ─── Shared AudioContext ──────────────────────────────────────────────────────
@@ -117,6 +121,7 @@ async function _playNext() {
   let playTimeout: ReturnType<typeof setTimeout> | null = null;
   
   console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] STARTING PLAYBACK | queue_remaining=${_audioQueue.length} | b64_length=${b64.length}`);
+  console.log(`[E2E_TRACE] [STAGE 12: Frontend Playback Started] Decoding base64 audio payload for response ID: ${rid}`);
   
   try {
     const ctx = getAudioContext();
@@ -144,8 +149,24 @@ async function _playNext() {
       
       src.buffer = audioBuf;
       src.connect(analyser);
-      analyser.connect(ctx.destination);
-      console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] Audio graph connected: source -> analyser -> destination`);
+      
+      // ── Anti-crackling audio graph ───────────────────────────────────────
+      // DynamicsCompressorNode prevents inter-app audio clipping when Chrome
+      // (YouTube) and FRIDAY's TTS both route through the same audio device.
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.setValueAtTime(-18, ctx.currentTime);
+      compressor.knee.setValueAtTime(8, ctx.currentTime);
+      compressor.ratio.setValueAtTime(4, ctx.currentTime);
+      compressor.attack.setValueAtTime(0.003, ctx.currentTime);
+      compressor.release.setValueAtTime(0.18, ctx.currentTime);
+      
+      const gainNode = ctx.createGain();
+      gainNode.gain.setValueAtTime(0.92, ctx.currentTime); // Slightly under unity to prevent clipping
+      
+      analyser.connect(compressor);
+      compressor.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] Audio graph: source -> analyser -> compressor -> gain -> destination`);
       
       _currentSource = src;
       _startLevelRaf(analyser);
@@ -177,9 +198,11 @@ async function _playNext() {
         const ws = getWsSocket();
         if (ws && ws.readyState === WebSocket.OPEN) {
           console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] Sending playback_completed to backend`);
+          console.log(`[E2E_TRACE] [STAGE 12: Frontend Playback Started] PASS. Playback finished. Sending playback_completed back to backend. Response ID: ${rid}`);
           ws.send(JSON.stringify({ type: "playback_completed", responseId: rid }));
         } else {
           console.warn(`[TRACE] [AUDIO_PLAYBACK] [${rid}] WebSocket not open, cannot send playback_completed | ws_state=${ws?.readyState}`);
+          console.log(`[E2E_TRACE] [STAGE 12: Frontend Playback Started] WARNING. Playback finished but WebSocket is closed. Response ID: ${rid}`);
         }
         
         console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] CLEANUP COMPLETE | queue_remaining=${_audioQueue.length}`);
@@ -191,24 +214,31 @@ async function _playNext() {
         cleanUpPlayback();
       };
       
-      console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] Starting source node playback`);
-      src.start(0);
+      // Schedule playback 40ms in the future to give the audio graph time to
+      // pre-buffer, preventing the initial crackle/pop artifact on start.
+      const startOffset = 0.04;
+      console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] Starting source node playback (scheduled +${startOffset}s)`);
+      src.start(ctx.currentTime + startOffset);
       console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] Source node start() called successfully`);
+      console.log(`[E2E_TRACE] [STAGE 12: Frontend Playback Started] PASS. Web Audio API source node started playing response ID: ${rid}`);
       
       // Safety Timeout: if it doesn't end in duration + 5 seconds, force recovery
       const safetyMs = (audioBuf.duration * 1000) + 5000;
       console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] Safety timeout set | duration=${audioBuf.duration}s | timeout=${safetyMs}ms`);
       playTimeout = setTimeout(() => {
         console.warn(`[TRACE] [AUDIO_PLAYBACK] [${rid}] SAFETY TIMEOUT TRIGGERED | forcing cleanup`);
+        console.log(`[E2E_TRACE] [STAGE 12: Frontend Playback Started] WARNING. Safety timeout triggered (playback hung/delayed). Response ID: ${rid}`);
         cleanUpPlayback();
       }, safetyMs);
       
     } catch (decodeError) {
       console.error(`[TRACE] [AUDIO_PLAYBACK] [${rid}] DECODE ERROR:`, decodeError);
+      console.log(`[E2E_TRACE] [STAGE 12: Frontend Playback Started] FAIL. Web Audio API decodeAudioData failed for response ID: ${rid}`);
       throw decodeError;
     }
   } catch (e) {
     console.error(`[TRACE] [AUDIO_PLAYBACK] [${rid}] PLAYBACK ERROR:`, e);
+    console.log(`[E2E_TRACE] [STAGE 12: Frontend Playback Started] FAIL. Playback error: ${e} for response ID: ${rid}`);
     if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
     _audioPlaying  = false;
     _currentSource = null;
@@ -227,6 +257,7 @@ async function _playNext() {
 export function enqueueAudio(base64: string, responseId?: string) {
   const rid = responseId || "unknown";
   console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] ENQUEUE AUDIO | queue_size_before=${_audioQueue.length} | b64_length=${base64.length}`);
+  console.log(`[E2E_TRACE] [STAGE 12: Frontend Playback Started] Audio base64 received from WebSocket. Enqueueing response ID: ${rid}`);
   _audioQueue.push({ b64: base64, responseId: rid });
   _playNext();
 }
@@ -298,10 +329,13 @@ export function useFridaySocket() {
   const setMapLocation  = useSetAtom(mapLocationAtom);
   const setMapLat       = useSetAtom(mapLatAtom);
   const setMapLon       = useSetAtom(mapLonAtom);
+  const setReminders    = useSetAtom(remindersAtom);
+  const setReminderToast = useSetAtom(reminderToastAtom);
   const micMuted        = useAtomValue(micMutedAtom);
   const micMutedRef     = useRef(micMuted);
   const wsRef           = useRef<WebSocket | null>(null);
   const reconnectAttempt = useRef(0);
+  const toastTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep a ref so onopen closure always reads the latest mute state
   micMutedRef.current = micMuted;
@@ -441,6 +475,25 @@ export function useFridaySocket() {
           // getUserMedia; instead the backend streams amplitude via WebSocket.
           if (data.type === "mic_level" && typeof data.level === "number") {
             setMicLevel(Math.min(1, Math.max(0, data.level)));
+          }
+          // ── Temporal: reminder list update ──────────────────────────────
+          if (data.type === "reminder_list" && Array.isArray(data.items)) {
+            console.log(`[TRACE] [WS_MSG] reminder_list received: ${data.items.length} items`);
+            setReminders(data.items as ReminderItem[]);
+          }
+          // ── Temporal: reminder/timer/alarm fired toast ───────────────────
+          if (data.type === "reminder_fired") {
+            console.log(`[TRACE] [WS_MSG] reminder_fired: ${data.title} — ${data.body}`);
+            const toast: ReminderToast = {
+              id: data.id || "",
+              item_type: data.item_type || "reminder",
+              title: data.title || "Reminder",
+              body: data.body || "",
+            };
+            setReminderToast(toast);
+            // Auto-dismiss toast after 6 seconds
+            if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+            toastTimerRef.current = setTimeout(() => setReminderToast(null), 6000);
           }
         } catch (err) {
           console.error("[TRACE] [WS_MSG_PARSE_ERROR] Failed to parse raw event data:", err);

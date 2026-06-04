@@ -37,7 +37,7 @@ def _platform_search(platform: str, query: str) -> bool:
                 print(f"[YOUTUBE INTEL] Resolved direct video! Opening: '{autoplay_url}'")
                 return open_url_in_chrome(autoplay_url)
         return youtube_search(query)
-    if p in ("google",):
+    if p in ("google", "chrome"):
         return search_google(query)
     if p in ("spotify",):
         url = f"https://open.spotify.com/search/{query.replace(' ', '%20')}"
@@ -280,25 +280,31 @@ async def execute_youtube_capability(intent: str, intent_data: dict, loop) -> di
     
     # Overwrite/back-fill entities from query if they aren't parsed
     if intent in ("PLAY_MEDIA", "SEARCH"):
-        entities = extract_media_entities(query)
-        creator = creator or entities.get("creator")
-        title = title or entities.get("title")
-        modifier = modifier or entities.get("modifier")
-        topic = topic or entities.get("topic")
+        has_search_verb = any(re.search(rf"\b{w}\b", query.lower()) for w in ("search", "find", "look up", "results", "videos about", "videos covering"))
+        has_play_verb = any(re.search(rf"\b{w}\b", query.lower()) for w in ("play", "watch", "listen to", "put on", "latest video", "newest video"))
         
-        # Classify legacy intents to strict capabilities
-        if modifier == "latest" and any(w in query.lower() for w in ("short", "shorts", "reel")):
-            intent = "LATEST_CREATOR_SHORT"
-        elif modifier == "latest" or any(w in query.lower() for w in ("newest", "recent")):
-            intent = "LATEST_CREATOR_VIDEO"
-        elif title:
-            intent = "VIDEO_BY_TITLE"
-        elif "channel" in query.lower() or "page" in query.lower():
-            intent = "CHANNEL_OPEN"
-        elif any(w in query.lower() for w in ("first", "second", "third", "result")):
-            intent = "PLAY_SEARCH_RESULT"
-        else:
+        if has_search_verb and not has_play_verb:
             intent = "YOUTUBE_TOPIC_SEARCH"
+        else:
+            entities = extract_media_entities(query)
+            creator = creator or entities.get("creator")
+            title = title or entities.get("title")
+            modifier = modifier or entities.get("modifier")
+            topic = topic or entities.get("topic")
+            
+            # Classify legacy intents to strict capabilities
+            if modifier == "latest" and any(w in query.lower() for w in ("short", "shorts", "reel")):
+                intent = "LATEST_CREATOR_SHORT"
+            elif modifier == "latest" or any(w in query.lower() for w in ("newest", "recent")):
+                intent = "LATEST_CREATOR_VIDEO"
+            elif title:
+                intent = "VIDEO_BY_TITLE"
+            elif "channel" in query.lower() or "page" in query.lower():
+                intent = "CHANNEL_OPEN"
+            elif any(w in query.lower() for w in ("first", "second", "third", "result")):
+                intent = "PLAY_SEARCH_RESULT"
+            else:
+                intent = "YOUTUBE_TOPIC_SEARCH"
 
     print(f"[YOUTUBE EXECUTOR] Executing capability: {intent} (creator='{creator}', title='{title}', modifier='{modifier}')")
 
@@ -308,7 +314,9 @@ async def execute_youtube_capability(intent: str, intent_data: dict, loop) -> di
             "open youtube results for", "search youtube for", "videos covering",
             "search youtube", "videos about", "youtube for", "on youtube",
             "videos of", "videos on", "video about", "video of", "video on",
-            "show me", "look up", "videos", "search", "video", "find", "show"
+            "open youtube and", "open youtube", "open yt and", "open yt",
+            "show me", "look up", "videos", "search", "video", "find", "show",
+            "youtube", "yt"
         ]
         for verb in sorted(verbs, key=len, reverse=True):
             clean_search = re.sub(rf"\b{verb}\b", "", clean_search, flags=re.IGNORECASE)
@@ -518,6 +526,44 @@ async def _execute_single(intent_data: dict, loop, memory=None) -> any:
     if intent == "CASUAL_CHAT":
         intent = "AI_QUERY"
         intent_data["intent"] = "AI_QUERY"
+        
+    # ── SET_FACT (Memory Write Verification Loop) ─────────────────────────────
+    if intent == "SET_FACT":
+        query_text = intent_data.get("query") or ""
+        import re
+        from memory.semantic import SemanticMemory
+        
+        sem_mem = SemanticMemory()
+        
+        q = re.sub(r"^(please\s+)?(remember|save|store|keep)\s+(that\s+)?", "", query_text, flags=re.IGNORECASE).strip()
+        parts = re.split(r"\s+(?:is|was|as|to be|=)\s+", q, maxsplit=1, flags=re.IGNORECASE)
+        
+        if len(parts) == 2:
+            k = parts[0].strip()
+            v = parts[1].strip()
+            k_clean = re.sub(r"^(my|the|that|a|an)\s+", "", k, flags=re.IGNORECASE).strip()
+            v_clean = re.sub(r"^(my|the|that|a|an)\s+", "", v, flags=re.IGNORECASE).strip()
+            
+            # Commit Write bidirectionally
+            sem_mem.add_fact(k_clean, v)
+            sem_mem.add_fact(v_clean, k)
+            
+            # Reload & Verify
+            sem_mem.load()
+            verified_val1 = sem_mem.get_fact(k_clean)
+            verified_val2 = sem_mem.get_fact(v_clean)
+            if verified_val1 == v and verified_val2 == k:
+                return {"type": "ai_response", "response": "I have committed and verified that in my semantic registry, Sir."}
+            else:
+                return {"type": "ai_response", "response": "I'm sorry Sir, but I encountered an error verifying that fact on disk."}
+        else:
+            sem_mem.add_fact(q, q)
+            sem_mem.load()
+            verified_val = sem_mem.get_fact(q)
+            if verified_val == q:
+                return {"type": "ai_response", "response": "I have committed and verified that in my semantic registry, Sir."}
+            else:
+                return {"type": "ai_response", "response": "I'm sorry Sir, but I encountered an error verifying that fact on disk."}
 
     # ── YOUTUBE CAPABILITIES ROUTING ──────────────────────────────────────────
     youtube_capabilities = {"YOUTUBE_TOPIC_SEARCH", "LATEST_CREATOR_VIDEO", "LATEST_CREATOR_SHORT", "VIDEO_BY_TITLE", "CHANNEL_OPEN", "PLAY_SEARCH_RESULT"}
@@ -547,9 +593,9 @@ async def _execute_single(intent_data: dict, loop, memory=None) -> any:
 
         from system.spotify_control import _spotify_client
         has_spotify_api = _spotify_client.is_configured and _spotify_client._token_info
-        explicit_spotify = "spotify" in query.lower() or intent_data.get("platform") == "spotify"
+        explicit_spotify = "spotify" in query.lower()
 
-        if explicit_spotify or has_spotify_api:
+        if explicit_spotify:
             if has_spotify_api:
                 # ── CONTEXTUAL MUSIC INTELLIGENCE ROUTING ───────────────────────
                 # A. Resume / Continue Active Playback
@@ -795,6 +841,22 @@ async def _execute_single(intent_data: dict, loop, memory=None) -> any:
         identity_slices = id_mgr.get_contextual_slices(query_text)
         
         env_ctx = "== USER SYSTEM CONTEXT ==\n"
+        
+        # Inject Tier-1 Authoritative Active Project Registry Context
+        try:
+            from brain.project_manager import ProjectManager
+            pm = ProjectManager()
+            active_proj = pm.get_active_project()
+            if active_proj:
+                env_ctx += "- AUTHORITATIVE ACTIVE PROJECT REGISTRY:\n"
+                env_ctx += f"  * Active Project Name: {active_proj.get('project_name')}\n"
+                env_ctx += f"  * Workspace Directory: {active_proj.get('workspace_path')}\n"
+                env_ctx += f"  * Repository Path: {active_proj.get('repo_path')}\n"
+                env_ctx += f"  * Active Goal: {active_proj.get('active_goal')}\n"
+                env_ctx += f"  * Project Type: {active_proj.get('project_type')}\n"
+        except Exception as e_proj:
+            print(f"[PROJECT REGISTRY WARNING] Failed to inject project registry: {e_proj}")
+            
         env_ctx += f"- Preferred Location/City: {pref_mem.get('default_city', 'Kashipur, Uttarakhand, India')}\n"
         
         # Inject Layer 1 Passive Active Window Context

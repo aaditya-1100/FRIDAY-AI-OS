@@ -10,3 +10,4 @@ build/
 Thumbs.db
 .DS_Store
 frontend/dist-electron/
+release/

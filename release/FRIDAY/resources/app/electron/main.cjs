@@ -1,11 +1,107 @@
-const { app, BrowserWindow, session } = require('electron');
+const { app, BrowserWindow, session, shell } = require('electron');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
 const http = require('http');
 const fs = require('fs');
 
-// Set Application User Model ID for robust Windows taskbar pinning and grouping
-app.setAppUserModelId('com.friday.assistant');
+// ── AUMID MUST be set before app.whenReady() ─────────────────────────────────
+// This is the single source of truth for Windows taskbar grouping.
+// The pinned shortcut's AppUserModelId MUST match this exactly.
+const APP_USER_MODEL_ID = 'com.friday.assistant';
+app.setAppUserModelId(APP_USER_MODEL_ID);
+
+// ── Repair Windows Taskbar Pinned Shortcut ──────────────────────────────────
+// Windows groups taskbar windows by matching the running exe's AUMID against
+// the shortcut's AppUserModelId. If either doesn't match, a ghost second button
+// appears. This function:
+//   1. Finds FRIDAY.lnk in the TaskBar pins folder
+//   2. Rewrites its Target to point to the CURRENT running exe
+//   3. Sets its AppUserModelId to APP_USER_MODEL_ID
+// This is idempotent — safe to call on every startup.
+function updateAppShortcuts() {
+  if (process.platform !== 'win32') return;
+
+  const execPath = process.execPath; // actual running exe (packaged or electron.exe)
+
+  // All Windows locations that can hold pinned taskbar shortcuts
+  const taskbarPinDir = process.env.APPDATA
+    ? path.join(process.env.APPDATA, 'Microsoft', 'Internet Explorer', 'Quick Launch', 'User Pinned', 'TaskBar')
+    : null;
+
+  const searchDirs = [
+    taskbarPinDir,
+    process.env.APPDATA ? path.join(process.env.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs') : null,
+    process.env.APPDATA ? path.join(process.env.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup') : null,
+    process.env.USERPROFILE ? path.join(process.env.USERPROFILE, 'Desktop') : null,
+    process.env.PUBLIC ? path.join(process.env.PUBLIC, 'Desktop') : null,
+  ].filter(Boolean);
+
+  let repaired = 0;
+
+  // Proactively create Start Menu shortcut if missing to ensure proper taskbar grouping
+  const startMenuFridayPath = process.env.APPDATA
+    ? path.join(process.env.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'FRIDAY.lnk')
+    : null;
+
+  if (startMenuFridayPath && !fs.existsSync(startMenuFridayPath)) {
+    try {
+      shell.writeShortcutLink(startMenuFridayPath, 'create', {
+        target: execPath,
+        cwd: path.dirname(execPath),
+        appUserModelId: APP_USER_MODEL_ID
+      });
+      logToFile(`[SHORTCUT] Created missing Start Menu shortcut at ${startMenuFridayPath}`);
+      repaired++;
+    } catch (err) {
+      logToFile(`[SHORTCUT ERROR] Could not create Start Menu shortcut: ${err.message}`);
+    }
+  }
+
+  searchDirs.forEach(dir => {
+    if (!fs.existsSync(dir)) return;
+    const files = fs.readdirSync(dir).filter(f => path.extname(f).toLowerCase() === '.lnk');
+
+    files.forEach(file => {
+      const shortcutPath = path.join(dir, file);
+      try {
+        const details = shell.readShortcutLink(shortcutPath);
+        const targetLower = (details.target || '').toLowerCase();
+        const execLower = execPath.toLowerCase();
+        const isFridayShortcut =
+          file.toLowerCase().includes('friday') ||
+          targetLower.includes('friday');
+
+        if (!isFridayShortcut) return;
+
+        const needsTargetFix = targetLower !== execLower;
+        const needsAumidFix  = details.appUserModelId !== APP_USER_MODEL_ID;
+
+        if (needsTargetFix || needsAumidFix) {
+          const updatePayload = { appUserModelId: APP_USER_MODEL_ID };
+          if (needsTargetFix) {
+            updatePayload.target = execPath;
+            updatePayload.cwd = path.dirname(execPath);
+          }
+          shell.writeShortcutLink(shortcutPath, 'update', updatePayload);
+          logToFile(
+            `[SHORTCUT] Repaired ${path.basename(shortcutPath)}` +
+            (needsTargetFix ? ` | target -> ${execPath}` : '') +
+            (needsAumidFix  ? ` | AUMID  -> ${APP_USER_MODEL_ID}` : '')
+          );
+          repaired++;
+        } else {
+          logToFile(`[SHORTCUT] ${path.basename(shortcutPath)} already correct — no update needed.`);
+        }
+      } catch (err) {
+        logToFile(`[SHORTCUT ERROR] Could not read/write ${shortcutPath}: ${err.message}`);
+      }
+    });
+  });
+
+  if (repaired > 0) {
+    logToFile(`[SHORTCUT] ${repaired} shortcut(s) repaired/created for taskbar grouping.`);
+  }
+}
 
 // ── Single Instance Lock ────────────────────────────────────────────────────
 const gotTheLock = app.requestSingleInstanceLock();
@@ -456,6 +552,9 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 app.whenReady().then(() => {
   logToFile('[STARTUP] Electron app ready. Cleaning up port 8001 to prevent stale backends...');
   killPortProcess(8001);
+  
+  // Update Windows taskbar pinned shortcuts to prevent separate taskbar icons
+  updateAppShortcuts();
   
   logToFile('[STARTUP] Port cleaned up. Waiting 600ms for OS sockets and PortAudio endpoints to release...');
   safeSetTimeout(() => {

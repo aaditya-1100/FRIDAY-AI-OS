@@ -1,851 +1,1069 @@
 [
   {
-    "timestamp": "2026-05-31T04:43:21.412259",
-    "query": "open bbc news",
+    "timestamp": "2026-06-03T09:51:10.707777",
+    "query": "open chrome and search ai agents",
     "intent": "OPEN",
     "success": true,
     "metadata": {
       "intent": "OPEN",
-      "target": "bbc news live",
-      "query": "open bbc news"
+      "target": "chrome and search ai agents"
     }
   },
   {
-    "timestamp": "2026-05-31T04:43:40.612200",
-    "query": "search youtube for python tutorial",
-    "intent": "YOUTUBE_TOPIC_SEARCH",
-    "success": true,
-    "metadata": {
-      "intent": "YOUTUBE_TOPIC_SEARCH",
-      "query": "python tutorial"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T04:44:14.566451",
-    "query": "open the map of paris",
-    "intent": "MAP_FOLLOWUP",
-    "success": true,
-    "metadata": {
-      "intent": "MAP_FOLLOWUP",
-      "action": "general_query",
-      "query": "open the map of paris"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T04:44:47.716367",
-    "query": "open bbc news on youtube",
-    "intent": "YOUTUBE_TOPIC_SEARCH",
-    "success": true,
-    "metadata": {
-      "intent": "YOUTUBE_TOPIC_SEARCH",
-      "query": "bbc news"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T04:45:04.750304",
-    "query": "play the latest video by bbc news",
-    "intent": "LATEST_CREATOR_VIDEO",
-    "success": true,
-    "metadata": {
-      "intent": "LATEST_CREATOR_VIDEO",
-      "creator": "BBC News",
-      "query": "play the latest video by bbc news"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T04:45:18.481772",
-    "query": "open latest video by param vir beniwal",
-    "intent": "LATEST_CREATOR_VIDEO",
-    "success": true,
-    "metadata": {
-      "intent": "LATEST_CREATOR_VIDEO",
-      "creator": "Param Vir Beniwal",
-      "query": "open latest video by param vir beniwal"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:52:32.800990",
-    "query": "open chrome",
+    "timestamp": "2026-06-03T09:51:29.820586",
+    "query": "open vs code and explain recursion",
     "intent": "OPEN",
     "success": true,
     "metadata": {
       "intent": "OPEN",
-      "target": "chrome"
+      "target": "vs code and explain recursion",
+      "query": "open vs code and explain recursion"
     }
   },
   {
-    "timestamp": "2026-05-31T05:53:04.670307",
-    "query": "explain me quantum mechanics in two lines",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "explain quantum mechanics in two lines"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:53:24.960771",
-    "query": "open c drive",
+    "timestamp": "2026-06-03T09:51:38.388550",
+    "query": "open vs code and open chrome",
     "intent": "OPEN",
     "success": true,
     "metadata": {
       "intent": "OPEN",
-      "target": "c drive"
+      "target": "vs code and open chrome"
     }
   },
   {
-    "timestamp": "2026-05-31T05:53:45.192936",
-    "query": "tell me about tesla",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "tell me about tesla"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:54:12.122809",
-    "query": "who owns tesla",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "who owns Tesla, Inc."
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:54:31.757468",
-    "query": "how old is Elon Musk owns",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "how old is Elon Musk owns"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:55:06.752218",
-    "query": "tell me about paris",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "tell me about paris"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:55:22.240892",
-    "query": "show paris on the map",
-    "intent": "MAP_LOCATION",
-    "success": true,
-    "metadata": {
-      "intent": "MAP_LOCATION",
-      "location": "paris",
-      "query": "show paris on the map"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:55:46.308211",
-    "query": "show paris sir",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "show paris sir"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:56:06.827438",
-    "query": "show Displaying from london to paris",
+    "timestamp": "2026-06-03T09:52:00.733155",
+    "query": "count from 1 to 20",
     "intent": "MAP_ROUTE",
     "success": true,
     "metadata": {
       "intent": "MAP_ROUTE",
-      "origin": "london",
-      "destination": "paris",
+      "origin": "1",
+      "destination": "20",
       "mode": "driving",
-      "query": "show Displaying from london to paris"
+      "query": "count from 1 to 20"
     }
   },
   {
-    "timestamp": "2026-05-31T05:56:25.203029",
-    "query": "how long will london to paris take",
-    "intent": "MAP_FOLLOWUP",
+    "timestamp": "2026-06-03T09:52:29.454048",
+    "query": "compare rust and python",
+    "intent": "AI_QUERY",
     "success": true,
     "metadata": {
-      "intent": "MAP_FOLLOWUP",
-      "action": "eta",
-      "query": "how long will london to paris take"
+      "intent": "AI_QUERY",
+      "query": "compare rust and python"
     }
   },
   {
-    "timestamp": "2026-05-31T05:57:08.655343",
-    "query": "open the latest video by tanmay",
+    "timestamp": "2026-06-03T09:52:58.548189",
+    "query": "what is their primary product?",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what is their primary product?"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T09:53:38.721741",
+    "query": "compare it with microsoft",
+    "intent": "REALTIME_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "REALTIME_QUERY",
+      "query": "compare it with microsoft"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T09:54:04.765913",
+    "query": "what are Word advantages?",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what are Word advantages?"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T09:55:41.032594",
+    "query": "beaches in kerala tamil nadu and odisha and he said Word the total results of thorium in india amount to",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "beaches in kerala tamil nadu and odisha and he said Word the total results of thorium in india amount to"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T09:57:09.141745",
+    "query": "15000 south indian marriage of oil which can produce 149700 all three combined amount to 520.6 billion barrels which can produce 292000",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "15000 south indian marriage of oil which can produce 149700 all three combined amount to 520.6 billion barrels which can produce 292000"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:07:22.200913",
+    "query": "play believer",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "believer",
+      "creator": null,
+      "query": "play believer"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:08:09.991852",
+    "query": "play believer",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "believer",
+      "creator": null,
+      "query": "play believer"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:08:40.507922",
+    "query": "play softly by karan aujla",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "softly",
+      "creator": "karan aujla",
+      "query": "play softly by karan aujla"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:09:04.473172",
+    "query": "open youtube and search rust ownership model",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "open youtube and search rust ownership model"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:10:53.012792",
+    "query": "play believer",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "believer",
+      "creator": null,
+      "query": "play believer"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:11:24.925942",
+    "query": "play softly by karan aujla",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "softly",
+      "creator": "karan aujla",
+      "query": "play softly by karan aujla"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:11:58.137264",
+    "query": "open youtube and search rust ownership model",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "open youtube and search rust ownership model"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:17:13.426629",
+    "query": "play believer",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "believer",
+      "creator": null,
+      "query": "play believer"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:17:29.235482",
+    "query": "play blinding lights",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "blinding lights",
+      "creator": "The Weeknd",
+      "query": "play blinding lights"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:17:44.656753",
+    "query": "play counting stars",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "counting stars",
+      "creator": null,
+      "query": "play counting stars"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:17:59.957566",
+    "query": "play heat waves",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "heat waves",
+      "creator": null,
+      "query": "play heat waves"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:18:18.485025",
+    "query": "play despacito",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "despacito",
+      "creator": null,
+      "query": "play despacito"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:18:35.300520",
+    "query": "play perfect by ed sheeran",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "perfect",
+      "creator": "ed sheeran",
+      "query": "play perfect by ed sheeran"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:18:50.774977",
+    "query": "play industry baby",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "industry baby",
+      "creator": null,
+      "query": "play industry baby"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:19:06.343908",
+    "query": "play mockingbird",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "mockingbird",
+      "creator": null,
+      "query": "play mockingbird"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:19:16.306969",
+    "query": "play lose FRIDAY",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "play lose FRIDAY"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:19:32.169697",
+    "query": "play softly by karan aujla",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "softly",
+      "creator": "karan aujla",
+      "query": "play softly by karan aujla"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:19:48.622302",
+    "query": "play winning speech by karan aujla",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "winning speech",
+      "creator": "karan aujla",
+      "query": "play winning speech by karan aujla"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:20:05.351078",
+    "query": "play wavy by karan aujla",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "wavy",
+      "creator": "karan aujla",
+      "query": "play wavy by karan aujla"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:20:21.528098",
+    "query": "play admirin FRIDAY by karan aujla",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "admirin friday",
+      "creator": "karan aujla",
+      "query": "play admirin FRIDAY by karan aujla"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:20:36.901591",
+    "query": "play tauba tauba",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "tauba tauba",
+      "creator": null,
+      "query": "play tauba tauba"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:20:52.258012",
+    "query": "play brown munde",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "brown munde",
+      "creator": null,
+      "query": "play brown munde"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:21:08.906632",
+    "query": "play excuses",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "excuses",
+      "creator": null,
+      "query": "play excuses"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:21:25.264634",
+    "query": "play insane by ap dhillon",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "insane",
+      "creator": "ap dhillon",
+      "query": "play insane by ap dhillon"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:21:41.271696",
+    "query": "play with FRIDAY by ap dhillon",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "with friday",
+      "creator": "ap dhillon",
+      "query": "play with FRIDAY by ap dhillon"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:21:57.332418",
+    "query": "play summer high",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "summer high",
+      "creator": null,
+      "query": "play summer high"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:22:13.579031",
+    "query": "play karan aujla",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "karan aujla",
+      "creator": null,
+      "query": "play karan aujla"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:22:29.067868",
+    "query": "play ap dhillon",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "ap dhillon",
+      "creator": null,
+      "query": "play ap dhillon"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:22:52.192912",
+    "query": "play arijit singh",
+    "intent": "VIDEO_BY_TITLE",
+    "success": true,
+    "metadata": {
+      "intent": "VIDEO_BY_TITLE",
+      "title": "arijit singh",
+      "creator": null,
+      "query": "play arijit singh"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:23:06.720772",
+    "query": "play latest video by think school",
     "intent": "LATEST_CREATOR_VIDEO",
     "success": true,
     "metadata": {
       "intent": "LATEST_CREATOR_VIDEO",
-      "creator": "the  tanmay",
-      "query": "open the latest video by tanmay"
+      "creator": "think school",
+      "query": "play latest video by think school"
     }
   },
   {
-    "timestamp": "2026-05-31T05:57:31.839852",
-    "query": "search youtube for spacex",
-    "intent": "YOUTUBE_TOPIC_SEARCH",
-    "success": true,
-    "metadata": {
-      "intent": "YOUTUBE_TOPIC_SEARCH",
-      "query": "search youtube for spacex"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:58:00.881448",
-    "query": "what was the latest launch of spacex",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "what was the latest launch of spacex"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:58:23.890863",
-    "query": "i didn't hear FRIDAY tell me again",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "i didn't hear FRIDAY tell me again"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:58:48.361675",
-    "query": "which rocket paris used",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "which rocket paris used"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:59:25.105379",
-    "query": "which rocket by used by spacex in The Ariane latest launch",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "which rocket by used by spacex in The Ariane latest launch"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T05:59:55.490134",
-    "query": "i am asking FRIDAY which rocket wise used by spacex in Ariane latest launch",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "i am asking FRIDAY which rocket wise used by spacex in Ariane latest launch"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:00:07.103235",
-    "query": "wasn't Youtube falcon 9 rocket",
-    "intent": "YOUTUBE_TOPIC_SEARCH",
-    "success": true,
-    "metadata": {
-      "intent": "YOUTUBE_TOPIC_SEARCH",
-      "query": "wasn't Youtube falcon 9 rocket"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:02:05.123800",
-    "query": "open bbc news latest video",
+    "timestamp": "2026-06-03T10:23:23.546574",
+    "query": "play latest video by vaibhav sisinty",
     "intent": "LATEST_CREATOR_VIDEO",
     "success": true,
     "metadata": {
       "intent": "LATEST_CREATOR_VIDEO",
-      "creator": "bbc news",
-      "query": "open bbc news latest video"
+      "creator": "vaibhav sisinty",
+      "query": "play latest video by vaibhav sisinty"
     }
   },
   {
-    "timestamp": "2026-05-31T06:02:49.881150",
-    "query": "play video driving into canada for the first time",
-    "intent": "VIDEO_BY_TITLE",
+    "timestamp": "2026-06-03T10:23:39.055918",
+    "query": "play latest video by dan martell",
+    "intent": "LATEST_CREATOR_VIDEO",
     "success": true,
     "metadata": {
-      "intent": "VIDEO_BY_TITLE",
-      "title": "driving into canada for the first time",
-      "creator": null,
-      "query": "play video driving into canada for the first time"
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "dan martell",
+      "query": "play latest video by dan martell"
     }
   },
   {
-    "timestamp": "2026-05-31T06:12:43.059437",
-    "query": "what rocket by FRIDAY was used by spacex in latest launch wasn't that falcon 9 friday",
-    "intent": "AI_QUERY",
+    "timestamp": "2026-06-03T10:23:56.346054",
+    "query": "play latest video by mark rober",
+    "intent": "LATEST_CREATOR_VIDEO",
     "success": true,
     "metadata": {
-      "intent": "AI_QUERY",
-      "query": "what rocket by FRIDAY was used by spacex in latest launch wasn't that falcon 9 friday"
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "mark rober",
+      "query": "play latest video by mark rober"
     }
   },
   {
-    "timestamp": "2026-05-31T06:13:18.902332",
-    "query": "wedding can FRIDAY open spotify for me",
-    "intent": "MULTI_ACTION",
+    "timestamp": "2026-06-03T10:24:12.336526",
+    "query": "play latest video by veritasium",
+    "intent": "LATEST_CREATOR_VIDEO",
     "success": true,
     "metadata": {
-      "intent": "MULTI_ACTION",
-      "actions": [
-        {
-          "intent": "WINDOW_CONTROL",
-          "command": "minimize",
-          "target": "spotify"
-        },
-        {
-          "intent": "OPEN",
-          "target": "spotify"
-        }
-      ],
-      "query": "wedding can FRIDAY open spotify for me"
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "veritasium",
+      "query": "play latest video by veritasium"
     }
   },
   {
-    "timestamp": "2026-05-31T06:13:28.143081",
-    "query": "open spotify",
-    "intent": "OPEN",
+    "timestamp": "2026-06-03T10:24:28.345023",
+    "query": "play latest video by fireship",
+    "intent": "LATEST_CREATOR_VIDEO",
     "success": true,
     "metadata": {
-      "intent": "OPEN",
-      "target": "spotify"
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "fireship",
+      "query": "play latest video by fireship"
     }
   },
   {
-    "timestamp": "2026-05-31T06:39:58.307309",
-    "query": "open spotify",
-    "intent": "OPEN",
+    "timestamp": "2026-06-03T10:24:45.679850",
+    "query": "play latest video by lex fridman",
+    "intent": "LATEST_CREATOR_VIDEO",
     "success": true,
     "metadata": {
-      "intent": "OPEN",
-      "target": "spotify"
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "lex fridman",
+      "query": "play latest video by lex fridman"
     }
   },
   {
-    "timestamp": "2026-05-31T06:40:38.589727",
-    "query": "open whatsapp",
-    "intent": "OPEN",
+    "timestamp": "2026-06-03T10:25:03.089783",
+    "query": "play latest video by ali abdaal",
+    "intent": "LATEST_CREATOR_VIDEO",
     "success": true,
     "metadata": {
-      "intent": "OPEN",
-      "target": "whatsapp"
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "ali abdaal",
+      "query": "play latest video by ali abdaal"
     }
   },
   {
-    "timestamp": "2026-05-31T06:40:57.055505",
-    "query": "open file explorer",
-    "intent": "OPEN",
+    "timestamp": "2026-06-03T10:25:19.188075",
+    "query": "play latest video by mrbeast",
+    "intent": "LATEST_CREATOR_VIDEO",
     "success": true,
     "metadata": {
-      "intent": "OPEN",
-      "target": "file explorer"
+      "intent": "LATEST_CREATOR_VIDEO",
+      "creator": "mrbeast",
+      "query": "play latest video by mrbeast"
     }
   },
   {
-    "timestamp": "2026-05-31T06:41:09.036248",
-    "query": "open whatsapp web",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "whatsapp"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:41:14.835052",
-    "query": "launch whatsapp",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "whatsapp"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:41:17.332711",
-    "query": "open my whatsapp",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "whatsapp"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:41:43.210704",
-    "query": "tell me about spacex",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "tell me about spacex"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:42:13.354137",
-    "query": "tell me about tesla in one line",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "tell me about Tesla in one line"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:42:36.360749",
-    "query": "who owns set",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "who owns set"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:42:58.612411",
-    "query": "who owns tesla",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "who owns tesla"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:43:17.197124",
-    "query": "how old is Elon Musk",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "how old is Elon Musk"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:43:28.139743",
-    "query": "open latest video by passenger paramveer",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "latest video by passenger paramveer"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:43:45.321232",
-    "query": "open latest video by tanmay",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "latest video by tanmay"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:43:54.991139",
-    "query": "show me the map of paris",
-    "intent": "MAP_FOLLOWUP",
-    "success": true,
-    "metadata": {
-      "intent": "MAP_FOLLOWUP",
-      "action": "general_query",
-      "query": "show me the map of paris"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T06:44:31.641354",
-    "query": "search youtube for ai news",
+    "timestamp": "2026-06-03T10:25:33.638974",
+    "query": "open youtube and search rust ownership model",
     "intent": "YOUTUBE_TOPIC_SEARCH",
     "success": true,
     "metadata": {
       "intent": "YOUTUBE_TOPIC_SEARCH",
-      "query": "search youtube for ai news"
+      "query": "open youtube and search rust ownership model"
     }
   },
   {
-    "timestamp": "2026-05-31T06:44:58.185905",
-    "query": "open video driving into canada for the first time",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "video driving into canada for first time"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T07:33:22.902017",
-    "query": "open physics wala",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "physics wala"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T07:33:29.067961",
-    "query": "open pw",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "pw"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T12:57:09.526503",
-    "query": "how r u",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "how are you"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T20:04:10.133996",
-    "query": "open latest video by param vir beniwal",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "latest video by param vir beniwal"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T20:04:41.141896",
-    "query": "video titled house spacex catches rockets",
-    "intent": "VIDEO_BY_TITLE",
-    "success": true,
-    "metadata": {
-      "intent": "VIDEO_BY_TITLE",
-      "title": "video  house spacex catches rockets",
-      "creator": null,
-      "query": "video titled house spacex catches rockets"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T20:05:07.709844",
-    "query": "open video doomsday and spider-man trailers confirmed roast was 171",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "video doomsday and spider-man trailers confirmed roast was 171"
-    }
-  },
-  {
-    "timestamp": "2026-05-31T20:05:16.989471",
-    "query": "show me the map of paris",
-    "intent": "MAP_FOLLOWUP",
-    "success": true,
-    "metadata": {
-      "intent": "MAP_FOLLOWUP",
-      "action": "general_query",
-      "query": "show me the map of paris"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:29:10.601398",
-    "query": "open chrome",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "chrome"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:29:19.088020",
-    "query": "what is 2 plus 2",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "what is 2 plus 2"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:29:36.326947",
-    "query": "open chrome",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "chrome"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:29:42.992119",
-    "query": "what is 2 plus 2",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "what is 2 plus 2"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:30:00.234014",
-    "query": "open chrome",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "chrome"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:30:06.969720",
-    "query": "what is 2 plus 2",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "what is 2 plus 2"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:30:24.100322",
-    "query": "open chrome",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "chrome"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:30:31.412031",
-    "query": "what is 2 plus 2",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "what is 2 plus 2"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:30:48.641450",
-    "query": "open chrome",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "chrome"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:30:57.225757",
-    "query": "what is 2 plus 2",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "what is 2 plus 2"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:33:58.953359",
-    "query": "how are FRIDAY friday",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "how are FRIDAY friday"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:34:06.066631",
-    "query": "can FRIDAY open chrome for me",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "can FRIDAY open chrome for me"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:34:26.797913",
-    "query": "open chrome",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "chrome"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:34:36.214369",
-    "query": "what is 2 + 2",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "what is 2 plus 2"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:36:30.863009",
-    "query": "tell me about apple",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "tell me about apple"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:36:55.827708",
-    "query": "what product do apple really",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "what product does apple really"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:37:20.652649",
-    "query": "who currently runs at",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "who currently runs at"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:38:01.886123",
-    "query": "who is the new ceo of apple",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "who is the new ceo of apple"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:38:25.366583",
-    "query": "tell me about cristiano ronaldo in",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "tell me about cristiano ronaldo in"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:38:50.696131",
-    "query": "how old is",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "how old is"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:39:29.047189",
-    "query": "open video titled why do we dream",
-    "intent": "VIDEO_BY_TITLE",
-    "success": true,
-    "metadata": {
-      "intent": "VIDEO_BY_TITLE",
-      "title": "why do we dream",
-      "creator": null,
-      "query": "open video titled why do we dream"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:40:00.229608",
-    "query": "search youtube for formula 1 highlights",
+    "timestamp": "2026-06-03T10:25:48.230991",
+    "query": "open youtube and search ai agents",
     "intent": "YOUTUBE_TOPIC_SEARCH",
     "success": true,
     "metadata": {
       "intent": "YOUTUBE_TOPIC_SEARCH",
-      "query": "search youtube for formula 1 highlights"
+      "query": "open youtube and search ai agents"
     }
   },
   {
-    "timestamp": "2026-06-01T10:40:26.333690",
-    "query": "show me map route for delhi to jaipur",
-    "intent": "MAP_ROUTE",
+    "timestamp": "2026-06-03T10:26:03.782935",
+    "query": "open youtube and search think school",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
     "success": true,
     "metadata": {
-      "intent": "MAP_ROUTE",
-      "origin": "show me map  for delhi",
-      "destination": "jaipur",
-      "mode": "driving",
-      "query": "show me map route for delhi to jaipur"
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "open youtube and search think school"
     }
   },
   {
-    "timestamp": "2026-06-01T10:41:09.929083",
-    "query": "current usd to inr",
+    "timestamp": "2026-06-03T10:26:19.600473",
+    "query": "open youtube and search raj shamani",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "open youtube and search raj shamani"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:26:34.068850",
+    "query": "open youtube and search karan aujla",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "open youtube and search karan aujla"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:26:48.589004",
+    "query": "open youtube and search marvel trailers",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "open youtube and search marvel trailers"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:27:13.927328",
+    "query": "open youtube and search react tutorial",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "open youtube and search react tutorial"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:27:28.267622",
+    "query": "search openai",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search openai"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:27:43.965209",
+    "query": "search rust ownership model",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search rust ownership model"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:28:02.423624",
+    "query": "search ai agents",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "search ai agents"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:28:21.196551",
+    "query": "search latest ai news",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search latest ai news"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:28:36.850785",
+    "query": "search latest startup news",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search latest startup news"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:28:52.063426",
+    "query": "search latest india startup news",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search latest india startup news"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:29:08.089800",
+    "query": "search nvidia blackwell",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search nvidia blackwell"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:29:25.394520",
+    "query": "search think school",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search think school"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:29:41.692647",
+    "query": "search raj shamani",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search raj shamani"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:29:57.382411",
+    "query": "search karan aujla",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search karan aujla"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:30:14.092380",
+    "query": "search ap dhillon",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search ap dhillon"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:30:29.776202",
+    "query": "search marvel studios",
+    "intent": "SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "SEARCH",
+      "platform": "youtube",
+      "query": "search marvel studios"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:30:45.244072",
+    "query": "search react framework",
+    "intent": "SYSTEM_STATUS",
+    "success": true,
+    "metadata": {
+      "intent": "SYSTEM_STATUS",
+      "query": "search react framework"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:31:01.348255",
+    "query": "search python programming language",
+    "intent": "SYSTEM_STATUS",
+    "success": true,
+    "metadata": {
+      "intent": "SYSTEM_STATUS",
+      "query": "search python programming language"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:31:08.407703",
+    "query": "open chrome and search openai",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search openai"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:31:14.382255",
+    "query": "open chrome and search chatgpt",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search chatgpt"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:31:20.132227",
+    "query": "open chrome and search rust ownership model",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search rust ownership model"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:31:25.518276",
+    "query": "open chrome and search ai agents",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search ai agents"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:31:31.278261",
+    "query": "open chrome and search think school",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search think school"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:31:36.871952",
+    "query": "open chrome and search raj shamani",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search raj shamani"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:31:42.602151",
+    "query": "open chrome and search karan aujla",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search karan aujla"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:31:48.313831",
+    "query": "open chrome and search marvel trailers",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search marvel trailers"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:31:54.238816",
+    "query": "open chrome and search python tutorial",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search python tutorial"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:32:00.444437",
+    "query": "open chrome and search react tutorial",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search react tutorial"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:32:06.210274",
+    "query": "open chrome and search nvidia blackwell",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search nvidia blackwell"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T10:32:12.168647",
+    "query": "open chrome and search startup news",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search startup news"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T15:33:52.318438",
+    "query": "tell me a joke",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "tell me a joke"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T15:35:41.368379",
+    "query": "tell me a joke",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "tell me a joke"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T15:38:16.057926",
+    "query": "what time is it?",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what time is it?"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T15:41:12.816447",
+    "query": "play believer",
+    "intent": "PLAY_MEDIA",
+    "success": true,
+    "metadata": {
+      "intent": "PLAY_MEDIA",
+      "query": "believer"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T15:41:39.394638",
+    "query": "play softly by karan aujla",
+    "intent": "PLAY_MEDIA",
+    "success": true,
+    "metadata": {
+      "intent": "PLAY_MEDIA",
+      "creator": "Karan Aujla",
+      "title": "Softly",
+      "platform": "youtube",
+      "query": "Karan Aujla Softly"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T15:59:44.491673",
+    "query": "play believer",
+    "intent": "PLAY_MEDIA",
+    "success": false,
+    "metadata": {
+      "intent": "PLAY_MEDIA",
+      "creator": null,
+      "title": "believer",
+      "platform": "youtube",
+      "query": "believer"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T15:59:59.792834",
+    "query": "open youtube and search rust ownership model",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "open youtube and search rust ownership model"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T17:28:03.491344",
+    "query": "what time is it",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what time is it"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T17:29:24.344000",
+    "query": "what time is it",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "what time is it"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T17:29:35.496221",
+    "query": "open chrome and search openai",
+    "intent": "OPEN",
+    "success": true,
+    "metadata": {
+      "intent": "OPEN",
+      "target": "chrome and search openai"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T23:14:57.761885",
+    "query": "open youtube and search python",
+    "intent": "YOUTUBE_TOPIC_SEARCH",
+    "success": true,
+    "metadata": {
+      "intent": "YOUTUBE_TOPIC_SEARCH",
+      "query": "open youtube and search python"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T23:15:35.883256",
+    "query": "today date today",
     "intent": "REALTIME_QUERY",
     "success": true,
     "metadata": {
       "intent": "REALTIME_QUERY",
-      "query": "current usd to inr"
+      "query": "what is the date today"
     }
   },
   {
-    "timestamp": "2026-06-01T10:41:39.592549",
-    "query": "today's cricket headlines",
-    "intent": "NEWS",
+    "timestamp": "2026-06-03T23:20:01.799948",
+    "query": "what time is it",
+    "intent": "AI_QUERY",
     "success": true,
     "metadata": {
-      "intent": "NEWS",
-      "topic": "",
-      "query": "today's cricket headlines"
+      "intent": "AI_QUERY",
+      "query": "what time is it"
     }
   },
   {
-    "timestamp": "2026-06-01T10:42:01.401276",
-    "query": "today's cricket headlines",
-    "intent": "NEWS",
+    "timestamp": "2026-06-03T23:21:06.039372",
+    "query": "i didn't tell me a joke",
+    "intent": "CLARIFICATION",
     "success": true,
     "metadata": {
-      "intent": "NEWS",
-      "topic": "",
-      "query": "today's cricket headlines"
+      "intent": "CLARIFICATION",
+      "question": "You didn't tell me a joke, would you like to hear one?",
+      "query": "i didn't tell me a joke"
     }
   },
   {
-    "timestamp": "2026-06-01T10:42:11.320385",
-    "query": "open calculator",
-    "intent": "OPEN",
+    "timestamp": "2026-06-03T23:21:36.509067",
+    "query": "yeah i say tell me a joke",
+    "intent": "CASUAL_CHAT",
     "success": true,
     "metadata": {
-      "intent": "OPEN",
-      "target": "calculator"
+      "intent": "AI_QUERY",
+      "query": "tell me a joke"
     }
   },
   {
-    "timestamp": "2026-06-01T10:42:19.322257",
-    "query": "open whatsapp",
-    "intent": "OPEN",
+    "timestamp": "2026-06-03T23:22:58.707246",
+    "query": "tell me a joke",
+    "intent": "CASUAL_CHAT",
     "success": true,
     "metadata": {
-      "intent": "OPEN",
-      "target": "whatsapp"
+      "intent": "AI_QUERY",
+      "query": "tell me a joke"
     }
   },
   {
-    "timestamp": "2026-06-01T10:42:26.173582",
+    "timestamp": "2026-06-03T23:24:51.509181",
+    "query": "compare rust and python",
+    "intent": "AI_QUERY",
+    "success": true,
+    "metadata": {
+      "intent": "AI_QUERY",
+      "query": "compare rust and python"
+    }
+  },
+  {
+    "timestamp": "2026-06-03T23:28:18.341586",
     "query": "open mocktail",
     "intent": "OPEN",
     "success": true,
@@ -855,183 +1073,13 @@
     }
   },
   {
-    "timestamp": "2026-06-01T10:42:31.741056",
-    "query": "open gemini",
+    "timestamp": "2026-06-03T23:28:36.897019",
+    "query": "open instagram",
     "intent": "OPEN",
     "success": true,
     "metadata": {
       "intent": "OPEN",
-      "target": "gemini"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:42:37.683400",
-    "query": "open file",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "file"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T10:42:44.651526",
-    "query": "open c drive",
-    "intent": "OPEN",
-    "success": true,
-    "metadata": {
-      "intent": "OPEN",
-      "target": "c drive"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T16:44:48.112281",
-    "query": "explain recursion",
-    "intent": "AI_QUERY",
-    "success": false,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "explain recursion"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T16:45:00.681521",
-    "query": "explain feedback loops",
-    "intent": "AI_QUERY",
-    "success": false,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "explain feedback loops"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T16:45:12.780604",
-    "query": "tell me prepare for finals",
-    "intent": "AI_QUERY",
-    "success": false,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "how to prepare for finals"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T16:46:03.440736",
-    "query": "explain recursion",
-    "intent": "AI_QUERY",
-    "success": false,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "explain recursion"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T16:46:19.101077",
-    "query": "explain feedback loops",
-    "intent": "AI_QUERY",
-    "success": false,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "explain feedback loops"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T16:46:36.037183",
-    "query": "how r u",
-    "intent": "CASUAL_CHAT",
-    "success": false,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "how are you"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T16:46:43.560364",
-    "query": "what is my name",
-    "intent": "AI_QUERY",
-    "success": false,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "what is my name"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T16:46:58.462479",
-    "query": "explain rust versus go",
-    "intent": "AI_QUERY",
-    "success": false,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "explain rust versus go"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T16:47:11.026947",
-    "query": "can FRIDAY tell me the capital of japan",
-    "intent": "AI_QUERY",
-    "success": false,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "can Friday tell me the capital of Japan"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T16:47:30.293903",
-    "query": "recommend me a horror movie",
-    "intent": "AI_QUERY",
-    "success": false,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "recommend me a horror movie"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T22:18:06.622304",
-    "query": "explain recursion",
-    "intent": "AI_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "AI_QUERY",
-      "query": "explain recursion"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T22:18:34.607035",
-    "query": "what are the two rules of it",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "what are the two rules of recursion"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T22:18:54.450315",
-    "query": "what is the capital of japan",
-    "intent": "REALTIME_QUERY",
-    "success": true,
-    "metadata": {
-      "intent": "REALTIME_QUERY",
-      "query": "what is the capital of Japan"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T22:19:09.135063",
-    "query": "what is tell me rust versus python",
-    "intent": "YOUTUBE_TOPIC_SEARCH",
-    "success": true,
-    "metadata": {
-      "intent": "YOUTUBE_TOPIC_SEARCH",
-      "query": "what is tell me rust versus python"
-    }
-  },
-  {
-    "timestamp": "2026-06-01T22:19:21.436855",
-    "query": "rust vs python",
-    "intent": "YOUTUBE_TOPIC_SEARCH",
-    "success": true,
-    "metadata": {
-      "intent": "YOUTUBE_TOPIC_SEARCH",
-      "query": "rust vs python"
+      "target": "instagram"
     }
   }
 ]

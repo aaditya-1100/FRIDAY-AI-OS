@@ -129,21 +129,26 @@ def _sync_play(temp_path: str) -> None:
         except Exception:
             pass
 
+def init_tts_singleton() -> None:
+    """Bypasses persistent singleton setup; SAPI5 operates on-demand per fallback turn."""
+    print("[TTS pyttsx3 SAPI5] Singleton warm-up bypassed: SAPI5 operates on-demand.")
+
 def _run_sapi_tts(text: str, path: str) -> None:
-    """Thread-safe SAPI5 offline fallback using dynamic thread-local COM apartments."""
+    """Uses a thread-isolated, fresh pyttsx3 engine for stable offline synthesis."""
     import pythoncom
     import pyttsx3
     
-    print("[TTS pyttsx3 SAPI5] Background thread: calling CoInitialize...")
+    print(f"[TTS pyttsx3 SAPI5] Thread-isolated worker: calling CoInitialize...")
     pythoncom.CoInitialize()
     try:
-        print("[TTS pyttsx3 SAPI5] Background thread: initializing pyttsx3...")
+        print("[TTS pyttsx3 SAPI5] Thread-isolated worker: initializing pyttsx3 engine...")
         engine = pyttsx3.init()
         voices = engine.getProperty('voices')
         selected_voice = None
+        # Authoritative local persona fallback (Hazel/Zira/Heera)
         for voice in voices:
             name_lower = voice.name.lower()
-            if "zira" in name_lower or "hazel" in name_lower or "female" in name_lower:
+            if "heera" in name_lower or "zira" in name_lower or "hazel" in name_lower or "female" in name_lower:
                 selected_voice = voice.id
                 break
         if not selected_voice:
@@ -153,22 +158,23 @@ def _run_sapi_tts(text: str, path: str) -> None:
                     break
         if selected_voice:
             engine.setProperty('voice', selected_voice)
-            print(f"[TTS pyttsx3 SAPI5] Selected SAPI5 female voice: {selected_voice}")
+            print(f"[TTS pyttsx3 SAPI5] Thread-isolated worker selected SAPI5 voice: {selected_voice}")
         
         rate = engine.getProperty('rate')
         engine.setProperty('rate', int(rate * 1.15))
         
-        print(f"[TTS pyttsx3 SAPI5] Background thread: saving synthesis to path: {path}")
+        print(f"[TTS pyttsx3 SAPI5] Thread-isolated worker: saving synthesis to path: {path}")
         engine.save_to_file(text, path)
         engine.runAndWait()
-        print("[TTS pyttsx3 SAPI5] Background thread: synthesis success!")
+        print("[TTS pyttsx3 SAPI5] Thread-isolated worker: synthesis success!")
         del engine
     except Exception as e:
-        print(f"[TTS pyttsx3 SAPI5 THREAD ERROR] Dynamic SAPI5 write failed: {e}")
+        print(f"[TTS pyttsx3 SAPI5 WORKER ERROR] {e}")
         raise e
     finally:
-        print("[TTS pyttsx3 SAPI5] Background thread: calling CoUninitialize...")
+        print("[TTS pyttsx3 SAPI5] Thread-isolated worker: calling CoUninitialize...")
         pythoncom.CoUninitialize()
+
 
 def normalize_speech_text(text: str) -> str:
     """
@@ -219,6 +225,7 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
         import uuid
         response_id = str(uuid.uuid4())[:8]
     
+    print(f"[E2E_TRACE] [STAGE 10: TTS Generated] Synthesis started for text: '{text[:60]}...' | web_mode={web_mode} | response_id={response_id}", flush=True)
     # Acquire Single-Speech Mutex to prevent overlapping voice collisions
     async with _speak_lock:
         normalized_text = normalize_speech_text(text)
@@ -237,27 +244,52 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
         temp_path = None
         provider_used = None
         audio_file_size = 0
+        from brain.routing_telemetry import telemetry_engine
 
         try:
-            # ─── PROVIDER 1: pyttsx3 (Primary Local Offline - 100% Consistent & Zero Latency) ────
+            # ─── PROVIDER 1: Edge-TTS (Primary Neural - Authoritative Voice Identity) ────
             try:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
                     temp_path = tmp.name
 
-                print(f"[TRACE] [TTS_SPEAK] [{response_id}] [pyttsx3] ATTEMPTING SYNTHESIS | text='{normalized_text[:40]}...' | temp_path={temp_path}")
-                loop = asyncio.get_running_loop()
-                await asyncio.wait_for(
-                    loop.run_in_executor(None, _run_sapi_tts, normalized_text, temp_path),
-                    timeout=6.0
-                )
-                provider_used = "pyttsx3"
+                # Edge-TTS retry logic: up to 2 attempts total (1 retry)
+                max_attempts = 2
+                edge_tts_error = None
+                for attempt in range(1, max_attempts + 1):
+                    try:
+                        print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] ATTEMPT {attempt}/{max_attempts} | voice={VOICE} | text='{normalized_text[:40]}...' | temp_path={temp_path}")
+                        communicate = edge_tts.Communicate(text=normalized_text, voice=VOICE)
+                        # We use 8.0s timeout per attempt, except for very long texts where we give more time
+                        timeout_limit = max(8.0, len(normalized_text) * 0.05)
+                        await asyncio.wait_for(communicate.save(temp_path), timeout=timeout_limit)
+                        provider_used = "Edge-TTS"
+                        break
+                    except Exception as e_attempt:
+                        edge_tts_error = e_attempt
+                        print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] ATTEMPT {attempt} FAILED: {e_attempt}")
+                        if attempt < max_attempts:
+                            await asyncio.sleep(0.5) # Quick pause before retry
+
+                if provider_used is None:
+                    raise edge_tts_error if edge_tts_error else Exception("Edge-TTS failed all attempts")
+
                 audio_file_size = os.path.getsize(temp_path) if os.path.exists(temp_path) else 0
-                print(f"[TRACE] [TTS_SPEAK] [{response_id}] [pyttsx3] SYNTHESIS SUCCESS | provider={provider_used} | file_size={audio_file_size} bytes")
+                print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] SYNTHESIS SUCCESS | provider={provider_used} | file_size={audio_file_size} bytes")
+                print(f"[E2E_TRACE] [STAGE 10: TTS Generated] PASS. Edge-TTS synthesized speech successfully. File size: {audio_file_size} bytes. Path: {temp_path}", flush=True)
             except asyncio.CancelledError:
-                print(f"[TRACE] [TTS_SPEAK] [{response_id}] [pyttsx3] TASK CANCELLED")
+                print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] TASK CANCELLED")
                 raise
             except Exception as e:
-                print(f"[TRACE] [TTS_SPEAK] [{response_id}] [pyttsx3] FAILED: {e} | Falling back to gTTS...")
+                # Log provider switch to gTTS in telemetry
+                print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] FAILED: {e} | Falling back to gTTS...")
+                telemetry_engine.log_voice_switch(
+                    response_id=response_id,
+                    text=normalized_text,
+                    requested_voice=VOICE,
+                    switched_from="Edge-TTS",
+                    switched_to="gTTS",
+                    reason=f"Edge-TTS failed after retry. Error: {e}"
+                )
                 if temp_path and os.path.exists(temp_path):
                     try:
                         os.remove(temp_path)
@@ -275,18 +307,29 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
                     from gtts import gTTS
                     loop = asyncio.get_running_loop()
                     tts_obj = gTTS(text=normalized_text, lang="en", tld="co.in")
+                    timeout_limit = max(6.0, len(normalized_text) * 0.05)
                     await asyncio.wait_for(
                         loop.run_in_executor(None, tts_obj.save, temp_path),
-                        timeout=5.0
+                        timeout=timeout_limit
                     )
                     provider_used = "gTTS"
                     audio_file_size = os.path.getsize(temp_path) if os.path.exists(temp_path) else 0
                     print(f"[TRACE] [TTS_SPEAK] [{response_id}] [gTTS] SYNTHESIS SUCCESS | provider={provider_used} | file_size={audio_file_size} bytes")
+                    print(f"[E2E_TRACE] [STAGE 10: TTS Generated] PASS. gTTS fallback synthesized speech successfully. File size: {audio_file_size} bytes. Path: {temp_path}", flush=True)
                 except asyncio.CancelledError:
                     print(f"[TRACE] [TTS_SPEAK] [{response_id}] [gTTS] TASK CANCELLED")
                     raise
                 except Exception as e:
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] [gTTS] FAILED: {e} | Falling back to Edge-TTS...")
+                    # Log provider switch to pyttsx3 in telemetry
+                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] [gTTS] FAILED: {e} | Falling back to pyttsx3...")
+                    telemetry_engine.log_voice_switch(
+                        response_id=response_id,
+                        text=normalized_text,
+                        requested_voice=VOICE,
+                        switched_from="gTTS",
+                        switched_to="pyttsx3",
+                        reason=f"gTTS failed. Error: {e}"
+                    )
                     if temp_path and os.path.exists(temp_path):
                         try:
                             os.remove(temp_path)
@@ -294,23 +337,37 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
                             pass
                     temp_path = None
 
-            # ─── PROVIDER 3: Edge-TTS (Tertiary Online Backup) ─────
+            # ─── PROVIDER 3: pyttsx3 (Tertiary Offline Fallback) ─────
             if provider_used is None:
                 try:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
                         temp_path = tmp.name
 
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] ATTEMPTING SYNTHESIS | text='{normalized_text[:40]}...' | temp_path={temp_path}")
-                    communicate = edge_tts.Communicate(text=normalized_text, voice=VOICE)
-                    await asyncio.wait_for(communicate.save(temp_path), timeout=8.0)
-                    provider_used = "Edge-TTS"
+                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] [pyttsx3] ATTEMPTING SYNTHESIS | text='{normalized_text[:40]}...' | temp_path={temp_path}")
+                    loop = asyncio.get_running_loop()
+                    # Increase SAPI5 synthesis timeout dynamically for long texts to prevent premature cuts
+                    timeout_limit = max(15.0, len(normalized_text) * 0.1)
+                    await asyncio.wait_for(
+                        loop.run_in_executor(None, _run_sapi_tts, normalized_text, temp_path),
+                        timeout=timeout_limit
+                    )
+                    provider_used = "pyttsx3"
                     audio_file_size = os.path.getsize(temp_path) if os.path.exists(temp_path) else 0
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] SYNTHESIS SUCCESS | provider={provider_used} | file_size={audio_file_size} bytes")
+                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] [pyttsx3] SYNTHESIS SUCCESS | provider={provider_used} | file_size={audio_file_size} bytes")
+                    print(f"[E2E_TRACE] [STAGE 10: TTS Generated] PASS. pyttsx3 (SAPI5) fallback synthesized speech successfully. File size: {audio_file_size} bytes. Path: {temp_path}", flush=True)
                 except asyncio.CancelledError:
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] TASK CANCELLED")
+                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] [pyttsx3] TASK CANCELLED")
                     raise
                 except Exception as e:
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] FAILED: {e} | All TTS providers failed.")
+                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] [pyttsx3] FAILED: {e} | All TTS providers failed.")
+                    telemetry_engine.log_voice_switch(
+                        response_id=response_id,
+                        text=normalized_text,
+                        requested_voice=VOICE,
+                        switched_from="pyttsx3",
+                        switched_to="FAILED",
+                        reason=f"All providers failed. pyttsx3 error: {e}"
+                    )
                     if temp_path and os.path.exists(temp_path):
                         try:
                             os.remove(temp_path)
@@ -319,13 +376,10 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
                     return
 
             print(f"[TRACE] [TTS_SPEAK] [{response_id}] TTS GENERATION COMPLETE | provider={provider_used} | file_size={audio_file_size} bytes")
-
-            from core.state_manager import AssistantState, get_state
-            current_state = get_state()
-            print(f"[TRACE] [TTS_SPEAK] [{response_id}] STATE CHECK | current_state={current_state} | expected=SPEAKING")
-            if current_state != AssistantState.SPEAKING:
-                print(f"[TRACE] [TTS_SPEAK] [{response_id}] ABORT: State is no longer SPEAKING (cancelled by user/state change)")
-                return
+            # NOTE: Intentional cancellations are handled by _play_cancelled (set by cancel_play())
+            # and the pipeline-level _speak_cancelled flag. Do NOT check state here — the state
+            # can legitimately drift to LISTENING during the synthesis window (Bluetooth A2DP
+            # handoff delay + Edge-TTS retry overhead) causing valid audio to be silently dropped.
 
             if web_mode:
                 import base64
@@ -342,41 +396,42 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
                 b64_size = len(b64)
                 print(f"[TRACE] [TTS_SPEAK] [{response_id}] BASE64 ENCODE COMPLETE | b64_size={b64_size} chars")
                 
-                if get_state() == AssistantState.SPEAKING:
-                    # Register response-specific event in the dictionary
-                    playback_event = asyncio.Event()
-                    _playback_events[response_id] = playback_event
+                # Audio is synthesized and encoded — emit it unconditionally.
+                # The state may have drifted to LISTENING during synthesis (Edge-TTS
+                # retry + gTTS fallback takes 2-4s). Real cancellations are handled
+                # by _play_cancelled flag, not state checks.
+                
+                # Register response-specific event in the dictionary
+                playback_event = asyncio.Event()
+                _playback_events[response_id] = playback_event
+                
+                print(f"[TRACE] [TTS_SPEAK] [{response_id}] EMITTING AUDIO VIA WEBSOCKET | type=audio | b64_size={b64_size}")
+                print(f"[E2E_TRACE] [STAGE 11: Audio Sent To Frontend] Sending audio base64 payload to WebSocket (b64_size={b64_size} chars)...", flush=True)
+                await emit_json({"type": "audio", "audioBase64": b64, "responseId": response_id})
+                print(f"[TRACE] [TTS_SPEAK] [{response_id}] AUDIO EMITTED SUCCESSFULLY | Waiting for playback completion...")
+                print(f"[E2E_TRACE] [STAGE 11: Audio Sent To Frontend] PASS. Audio payload emitted successfully. Response ID: {response_id}", flush=True)
                     
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] EMITTING AUDIO VIA WEBSOCKET | type=audio | b64_size={b64_size}")
-                    await emit_json({"type": "audio", "audioBase64": b64, "responseId": response_id})
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] AUDIO EMITTED SUCCESSFULLY | Waiting for playback completion...")
-                    
-                    # Dynamic playback timeout: 0.15s per character + 15s buffer (min 20.0s, max 180.0s)
-                    char_count = len(normalized_text)
-                    audio_duration = max(20.0, min(180.0, char_count * 0.15 + 15.0))
-                    global current_audio_duration
-                    current_audio_duration = audio_duration
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] PLAYBACK TIMEOUT SET | duration={audio_duration}s | char_count={char_count}")
-                    
-                    try:
-                        await asyncio.wait_for(playback_event.wait(), timeout=audio_duration)
-                        print(f"[TRACE] [TTS_SPEAK] [{response_id}] PLAYBACK COMPLETION CONFIRMED FROM FRONTEND")
-                    except asyncio.TimeoutError:
-                        print(f"[TRACE] [TTS_SPEAK] [{response_id}] PLAYBACK COMPLETION TIMEOUT | timeout={audio_duration}s | FRONTEND MAY HAVE FAILED TO PLAY")
-                    finally:
-                        # Ensure cleanup of the specific response event
-                        _playback_events.pop(response_id, None)
-                else:
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] ABORT: State changed during base64 encoding | skipping emit")
+                # Dynamic playback timeout: 0.15s per character + 15s buffer (min 20.0s, max 180.0s)
+                char_count = len(normalized_text)
+                audio_duration = max(20.0, min(180.0, char_count * 0.15 + 15.0))
+                global current_audio_duration
+                current_audio_duration = audio_duration
+                print(f"[TRACE] [TTS_SPEAK] [{response_id}] PLAYBACK TIMEOUT SET | duration={audio_duration}s | char_count={char_count}")
+                
+                try:
+                    await asyncio.wait_for(playback_event.wait(), timeout=audio_duration)
+                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] PLAYBACK COMPLETION CONFIRMED FROM FRONTEND")
+                except asyncio.TimeoutError:
+                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] PLAYBACK COMPLETION TIMEOUT | timeout={audio_duration}s | FRONTEND MAY HAVE FAILED TO PLAY")
+                finally:
+                    # Ensure cleanup of the specific response event
+                    _playback_events.pop(response_id, None)
             else:
-                import sys
-                if "api.server" in sys.modules:
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] Web server running but no UI connected | skipping local playback fallback to prevent audio driver deadlock")
-                else:
-                    loop = asyncio.get_running_loop()
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] DISPATCHING LOCAL PLAYBACK | temp_path={temp_path}")
-                    await loop.run_in_executor(None, _sync_play, temp_path)
-                    print(f"[TRACE] [TTS_SPEAK] [{response_id}] LOCAL PLAYBACK FINISHED")
+                loop = asyncio.get_running_loop()
+                print(f"[TRACE] [TTS_SPEAK] [{response_id}] DISPATCHING LOCAL PLAYBACK | temp_path={temp_path}")
+                print(f"[E2E_TRACE] [STAGE 11: Audio Sent To Frontend] LOCAL PLAYBACK MODE. Dispatching local playback. Path: {temp_path}", flush=True)
+                await loop.run_in_executor(None, _sync_play, temp_path)
+                print(f"[TRACE] [TTS_SPEAK] [{response_id}] LOCAL PLAYBACK FINISHED")
 
         except asyncio.CancelledError:
             print(f"[TRACE] [TTS_SPEAK] [{response_id}] TASK CANCELLED")

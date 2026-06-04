@@ -214,6 +214,14 @@ async def lifespan(app: FastAPI):
     # Trigger background installed apps indexing prefetch
     from system.app_control import ensure_app_index_loaded
     ensure_app_index_loaded()
+    
+    # Warm SAPI5 Singleton Startup
+    try:
+        from voice.speak import init_tts_singleton
+        init_tts_singleton()
+        print("[STARTUP] SAPI5 TTS singleton initialized successfully.")
+    except Exception as e_tts:
+        print(f"[STARTUP WARNING] Failed to warm SAPI5 singleton: {e_tts}")
 
     reset_stop()                         # arm the mic listener
     agent_task = loop.create_task(agent_loop())

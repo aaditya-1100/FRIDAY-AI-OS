@@ -14,7 +14,7 @@ import re
 import numpy as np
 import spacy
 from brain.onnx_biencoder import ONNXBiEncoder
-from brain.semantic_taxonomy import SemanticTaxonomy
+from brain.entity_tracker import _TAXONOMY
 from brain.behavioral_signal_registry import BehavioralSignalRegistry
 
 def levenshtein_distance(s1: str, s2: str) -> int:
@@ -141,7 +141,7 @@ class PersonalizationEngine:
         self.nlp = spacy.load("en_core_web_sm")
         
         # 4. Load Dynamic Taxonomy Config
-        self.taxonomy = SemanticTaxonomy()
+        self.taxonomy = _TAXONOMY
         
         # 5. Compile Dynamic Intent Centroids from Prototypes at Startup
         self.centroids = {}

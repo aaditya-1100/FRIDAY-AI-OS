@@ -1,14 +1,14 @@
 {
-  "version": "1.0",
-  "created_at": "2026-06-01T15:30:00Z",
-  "updated_at": "2026-06-01T15:30:00Z",
+  "version": "2.1",
+  "created_at": "2026-06-02T12:05:00Z",
+  "updated_at": "2026-06-02T12:05:00Z",
   "nodes": {
     "technology": {
-      "children": ["ai", "robotics", "automation", "programming"],
+      "children": ["ai", "robotics", "automation", "programming_language", "framework", "CODEBASE"],
       "synonyms": ["tech", "software", "engineering", "hardware", "technology"]
     },
     "ai": {
-      "children": ["machine learning", "deep learning", "nlp", "vision", "ai systems"],
+      "children": ["machine learning", "deep learning", "nlp", "vision", "ai systems", "AI_MODEL", "AI_ASSISTANT"],
       "synonyms": ["artificial intelligence", "intelligent systems", "neural networks", "ai systems", "ai"]
     },
     "robotics": {
@@ -19,9 +19,33 @@
       "children": ["system automation", "scripting", "cron"],
       "synonyms": ["sys-automation", "automation", "automated"]
     },
-    "programming": {
-      "children": ["python", "javascript", "rust", "c++"],
-      "synonyms": ["coding", "development", "software engineering", "programming"]
+    "programming_language": {
+      "children": ["python", "javascript", "rust", "c++", "go", "typescript"],
+      "synonyms": ["coding", "development", "software engineering", "programming", "programming_language"]
+    },
+    "python": {
+      "children": [],
+      "synonyms": ["python", "py"]
+    },
+    "javascript": {
+      "children": [],
+      "synonyms": ["javascript", "js"]
+    },
+    "rust": {
+      "children": [],
+      "synonyms": ["rust", "rustlang"]
+    },
+    "c++": {
+      "children": [],
+      "synonyms": ["c++", "cpp"]
+    },
+    "go": {
+      "children": [],
+      "synonyms": ["go", "golang"]
+    },
+    "typescript": {
+      "children": [],
+      "synonyms": ["typescript", "ts"]
     },
     "sci-fi": {
       "children": ["cyberpunk", "space opera", "dystopian"],
@@ -32,8 +56,52 @@
       "synonyms": ["marvel comics", "marvel cinematic universe", "mcu", "marvel"]
     },
     "startups": {
-      "children": ["venture capital", "saas", "bootstrapping"],
+      "children": ["venture capital", "saas", "bootstrapping", "STARTUP"],
       "synonyms": ["startup case studies", "startup-minded", "startups", "startup"]
+    },
+    "company": {
+      "children": ["brand"],
+      "synonyms": ["apple", "google", "microsoft", "meta", "tesla", "amazon", "netflix", "company"]
+    },
+    "organization": {
+      "children": [],
+      "synonyms": ["openai", "mit", "stanford", "harvard", "nasa", "organization"]
+    },
+    "product": {
+      "children": [],
+      "synonyms": ["iphone", "nord", "oneplus", "macbook", "ipad", "kindle", "product"]
+    },
+    "brand": {
+      "children": [],
+      "synonyms": ["oneplus", "samsung", "nike", "sony", "brand"]
+    },
+    "project": {
+      "children": ["repository"],
+      "synonyms": ["friday", "project"]
+    },
+    "framework": {
+      "children": [],
+      "synonyms": ["react", "vue", "svelte", "nextjs", "pyttsx3", "onnx", "framework"]
+    },
+    "repository": {
+      "children": [],
+      "synonyms": ["friday-personal-assistant", "friday repo", "repo", "repository"]
+    },
+    "AI_MODEL": {
+      "children": [],
+      "synonyms": ["gpt-4", "llama 3.3", "claude 3.5", "gemini 1.5", "deepseek", "AI_MODEL"]
+    },
+    "AI_ASSISTANT": {
+      "children": [],
+      "synonyms": ["friday", "jarvis", "assistant", "companion", "AI_ASSISTANT"]
+    },
+    "CODEBASE": {
+      "children": ["repository"],
+      "synonyms": ["repo", "files", "backend", "frontend", "project files", "codebase", "CODEBASE"]
+    },
+    "STARTUP": {
+      "children": [],
+      "synonyms": ["saas", "business", "bootstrapping", "venture capital", "startup", "STARTUP"]
     }
   }
 }

@@ -25,6 +25,18 @@ async def main():
     pipeline.set_web_session_active(True)
 
     try:
+        # Pre-calibrate microphone BEFORE the startup greeting plays.
+        # If calibration runs lazily (on first listen()), the TTS greeting is still
+        # reverberating through speakers, inflating ambient RMS (e.g. 540) and clamping
+        # the detection threshold to 400 — which silences real speech detection.
+        print("[STARTUP] Pre-calibrating microphone in silence...")
+        try:
+            from voice.listen import _force_calibration
+            _force_calibration()
+            print("[STARTUP] Microphone pre-calibration complete.")
+        except Exception as e_cal:
+            print(f"[STARTUP] Microphone pre-calibration failed (will retry on first listen): {e_cal}")
+
         await pipeline.safe_speak(pipeline.STARTUP_MESSAGE)
 
         print("[STARTUP] FRIDAY is ready. Say 'Friday' to wake up.")

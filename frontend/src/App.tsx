@@ -5,6 +5,7 @@ import { Suspense, useEffect, useState } from "react";
 import { aiStateAtom, commandErrorAtom, wsConnectedAtom, mapModeAtom, mapLocationAtom, mapLatAtom, mapLonAtom, type AiState } from "./atoms";
 import { MicButton } from "./components/MicButton";
 import { ParticleOrb } from "./components/ParticleOrb";
+import { RemindersPanel, ReminderToastOverlay } from "./components/RemindersPanel";
 import { useFridaySocket } from "./hooks/useFridaySocket";
 
 function statusFor(state: AiState, connected: boolean, err: string | null) {
@@ -327,7 +328,7 @@ export default function App() {
 
                     {/* Scanlines */}
                     <div className="pointer-events-none absolute inset-0 opacity-10"
-                      style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 4px)" }} />
+                       style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 4px)" }} />
 
                     {/* HUD corners */}
                     {["top-4 left-4 border-t border-l","top-4 right-4 border-t border-r",
@@ -378,6 +379,12 @@ export default function App() {
 
 
 
+
+      {/* Reminder Toast — top center notification */}
+      <ReminderToastOverlay />
+
+      {/* Reminder/Timer/Alarm live panel — bottom right */}
+      <RemindersPanel />
 
       <header className="relative z-10 flex flex-none justify-center pt-10 md:pt-14">
         <motion.h1
