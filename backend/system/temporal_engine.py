@@ -176,17 +176,28 @@ class TemporalEngine:
             print(f"[TEMPORAL WARNING] Failed to load persistent state: {e}")
 
     def save_state(self):
-        """Saves current state persistently to JSON file."""
+        """Saves current state persistently to JSON file using an atomic write pattern."""
         try:
-            os.makedirs(os.path.dirname(self.state_file), exist_ok=True)
+            dir_name = os.path.dirname(self.state_file)
+            os.makedirs(dir_name, exist_ok=True)
             state = {
                 "reminders": self.reminders,
                 "stopwatch": self.stopwatch
             }
-            with open(self.state_file, "w", encoding="utf-8") as f:
+            import tempfile
+            # Write to a temporary file in the same directory to ensure atomic replace
+            with tempfile.NamedTemporaryFile("w", dir=dir_name, delete=False, encoding="utf-8") as f:
+                temp_path = f.name
                 json.dump(state, f, indent=2)
+            
+            os.replace(temp_path, self.state_file)
         except Exception as e:
             print(f"[TEMPORAL WARNING] Failed to save persistent state: {e}")
+            if 'temp_path' in locals() and os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except Exception:
+                    pass
 
     # ─── REMINDER & TIMER OPERATIONS ──────────────────────────────────────────
 

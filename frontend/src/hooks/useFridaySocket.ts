@@ -83,6 +83,7 @@ export function _registerIsTtsPlayingSetter(fn: (v: boolean) => void) {
 let _audioPlaying  = false;
 let _currentSource: AudioBufferSourceNode | null = null;
 let _levelRaf = 0;
+let _playbackSessionId = 0;
 interface AudioQueueItem {
   b64: string;
   responseId: string;
@@ -119,6 +120,7 @@ async function _playNext() {
   const b64 = item.b64;
   const rid = item.responseId;
   let playTimeout: ReturnType<typeof setTimeout> | null = null;
+  const thisSessionId = ++_playbackSessionId;
   
   console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] STARTING PLAYBACK | queue_remaining=${_audioQueue.length} | b64_length=${b64.length}`);
   console.log(`[E2E_TRACE] [STAGE 12: Frontend Playback Started] Decoding base64 audio payload for response ID: ${rid}`);
@@ -181,12 +183,15 @@ async function _playNext() {
         if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
         
         try {
-          if (_currentSource) {
-            _currentSource.disconnect();
-            console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] Source node disconnected`);
-          }
+          src.disconnect();
+          console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] Source node disconnected`);
         } catch (e) {
           console.warn(`[TRACE] [AUDIO_PLAYBACK] [${rid}] disconnect error:`, e);
+        }
+        
+        if (thisSessionId !== _playbackSessionId) {
+          console.log(`[TRACE] [AUDIO_PLAYBACK] [${rid}] Obsolete session cleanup ignored | thisSessionId=${thisSessionId} active=${_playbackSessionId}`);
+          return;
         }
         
         _audioPlaying  = false;
@@ -240,10 +245,12 @@ async function _playNext() {
     console.error(`[TRACE] [AUDIO_PLAYBACK] [${rid}] PLAYBACK ERROR:`, e);
     console.log(`[E2E_TRACE] [STAGE 12: Frontend Playback Started] FAIL. Playback error: ${e} for response ID: ${rid}`);
     if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
-    _audioPlaying  = false;
-    _currentSource = null;
-    _stopLevelRaf();
-    _setIsTtsPlaying?.(false);
+    if (thisSessionId === _playbackSessionId) {
+      _audioPlaying  = false;
+      _currentSource = null;
+      _stopLevelRaf();
+      _setIsTtsPlaying?.(false);
+    }
     
     // Safety check: notify backend on error so it unblocks
     const ws = getWsSocket();
@@ -265,6 +272,7 @@ export function enqueueAudio(base64: string, responseId?: string) {
 export function stopAudio() {
   console.log(`[TRACE] [AUDIO] stopAudio() called. Clearing queue.`);
   _audioQueue.length = 0;
+  _playbackSessionId++;
   try {
     if (_currentSource) {
       console.log("[TRACE] [AUDIO] Stopping active source node");
@@ -302,10 +310,14 @@ export function sendStopSpeaking() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function wsUrl(): string {
-  const env = import.meta.env.VITE_WS_URL;
-  if (env) return env;
-  // Always connect to local backend — works in both dev and packaged Electron app
-  return "ws://127.0.0.1:8001/api/ws";
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token") || "";
+  const base = import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8001/api/ws";
+  if (token) {
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}token=${encodeURIComponent(token)}`;
+  }
+  return base;
 }
 
 function formatResultError(data: { reason?: string; detail?: string }): string {
@@ -409,17 +421,17 @@ export function useFridaySocket() {
           const data = JSON.parse(ev.data as string);
           console.log(`[TRACE] [WS_MSG] Parsed message type: "${data.type}"`, data);
           
-          if (data.type === "state" && typeof data.state === "string") {
+          if ((data.type === "state" || data.type === "fsm_state_change") && typeof data.state === "string") {
             const newState = data.state as AiState;
             console.log(`[TRACE] [WS_MSG] State change: "${newState}"`);
             setBackendState(newState);
-            if (newState === "LISTENING") {
+            if (newState === "LISTENING" || newState === "PERCEIVING") {
               setTranscript("");
               setSpeakText("");
-            } else if (newState === "THINKING") {
+            } else if (newState === "THINKING" || newState === "SYNTHESIZING") {
               setSpeakText("");
             }
-            if (newState === "LISTENING" || newState === "IDLE") {
+            if (newState === "LISTENING" || newState === "PERCEIVING" || newState === "IDLE" || newState === "WAITING") {
               stopAudio();
             }
           }

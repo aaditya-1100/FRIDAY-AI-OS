@@ -3,11 +3,19 @@ import { atomWithStorage } from "jotai/utils";
 
 export type AiState =
   | "IDLE"
+  | "PERCEIVING"
+  | "PLANNING"
+  | "DELEGATING"
+  | "WAITING"
+  | "SYNTHESIZING"
+  | "RESPONDING"
+  | "REFLECTING"
+  | "INTERRUPTED"
+  | "ERROR"
   | "LISTENING"
   | "THINKING"
   | "EXECUTING"
-  | "SPEAKING"
-  | "ERROR";
+  | "SPEAKING";
 
 export interface ReminderItem {
   id: string;

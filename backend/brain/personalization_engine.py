@@ -71,10 +71,30 @@ class SemanticPreprocessor:
             except Exception:
                 pass
                 
-        # Inject core operational terms
+        # Inject core operational terms, standard verbs, query tokens, pronouns, and media descriptors
         self.vocabulary.update([
             "recommend", "suggest", "explain", "calculate", "debug", "define", "roadmap", "plan",
-            "unrelated", "without", "except", "yesterday", "tomorrow", "finals", "recursion"
+            "unrelated", "without", "except", "yesterday", "tomorrow", "finals", "recursion",
+            
+            # Media control & actions
+            "play", "open", "show", "tell", "watch", "search", "find", "check", "get", "run", "start", 
+            "stop", "close", "launch", "kill", "quit", "exit", "terminate", "go", "shut", "shutdown", 
+            "restart", "mute", "unmute", "remember", "save", "store", "keep", "forget", "clear", "reset", "set",
+            
+            # Common query & helper words
+            "what", "how", "why", "who", "when", "where", "which", "is", "are", "am", "was", "were", "be", 
+            "been", "do", "does", "did", "can", "could", "would", "should", "will", "shall",
+            
+            # Target apps, entities & mediums
+            "music", "song", "video", "short", "shorts", "movie", "playlist", "chrome", "google", "youtube", 
+            "spotify", "weather", "news", "time", "date", "day", "screen", "screenshot", "status", "system", 
+            "app", "application", "browser", "window", "calculator", "notepad", "command", "prompt", "cmd", 
+            "powershell", "pc", "computer",
+            
+            # Pronouns & structural prepositions
+            "me", "my", "i", "you", "your", "he", "she", "it", "they", "them", "us", "we", "our", "to", "for", 
+            "on", "in", "at", "by", "with", "about", "from", "of", "and", "or", "but", "the", "a", "an", "this", 
+            "that", "these", "those"
         ])
         
     def preprocess(self, query: str) -> str:
@@ -137,8 +157,9 @@ class PersonalizationEngine:
         self.encoder = ONNXBiEncoder(model_name=winner)
         self.encoder.load()
         
-        # 3. Load Spacy NLP Tagger/Parser
-        self.nlp = spacy.load("en_core_web_sm")
+        # 3. Load Spacy NLP Tagger/Parser via shared cache loader
+        from brain.spacy_loader import get_spacy_model
+        self.nlp = get_spacy_model()
         
         # 4. Load Dynamic Taxonomy Config
         self.taxonomy = _TAXONOMY

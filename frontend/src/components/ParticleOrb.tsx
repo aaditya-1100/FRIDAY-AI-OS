@@ -41,22 +41,38 @@ function fibonacciSphere(count: number, radius: number) {
 
 // ── Per-state color palette ────────────────────────────────────────────────────
 const COLORS: Record<AiState, string> = {
-  IDLE:      "#4f46e5",   // deep indigo
-  LISTENING: "#06b6d4",   // cyber cyan
-  THINKING:  "#a855f7",   // bright purple
-  EXECUTING: "#ec4899",   // vibrant hot pink
-  SPEAKING:  "#f59e0b",   // radiant gold/amber
-  ERROR:     "#ef4444",   // warning crimson
+  IDLE:         "#4f46e5",   // deep indigo
+  PERCEIVING:   "#06b6d4",   // cyber cyan (listening)
+  PLANNING:     "#ec4899",   // vibrant hot pink (processing)
+  DELEGATING:   "#ec4899",   // vibrant hot pink (processing)
+  WAITING:      "#6366f1",   // soft indigo (slow pulse paused)
+  SYNTHESIZING: "#a855f7",   // bright purple (thinking)
+  RESPONDING:   "#f59e0b",   // radiant gold/amber (speaking)
+  REFLECTING:   "#312e81",   // dim indigo (post-response wind-down)
+  INTERRUPTED:  "#f43f5e",   // rose flash
+  ERROR:        "#ef4444",   // warning crimson
+  LISTENING:    "#06b6d4",
+  THINKING:     "#a855f7",
+  EXECUTING:    "#ec4899",
+  SPEAKING:     "#f59e0b",
 };
 
 // ── Per-state rotation speeds (radians/second) ─────────────────────────────────
 const ROT_SPEED: Record<AiState, number> = {
-  IDLE:      0.055,   // slow, meditative
-  LISTENING: 0.095,   // slightly elevated — active attention
-  THINKING:  0.35,    // fast focused spin — "working hard"
-  EXECUTING: 0.50,    // fastest — urgent task execution
-  SPEAKING:  0.13,    // smooth, steady — speech flow
-  ERROR:     0.07,    // slow, contracted
+  IDLE:         0.055,   // slow, meditative
+  PERCEIVING:   0.095,   // cyber cyan (listening)
+  PLANNING:     0.50,    // processing animation
+  DELEGATING:   0.50,    // processing animation
+  WAITING:      0.03,    // slow pulse (paused)
+  SYNTHESIZING: 0.35,    // thinking animation
+  RESPONDING:   0.13,    // speaking animation
+  REFLECTING:   0.02,    // dim pulse (post-response wind-down)
+  INTERRUPTED:  0.60,    // flash + reset to listening
+  ERROR:        0.07,    // error state animation
+  LISTENING:    0.095,
+  THINKING:     0.35,
+  EXECUTING:    0.50,
+  SPEAKING:     0.13,
 };
 
 // ── Per-state base scale ────────────────────────────────────────────────────────
@@ -65,12 +81,20 @@ const BASE_SCALE = 0.53;
 // ── Damping speeds (lerp lambda per state) ──────────────────────────────────────
 // Higher = faster snap. Lower = smoother, more organic transition.
 const SCALE_DAMP: Record<AiState, number> = {
-  IDLE:      2.5,    // slow breathing
-  LISTENING: 10,     // organic growth — responsive but fluid, not jumpy
-  THINKING:  4.0,    // smooth ramp
-  EXECUTING: 4.5,    // smooth ramp
-  SPEAKING:  10,     // organic sync with audio — matched fluidity
-  ERROR:     3.0,    // slow contraction
+  IDLE:         2.5,    // slow breathing
+  PERCEIVING:   10,     // active listening animation
+  PLANNING:     4.5,    // processing animation
+  DELEGATING:   4.5,    // processing animation
+  WAITING:      2.0,    // slow pulse (paused)
+  SYNTHESIZING: 4.0,    // thinking animation
+  RESPONDING:   10,     // speaking animation
+  REFLECTING:   1.5,    // dim pulse (post-response wind-down)
+  INTERRUPTED:  15,     // flash + reset to listening
+  ERROR:        3.0,    // error state animation
+  LISTENING:    10,
+  THINKING:     4.0,
+  EXECUTING:    4.5,
+  SPEAKING:     10,
 };
 
 // ── Per-state particle size ─────────────────────────────────────────────────────
@@ -107,52 +131,43 @@ export function ParticleOrb() {
     const dt2 = Math.min(dt, 0.05);
 
     // ── Smooth raw audio levels ────────────────────────────────────────────────
-    // Organic damping: 10 for active states gives fluid, premium motion
-    // without sacrificing responsiveness to speech onset/offset.
-    const micDamp = aiState === "LISTENING" ? 10 : 8;
-    const ttsDamp = aiState === "SPEAKING"  ? 10 : 8;
+    const micDamp = (aiState === "LISTENING" || aiState === "PERCEIVING") ? 10 : 8;
+    const ttsDamp = (aiState === "SPEAKING" || aiState === "RESPONDING")  ? 10 : 8;
     mic.current = THREE.MathUtils.damp(mic.current, micLevel, micDamp, dt);
     tts.current = THREE.MathUtils.damp(tts.current, ttsLevel, ttsDamp, dt);
 
     // Noise floor: mic levels below 0.03 are ambient room noise — treat as silence
-    // to prevent micro-jitter when nobody is speaking.
     const cleanMic = mic.current < 0.03 ? 0 : mic.current;
 
     // ── Target scale per state ─────────────────────────────────────────────────
     let target = BASE_SCALE;
 
-    if (aiState === "IDLE") {
-      // Gentle two-frequency breathing — calm, alive, not mechanical
-      target = BASE_SCALE
+    if (aiState === "IDLE" || aiState === "WAITING" || aiState === "REFLECTING") {
+      const multiplier = aiState === "REFLECTING" ? 0.7 : 1.0;
+      target = (BASE_SCALE
         + Math.sin(t * 0.75) * 0.015
-        + Math.sin(t * 0.31) * 0.006;
+        + Math.sin(t * 0.31) * 0.006) * multiplier;
 
-    } else if (aiState === "LISTENING") {
-      // Expand organically with voice amplitude — louder speech = slightly larger orb, silence = baseline
-      // Cubic easing (pow 0.7) is less aggressive than sqrt, reducing sensitivity to small
-      // fluctuations while preserving dramatic response to loud speech.
+    } else if (aiState === "LISTENING" || aiState === "PERCEIVING" || aiState === "INTERRUPTED") {
       const voiceExpansion = Math.pow(cleanMic, 0.7) * 0.10;
       target = BASE_SCALE + voiceExpansion;
+      if (aiState === "INTERRUPTED") {
+        target = BASE_SCALE + 0.08;
+      }
 
-    } else if (aiState === "SPEAKING") {
-      // Expand with TTS audio amplitude — authentic speech rhythm.
-      // Fallback gentle pulse when tts is zero (TTS warming up or between chunks).
+    } else if (aiState === "SPEAKING" || aiState === "RESPONDING") {
       const warmupPulse = tts.current < 0.025
         ? Math.abs(Math.sin(t * 5.5)) * 0.010
         : 0;
       target = BASE_SCALE + 0.01 + tts.current * 0.16 + warmupPulse;
 
-    } else if (aiState === "THINKING") {
-      // Elevated steady state + tight high-frequency pulse = "processing" feel
-      // Distinct from EXECUTING: smaller base, different pulse frequency
+    } else if (aiState === "THINKING" || aiState === "SYNTHESIZING") {
       target = BASE_SCALE + 0.04 + Math.sin(t * 5.5) * 0.010;
 
-    } else if (aiState === "EXECUTING") {
-      // Larger than THINKING + faster pulse + slight breathless urgency
+    } else if (aiState === "EXECUTING" || aiState === "PLANNING" || aiState === "DELEGATING") {
       target = BASE_SCALE + 0.06 + Math.sin(t * 9.0) * 0.008;
 
     } else if (aiState === "ERROR") {
-      // Contracted, slow warning strobe
       target = BASE_SCALE - 0.04 + Math.sin(t * 3.0) * 0.010;
     }
 
@@ -164,7 +179,6 @@ export function ParticleOrb() {
     // ── Rotation (state-specific speed, smooth transition) ────────────────────
     const targetRotSpeed = ROT_SPEED[aiState] ?? 0.10;
     if (g.userData.rotSpeed === undefined) g.userData.rotSpeed = ROT_SPEED.IDLE;
-    // Rotation speed transitions with lambda=5 — takes ~0.6s to fully change
     g.userData.rotSpeed = THREE.MathUtils.damp(g.userData.rotSpeed, targetRotSpeed, 5, dt);
     g.rotation.y += dt2 * g.userData.rotSpeed;
     g.rotation.x += dt2 * g.userData.rotSpeed * 0.22;
@@ -173,14 +187,14 @@ export function ParticleOrb() {
     const mat = pts.material as THREE.PointsMaterial;
 
     // Color lerp — instant enough to feel crisp, smooth enough to avoid flash
-    const targetColorStr = (aiState === "IDLE" && micMuted) ? "#334155" : COLORS[aiState];
+    const targetColorStr = ((aiState === "IDLE" || aiState === "WAITING" || aiState === "REFLECTING") && micMuted) ? "#334155" : COLORS[aiState];
     color.current.set(targetColorStr);
     mat.color.lerp(color.current, 1 - Math.exp(-5 * dt));
 
     // Audio level drives opacity + particle size boost
-    const audioLevel = aiState === "SPEAKING"
+    const audioLevel = (aiState === "SPEAKING" || aiState === "RESPONDING")
       ? tts.current
-      : aiState === "LISTENING"
+      : (aiState === "LISTENING" || aiState === "PERCEIVING")
         ? mic.current
         : 0;
 

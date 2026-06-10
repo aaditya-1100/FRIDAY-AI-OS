@@ -13,13 +13,24 @@ function statusFor(state: AiState, connected: boolean, err: string | null) {
   if (!connected) return "Waiting for server…";
   switch (state) {
     case "LISTENING":
+    case "PERCEIVING":
       return "Listening";
     case "THINKING":
+    case "SYNTHESIZING":
       return "Thinking";
     case "EXECUTING":
+    case "PLANNING":
+    case "DELEGATING":
       return "Working";
     case "SPEAKING":
+    case "RESPONDING":
       return "Speaking";
+    case "WAITING":
+      return "Waiting";
+    case "REFLECTING":
+      return "Reflecting";
+    case "INTERRUPTED":
+      return "Interrupted";
     case "ERROR":
       return "Error";
     default:
