@@ -4,8 +4,19 @@ import re
 from brain.personalization_engine import PersonalizationEngine
 from brain.behavior_contract import BehaviorContract
 
+_identity_manager_instance = None
+
 class IdentityManager:
+    def __new__(cls, *args, **kwargs):
+        global _identity_manager_instance
+        if _identity_manager_instance is None:
+            _identity_manager_instance = super().__new__(cls)
+            _identity_manager_instance._initialized = False
+        return _identity_manager_instance
+
     def __init__(self, file_path=None):
+        if getattr(self, "_initialized", False):
+            return
         if file_path is None:
             self.file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "memory", "identity_profile.json")
         else:
@@ -76,6 +87,7 @@ class IdentityManager:
         self.load()
         self.engine = PersonalizationEngine()
         self.contract = BehaviorContract()
+        self._initialized = True
 
     def load(self):
         if os.path.exists(self.file_path) and os.path.getsize(self.file_path) > 0:

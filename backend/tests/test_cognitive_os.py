@@ -1643,3 +1643,263 @@ def test_system_prompt_assembly():
     assert len(huge_prompt) / 3 <= 8500
 
 
+@pytest.mark.asyncio
+async def test_screen_reader():
+    from friday.vision.screen_reader import screen_reader, TESSERACT_AVAILABLE
+    from PIL import Image
+    import time
+    from unittest.mock import patch
+
+    # Mock screenshot
+    img = Image.new("RGB", (100, 100), color="white")
+    with patch.object(screen_reader, "screenshot", return_value=img):
+        captured = screen_reader.screenshot()
+        assert isinstance(captured, Image.Image)
+        assert captured.size == (100, 100)
+        
+    if TESSERACT_AVAILABLE:
+        txt = screen_reader.extract_text(img)
+        assert isinstance(txt, str)
+    else:
+        txt = screen_reader.extract_text(img)
+        assert txt == ""
+        
+    bbox = screen_reader.find_text(img, "nonexistent")
+    assert bbox is None
+    
+    # Test timeout
+    def slow_screenshot():
+        time.sleep(4.0)
+        return img
+        
+    with patch.object(screen_reader, "screenshot", side_effect=slow_screenshot):
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(asyncio.to_thread(screen_reader.screenshot), timeout=1.0)
+
+
+@pytest.mark.asyncio
+async def test_vision_agent():
+    from friday.agents.vision_agent import VisionAgent
+    from friday.core.events import TaskDispatch, TaskResult, TaskStatus, AgentType
+    from friday.vision.screen_reader import screen_reader
+    from PIL import Image
+    from uuid import uuid4
+    from unittest.mock import patch
+
+    agent = VisionAgent()
+    await agent.start()
+    
+    img = Image.new("RGB", (50, 50), color="blue")
+    mock_structured = {"full_text": "mock text", "text_blocks": [], "active_window": "TestWindow"}
+    
+    with patch.object(screen_reader, "screenshot", return_value=img), \
+         patch.object(screen_reader, "extract_structured", return_value=mock_structured), \
+         patch.object(screen_reader, "extract_text", return_value="mock raw text"):
+         
+        # Dispatch SCREEN_READ
+        dispatch_read = TaskDispatch(
+            task_id=uuid4(),
+            agent_id=agent.agent_id,
+            agent_type=AgentType.VISION_AGENT,
+            intent="SCREEN_READ",
+            parameters={},
+            correlation_id=uuid4(),
+            session_id=uuid4()
+        )
+        res_read = await agent.handle_task(dispatch_read)
+        assert res_read.status == TaskStatus.SUCCESS
+        assert res_read.payload["full_text"] == "mock text"
+        assert "text_blocks" in res_read.payload
+        
+        # Dispatch SCREEN_SCREENSHOT
+        dispatch_shot = TaskDispatch(
+            task_id=uuid4(),
+            agent_id=agent.agent_id,
+            agent_type=AgentType.VISION_AGENT,
+            intent="SCREEN_SCREENSHOT",
+            parameters={},
+            correlation_id=uuid4(),
+            session_id=uuid4()
+        )
+        res_shot = await agent.handle_task(dispatch_shot)
+        assert res_shot.status == TaskStatus.SUCCESS
+        assert "path" in res_shot.payload
+        assert os.path.exists(res_shot.payload["path"])
+        if os.path.exists(res_shot.payload["path"]):
+            os.remove(res_shot.payload["path"])
+            
+        # Dispatch SCREEN_DESCRIBE
+        dispatch_desc = TaskDispatch(
+            task_id=uuid4(),
+            agent_id=agent.agent_id,
+            agent_type=AgentType.VISION_AGENT,
+            intent="SCREEN_DESCRIBE",
+            parameters={},
+            correlation_id=uuid4(),
+            session_id=uuid4()
+        )
+        res_desc = await agent.handle_task(dispatch_desc)
+        assert res_desc.status == TaskStatus.SUCCESS
+        assert res_desc.payload["ocr_text"] == "mock raw text"
+        
+    await agent.stop()
+
+
+@pytest.mark.asyncio
+async def test_proactive_engine():
+    from friday.core.proactive_engine import ProactiveEngine
+    from friday.core.fsm import cognitive_core, AssistantState
+    from friday.core.events import EventEnvelope, EventPriority
+    from friday.core.event_bus import event_bus
+    from uuid import uuid4
+    
+    event_bus._subscribers.clear()
+    loop = asyncio.get_running_loop()
+    event_bus.start(loop)
+    
+    engine = ProactiveEngine()
+    engine.start()
+    
+    triggers = []
+    async def on_trigger(env):
+        triggers.append(env)
+    event_bus.subscribe("friday.core.proactive_trigger", on_trigger)
+    
+    try:
+        cognitive_core.current_state = AssistantState.IDLE
+        
+        # 1. LOW_BATTERY trigger
+        context_env = EventEnvelope(
+            topic="friday.system.context_update",
+            priority=EventPriority.P3,
+            source="test",
+            correlation_id=uuid4(),
+            session_id=uuid4(),
+            payload={"battery_level": 0.15, "cpu_percent": 10.0, "memory_percent": 50.0}
+        )
+        await event_bus.publish(context_env)
+        await asyncio.sleep(0.1)
+        
+        assert len(triggers) == 1
+        assert triggers[0].payload["rule"] == "LOW_BATTERY"
+        
+        # 2. Cooldown check
+        await event_bus.publish(context_env)
+        await asyncio.sleep(0.1)
+        assert len(triggers) == 1
+        
+        # 3. HIGH_CPU double-tick test
+        cpu_env_1 = EventEnvelope(
+            topic="friday.system.context_update",
+            priority=EventPriority.P3,
+            source="test",
+            correlation_id=uuid4(),
+            session_id=uuid4(),
+            payload={"battery_level": 0.80, "cpu_percent": 90.0, "memory_percent": 50.0}
+        )
+        engine.rule_last_fired.pop("HIGH_CPU", None)
+        await event_bus.publish(cpu_env_1)
+        await asyncio.sleep(0.1)
+        assert len(triggers) == 1
+        
+        cpu_env_2 = EventEnvelope(
+            topic="friday.system.context_update",
+            priority=EventPriority.P3,
+            source="test",
+            correlation_id=uuid4(),
+            session_id=uuid4(),
+            payload={"battery_level": 0.80, "cpu_percent": 95.0, "memory_percent": 50.0}
+        )
+        await event_bus.publish(cpu_env_2)
+        await asyncio.sleep(0.1)
+        assert len(triggers) == 2
+        assert triggers[1].payload["rule"] == "HIGH_CPU"
+        
+        # 4. State check suppression
+        cognitive_core.current_state = AssistantState.SYNTHESIZING
+        engine.rule_last_fired.pop("LOW_BATTERY", None)
+        await event_bus.publish(context_env)
+        await asyncio.sleep(0.1)
+        assert len(triggers) == 2
+    finally:
+        engine.stop()
+        event_bus.unsubscribe("friday.core.proactive_trigger", on_trigger)
+        await event_bus.stop()
+
+
+def test_screen_aware_prompt():
+    from friday.core.system_prompt import assemble_system_prompt
+    
+    mock_wm = {
+        "agent_results": [],
+        "memory_context": {},
+        "conversation_history": []
+    }
+    mock_context = {
+        "current_time": "2026-06-10T12:00:00",
+        "current_date": "2026-06-10"
+    }
+    
+    screen_ctx = {"ocr_text": "Hello screen OCR text", "active_window": "Notepad"}
+    prompt = assemble_system_prompt(mock_wm, mock_context, screen_context=screen_ctx)
+    assert "3b. Screen Context" in prompt
+    assert "Current screen: Notepad" in prompt
+    assert "Screen text (excerpt): Hello screen OCR text" in prompt
+    
+    prompt_no_screen = assemble_system_prompt(mock_wm, mock_context, screen_context=None)
+    assert "3b. Screen Context" not in prompt_no_screen
+    
+    huge_ocr = "A" * 600
+    screen_ctx_huge = {"ocr_text": huge_ocr, "active_window": "Notepad"}
+    prompt_huge = assemble_system_prompt(mock_wm, mock_context, screen_context=screen_ctx_huge)
+    assert "A" * 500 in prompt_huge
+    assert "A" * 501 not in prompt_huge
+
+
+@pytest.mark.asyncio
+async def test_user_profile():
+    import tempfile
+    from friday.memory.user_profile import UserProfile
+    from unittest.mock import patch
+    
+    fd, temp_db_path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    
+    try:
+        profile = UserProfile()
+        profile.sqlite_path = temp_db_path
+        profile.stats = {"hour": {}, "app": {}, "intent": {}, "entity": {}}
+        profile._init_sqlite()
+        
+        import datetime
+        hour = datetime.datetime.now().hour
+        
+        await profile.record_turn("OPEN", ["file"], "Notepad", hour)
+        await profile.record_turn("SYSTEM_STATUS", [], "VS Code", hour)
+        await profile.record_turn("FILE_READ", ["code"], "VS Code", hour)
+        await profile.record_turn("FILE_WRITE", ["script"], "Word", hour)
+        await profile.record_turn("WEB_SEARCH", [], "Chrome", hour)
+        
+        await profile.flush()
+        profile.load()
+        
+        top_intents = profile.get_top_n("intent", 5)
+        assert len(top_intents) >= 3
+        
+        hours = profile.get_active_hours()
+        assert str(hour) in hours
+        assert hours[str(hour)] == 5
+        
+        new_profile = UserProfile()
+        new_profile.sqlite_path = temp_db_path
+        new_profile.load()
+        
+        assert new_profile.get_active_hours().get(str(hour)) == 5
+        assert len(new_profile.get_top_n("intent", 5)) >= 3
+        
+    finally:
+        if os.path.exists(temp_db_path):
+            os.remove(temp_db_path)
+
+
+

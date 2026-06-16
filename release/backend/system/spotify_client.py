@@ -76,7 +76,6 @@ class SpotifyPKCECallbackHandler(BaseHTTPRequestHandler):
             </html>
             """
             self.wfile.write(html.encode("utf-8"))
-            threading.Thread(target=self.server.shutdown).start()
         else:
             html = """
             <html>
@@ -89,6 +88,10 @@ class SpotifyPKCECallbackHandler(BaseHTTPRequestHandler):
             </html>
             """
             self.wfile.write(html.encode("utf-8"))
+
+        if hasattr(self.server, "timeout_timer") and self.server.timeout_timer:
+            self.server.timeout_timer.cancel()
+        threading.Thread(target=self.server.shutdown).start()
 
     def log_message(self, format, *args):
         pass
@@ -220,9 +223,27 @@ class SpotifyClient:
         print(f"[SPOTIFY PKCE] Opening PKCE auth link in browser...")
         open_url_in_chrome(auth_url)
 
-        # 5. Wait for callback code
-        server.serve_forever()
-        code = server.auth_code
+        timeout_timer = None
+        try:
+            # Set up the watchdog timer to shut down the server after 120s if inactive
+            def force_shutdown():
+                if server and server.auth_code is None:
+                    print("[SPOTIFY PKCE] Authorization timed out (120s limit). Shutting down callback server...")
+                    server.shutdown()
+
+            timeout_timer = threading.Timer(120.0, force_shutdown)
+            server.timeout_timer = timeout_timer
+            timeout_timer.start()
+
+            # 5. Wait for callback code
+            server.serve_forever()
+            code = server.auth_code
+        finally:
+            if timeout_timer:
+                timeout_timer.cancel()
+            server.server_close()
+            print("[SPOTIFY PKCE] Callback server closed and port unbound.")
+
         if not code:
             print("[SPOTIFY PKCE] Authentication failed or timed out.")
             return False

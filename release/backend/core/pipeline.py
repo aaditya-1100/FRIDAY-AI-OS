@@ -353,7 +353,8 @@ async def safe_speak(text: str, web_mode: bool | None = None) -> None:
         
         # Restore microphone stream if it was active before voice playback
         if mic_was_enabled:
-            print(f"[BLUETOOTH HFP FIX] [{response_id}] Restoring mic stream context")
+            print(f"[BLUETOOTH HFP FIX] [{response_id}] Restoring mic stream context after 0.8s stabilization delay...")
+            await asyncio.sleep(0.8)
             from voice.listen import reset_stop, set_mic_enabled
             reset_stop()
             set_mic_enabled(True)
@@ -372,7 +373,7 @@ async def safe_speak(text: str, web_mode: bool | None = None) -> None:
         print(f"[TRACE] [SPEAK] [{response_id}] SAFE_SPEAK COMPLETE")
 
 
-async def process_transcript(raw_query: str, *, web_mode: bool | None = None) -> None:
+async def process_transcript(raw_query: str, *, web_mode: bool | None = None, is_voice: bool = False) -> None:
     """
     Process one user utterance from mic or web UI.
     web_mode=None (default) → auto-detect: True if WS clients connected, else False.
@@ -481,9 +482,9 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None) ->
                 query = cleaned_without_wake.lower().strip()
                 print(f"[TRACE] [PIPELINE] Query after wake-word removal: '{query}'")
 
-            if not active and not web_mode:
-                print("[TRACE] [PIPELINE] Assistant inactive and web_mode=False. Emitting UI wake hint.")
-                print("[E2E_TRACE] [WAKE_WORD_CHECK] FAIL. Assistant inactive and web_mode=False. Wake word required.", flush=True)
+            if not active and (is_voice or not web_mode):
+                print(f"[TRACE] [PIPELINE] Assistant inactive and wake word required (is_voice={is_voice}, web_mode={web_mode}). Emitting UI wake hint.")
+                print(f"[E2E_TRACE] [WAKE_WORD_CHECK] FAIL. Assistant inactive. is_voice={is_voice} | web_mode={web_mode}. Wake word required.", flush=True)
                 # Emit a UI hint so the user knows FRIDAY is waiting for wake word.
                 await emit_json({"type": "hint", "text": "Say 'Friday' to wake me up"})
                 return

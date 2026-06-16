@@ -7,7 +7,12 @@ from loguru import logger
 class SessionMemory:
     def __init__(self, host: str = "127.0.0.1", port: int = 6379, db: int = 0):
         self.redis_client = None
-        self.sqlite_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "session_fallback.db"))
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "session_fallback.db"))
+        worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+        if worker_id:
+            self.sqlite_path = f"{os.path.splitext(base_path)[0]}_{worker_id}.db"
+        else:
+            self.sqlite_path = base_path
         os.makedirs(os.path.dirname(self.sqlite_path), exist_ok=True)
         
         try:

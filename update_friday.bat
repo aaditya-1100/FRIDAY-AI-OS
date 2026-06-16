@@ -26,7 +26,7 @@ if !ERRORLEVEL! neq 0 (
 )
 
 echo Resolving library dependency conflicts...
-call .venv\Scripts\pip.exe install click==8.4.1 >nul 2>&1
+call .venv\Scripts\pip.exe install click==8.1.8 >nul 2>&1
 
 
 echo Installing Node frontend dependencies...

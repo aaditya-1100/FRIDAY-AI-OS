@@ -431,7 +431,7 @@ def _invalidate_microphone():
 
 
 def set_mic_enabled(enabled: bool) -> None:
-    global _MIC_ENABLED, _microphone
+    global _MIC_ENABLED, _microphone, _ambient_calibrated, _recognizer
     print(f"[TRACE] [MIC_CONTROL] set_mic_enabled({enabled}) called")
     with _MIC_LOCK:
         _MIC_ENABLED = enabled
@@ -449,13 +449,13 @@ def set_mic_enabled(enabled: bool) -> None:
         finally:
             if acquired:
                 _listen_execution_lock.release()
+        _ambient_calibrated = False
+        _recognizer = None
         from core.state_manager import set_state, AssistantState, get_state
         if get_state() != AssistantState.SPEAKING:
             set_state(AssistantState.IDLE, force=True)
     else:
-        from core.state_manager import set_state, AssistantState, get_state
-        if get_state() != AssistantState.SPEAKING:
-            set_state(AssistantState.LISTENING, force=True)
+        pass
 
 
 def request_stop() -> None:
@@ -642,6 +642,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
     # Phase 1: Wait for phrase to start
     print("[E2E_TRACE] [STAGE 2: Raw Audio Received] listen() started. Awaiting voice input...", flush=True)
     first_chunk_logged = False
+    consecutive_speech_chunks = 0
     
     while True:
         if _STOP_EVENT.is_set():
@@ -660,7 +661,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
             print("[E2E_TRACE] [STAGE 3: VAD Triggered] FAIL. WaitTimeoutError - no speech detected above threshold.", flush=True)
             raise sr.WaitTimeoutError("listening timed out while waiting for phrase to start")
 
-        buffer = source.stream.read(source.CHUNK)
+        buffer = source.stream.read(source.CHUNK, exception_on_overflow=False)
         if len(buffer) == 0:
             break
         
@@ -684,11 +685,15 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
         if elapsed_time % 1.5 < seconds_per_buffer:
             print(f"[E2E_TRACE] [VAD_AWAITING] Ambient RMS={energy:.1f} | Threshold={recognizer.energy_threshold:.1f}", flush=True)
 
-        # Adjust speaking threshold dynamically while silent
+        # Phase 1: Sustained-energy VAD trigger (Require 3 consecutive chunks above threshold)
         if energy > recognizer.energy_threshold:
-            print(f"[TRACE] [MIC_VAD] Speech detected! energy={energy:.1f} vs threshold={recognizer.energy_threshold:.1f} (accepted)")
-            print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] PASS. Speech detected! energy={energy:.1f} > threshold={recognizer.energy_threshold:.1f}", flush=True)
-            break
+            consecutive_speech_chunks += 1
+            if consecutive_speech_chunks >= 3:
+                print(f"[TRACE] [MIC_VAD] Speech detected! energy={energy:.1f} vs threshold={recognizer.energy_threshold:.1f} (accepted)")
+                print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] PASS. Speech detected! energy={energy:.1f} > threshold={recognizer.energy_threshold:.1f}", flush=True)
+                break
+        else:
+            consecutive_speech_chunks = 0
 
         # NOTE: dynamic_energy_threshold is now FROZEN after calibration.
         # No threshold adjustment here — it would undo the calibration lock.
@@ -710,6 +715,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
     current_speaking_streak = 0
     current_pause_streak = 0
     adaptive_pause_threshold = base_pause
+    total_active_speech_chunks = consecutive_speech_chunks
 
     while True:
         if _STOP_EVENT.is_set():
@@ -727,7 +733,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
         if phrase_time_limit and elapsed_time - phrase_start_time > phrase_time_limit:
             break
 
-        buffer = source.stream.read(source.CHUNK)
+        buffer = source.stream.read(source.CHUNK, exception_on_overflow=False)
         if len(buffer) == 0:
             break
         frames.append(buffer)
@@ -749,6 +755,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
                 current_pause_streak = 0
             current_speaking_streak += 1
             pause_count = 0
+            total_active_speech_chunks += 1
         else:
             if current_speaking_streak > 0:
                 # Recorded a vocal burst
@@ -784,10 +791,10 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
                 tmp_threshold = max(tmp_threshold, 1.4 if state == "EMOTIONAL_CONTEXT" else 1.1)
         
         # 2. Rule A: Single short vocalization at start (e.g. "friday...", "are...") -> Hesitation/Call
-        if first_segment_dur > 0 and first_segment_dur < 0.8 and len(speech_segments) <= 1:
+        if first_segment_dur > 0 and first_segment_dur < 0.7 and len(speech_segments) <= 1:
             # Pacing indicates potential hesitation or thought-gathering pause at the beginning.
             # Raise the pause threshold to allow them to collect thoughts and continue.
-            tmp_threshold = max(tmp_threshold, 1.3)
+            tmp_threshold = max(tmp_threshold, 0.6 if state == "TASK_MODE" else 1.0)
             
         # 3. Rule B: Halting or conversational rhythm (multiple short segments with frequent thinking gaps)
         elif len(speech_segments) > 1:
@@ -798,7 +805,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
                 tmp_threshold = max(tmp_threshold, base_pause + cushion)
 
         # 4. Rule C: Fast, fluent command (continuous speech, single segment, no previous gaps)
-        if state in ("TASK_MODE", "RETRIEVAL_MODE", "CASUAL_CHAT") and first_segment_dur > 0.8 and len(speech_segments) <= 1:
+        if state in ("TASK_MODE", "RETRIEVAL_MODE", "CASUAL_CHAT") and first_segment_dur > 0.7 and len(speech_segments) <= 1:
             # Continuous speech running, likely a direct command.
             # Allow rapid cutoff once they stop.
             tmp_threshold = min(tmp_threshold, 0.4 if state in ("TASK_MODE", "RETRIEVAL_MODE") else 0.6)
@@ -815,6 +822,12 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
         # Phrase was too short to be speech, return None
         print(f"[TRACE] [MIC_VAD] Phrase duration too short ({phrase_count * seconds_per_buffer:.2f}s < {phrase_threshold}s), rejected as noise pulse.")
         print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] FAIL. Rejected as noise pulse. Duration={phrase_count * seconds_per_buffer:.2f}s < threshold={phrase_threshold}s", flush=True)
+        return None
+
+    # STT Protection Layer: Reject if we didn't get enough actual speech chunks (e.g., just a transient pop)
+    if total_active_speech_chunks < 3:
+        print(f"[TRACE] [MIC_VAD] Phase 2 STT Protection: Rejected as noise pulse. Active speech chunks={total_active_speech_chunks} < 3.")
+        print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] FAIL. STT Protection rejected phrase. Active chunks={total_active_speech_chunks} < 3", flush=True)
         return None
 
     # Remove extra non-speaking frames at the end
@@ -926,12 +939,14 @@ def sync_listen() -> str | None:
         # Get active conversational state
         state = "CASUAL_CHAT"
         try:
-            from core.state_manager import get_conversational_state
+            from core.state_manager import get_conversational_state, set_state, AssistantState, get_state
             state = get_conversational_state()
+            
+            # Fix Issue 1: Set LISTENING state only AFTER mic initialization and calibration are complete
+            if get_state() != AssistantState.SPEAKING:
+                set_state(AssistantState.LISTENING, force=True)
         except Exception as e_state:
-            print(f"[MIC_DYNAMIC_ERROR] Failed to get conversational state: {e_state}")
-
-        # State remains AssistantState.LISTENING (deleted set_state(AssistantState.SOFT_IDLE) call)
+            print(f"[MIC_DYNAMIC_ERROR] Failed to get/set conversational state: {e_state}")
 
         print(f"[TRACE] [MIC_SYNC] Listening... (timeout={LISTEN_TIMEOUT}s, phrase_limit={PHRASE_TIME_LIMIT}s, threshold={recognizer.energy_threshold:.1f}, state={state})")
         t_start = time.monotonic()
@@ -1025,5 +1040,48 @@ def sync_listen() -> str | None:
         _invalidate_microphone()
         _STOP_EVENT.wait(timeout=1.0)
         return None
+    finally:
+        _listen_execution_lock.release()
+
+
+def diag_record_sample(duration: float = 1.0) -> dict:
+    """Safely records a short sample for diagnostics, respecting active listening locks.
+    If the listener is currently running, reports active status without attempting to access the stream concurrently.
+    """
+    if not _listen_execution_lock.acquire(blocking=False):
+        return {
+            "ok": True,
+            "active": True,
+            "message": "Microphone is currently in active use by the voice assistant loop.",
+            "rms": None,
+            "transcript": None
+        }
+
+    try:
+        mic = _get_microphone()
+        recognizer = _get_recognizer()
+        with mic as source:
+            print(f"[DIAG MIC] Recording {duration}s test sample...")
+            audio = recognizer.record(source, duration=duration)
+        
+        rms = _compute_rms(audio)
+        raw_len = len(audio.get_raw_data())
+        transcript = None
+        try:
+            transcript = recognizer.recognize_google(audio, language="en-IN")
+        except Exception as e_rec:
+            transcript = f"(recognition failed: {e_rec})"
+        
+        wav_path = _save_audio_diag(audio, "diag_sample")
+        return {
+            "ok": True,
+            "active": False,
+            "rms": rms,
+            "raw_bytes": raw_len,
+            "transcript": transcript,
+            "wav": wav_path
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
     finally:
         _listen_execution_lock.release()

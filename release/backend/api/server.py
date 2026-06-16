@@ -136,14 +136,31 @@ from typing import Set
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from core.pipeline import process_transcript, set_web_session_active, cancel_speak
 from core.realtime_emit import register_json_emitter, unregister_json_emitter, register_event_loop
 from main import main as agent_loop
-from core.state_manager import (
-    AssistantState, get_state,
-    register_state_callback, unregister_state_callback, set_main_loop,
-)
 from voice.listen import request_stop, set_mic_enabled, reset_stop
+from friday.core.fsm import cognitive_core, AssistantState
+
+# Replaced state manager and pipeline functions for Cognitive OS
+def get_state() -> str:
+    return cognitive_core.fsm.current_state.value
+
+def set_main_loop(loop):
+    raise NotImplementedError("replaced by cognitive OS in Phase R1")
+
+def register_state_callback(cb):
+    raise NotImplementedError("replaced by cognitive OS in Phase R1")
+
+def unregister_state_callback(cb):
+    raise NotImplementedError("replaced by cognitive OS in Phase R1")
+
+def set_web_session_active(value: bool = True) -> None:
+    raise NotImplementedError("replaced by cognitive OS in Phase R1")
+
+def cancel_speak() -> None:
+    from voice.speak import cancel_play
+    cancel_play()
+    cognitive_core.fsm.transition_to(AssistantState.IDLE, reason="Cancellation requested", force=True)
 
 clients: Set[WebSocket] = set()
 
@@ -193,8 +210,13 @@ async def emit_to_clients(payload: dict) -> None:
 async def lifespan(app: FastAPI):
     enforce_single_backend_instance()
     loop = asyncio.get_running_loop()
-    set_main_loop(loop)
-    register_state_callback(broadcast_state)
+    
+    # Start event bus and FSM WS manager
+    from friday.core.event_bus import event_bus
+    from friday.api.websocket import fsm_ws_manager
+    event_bus.start(loop)
+    fsm_ws_manager.start()
+    
     register_json_emitter(emit_to_clients)
     # Register the event loop so emit_json_sync() can schedule coroutines from
     # the PyAudio thread (mic_level streaming during LISTENING state).
@@ -269,7 +291,14 @@ async def lifespan(app: FastAPI):
         # 6. Unregister callbacks
         unregister_client_count_callback()
         unregister_json_emitter(emit_to_clients)
-        unregister_state_callback(broadcast_state)
+        
+        # Stop event bus
+        try:
+            from friday.core.event_bus import event_bus
+            await event_bus.stop()
+        except Exception as e_eb:
+            print(f"[SHUTDOWN WARNING] Failed to stop event bus: {e_eb}")
+            
         cleanup_backend_pid()
 
         print("[SERVER] All subsystems stopped.")
@@ -387,7 +416,18 @@ def weather_endpoint():
 
 async def _run_command(text: str) -> None:
     try:
-        await process_transcript(text, web_mode=True)
+        from friday.core.events import EventEnvelope, EventPriority
+        from friday.core.event_bus import event_bus
+        from uuid import uuid4
+        envelope = EventEnvelope(
+            topic="friday.perception.text.input",
+            priority=EventPriority.P1,
+            source="user_interface.websocket",
+            correlation_id=uuid4(),
+            session_id=uuid4(),
+            payload={"text": text, "is_voice": False}
+        )
+        await event_bus.publish(envelope)
     except Exception as e:
         print(f"[API COMMAND ERROR] {e}")
 
@@ -396,9 +436,26 @@ async def _run_command(text: str) -> None:
 
 @app.websocket("/api/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    origin = websocket.headers.get("origin")
+    if origin:
+        origin_lower = origin.strip().lower()
+        if origin_lower not in ["file://", "http://localhost:5173"] and not origin_lower.startswith("file://"):
+            print(f"[WS AUTH FAIL] Origin '{origin}' is not authorized.")
+            await websocket.close(code=1008)
+            return
+
+    expected_token = os.getenv("FRIDAY_AUTH_TOKEN")
+    if expected_token:
+        token = websocket.query_params.get("token")
+        if token != expected_token:
+            print(f"[WS AUTH FAIL] Invalid or missing auth token: '{token}'")
+            await websocket.close(code=1008)
+            return
+
     await websocket.accept()
     clients.add(websocket)
-    set_web_session_active(True)
+    from friday.api.websocket import fsm_ws_manager
+    fsm_ws_manager.register_client(websocket)
     # Re-arm mic stopping state cleanly. Do not enable mic automatically —
     # wait for the client's explicit "mic_on" / "mic_off" sync message.
     reset_stop()
@@ -437,8 +494,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 set_mic_enabled(False)
                 # Cancel any active TTS playback or speak loops instantly
                 cancel_speak()
-                from core.state_manager import AssistantState, set_state
-                set_state(AssistantState.IDLE)
+                cognitive_core.fsm.transition_to(AssistantState.IDLE, reason="UI disabled mic", force=True)
                 print("[MIC] Disabled by UI")
 
             elif msg_type == "mic_on":
@@ -457,12 +513,30 @@ async def websocket_endpoint(websocket: WebSocket):
             elif msg_type == "ping":
                 await _prune_send(websocket, {"type": "pong"})
 
+            elif msg_type == "user_confirmed":
+                from friday.core.events import EventEnvelope, EventPriority
+                from friday.core.event_bus import event_bus
+                from uuid import UUID, uuid4
+                corr_id = msg.get("correlation_id")
+                envelope = EventEnvelope(
+                    topic="friday.tool.user_confirmed",
+                    priority=EventPriority.P0,
+                    source="user_interface.websocket",
+                    correlation_id=UUID(corr_id) if corr_id else uuid4(),
+                    session_id=uuid4(),
+                    payload={}
+                )
+                asyncio.get_running_loop().create_task(event_bus.publish(envelope))
+                print(f"[WS SERVER] Published user_confirmed for correlation_id={corr_id}")
+
     except (WebSocketDisconnect, RuntimeError):
         pass
     except Exception as e:
         print(f"[WS ERROR] {e}")
     finally:
         clients.discard(websocket)
+        from friday.api.websocket import fsm_ws_manager
+        fsm_ws_manager.unregister_client(websocket)
         if len(clients) == 0:
             orchestrator.set_websocket_state("DISCONNECTED")
 
@@ -480,26 +554,9 @@ def diag_mic():
         except Exception as e_enum:
             print(f"[DIAG MIC] Device enumeration failed: {e_enum}")
 
-        # Attempt to capture a short 1.0s sample using the persistent microphone
-        try:
-            mic = vl.get_open_microphone()
-            recognizer = vl._get_recognizer()
-            with mic as source:
-                print("[DIAG MIC] Recording 1.0s test sample...")
-                audio = recognizer.record(source, duration=1.0)
-            rms = vl._compute_rms(audio)
-            raw_len = len(audio.get_raw_data())
-            transcript = None
-            try:
-                transcript = recognizer.recognize_google(audio, language="en-IN")
-            except Exception as e_rec:
-                transcript = f"(recognition failed: {e_rec})"
-            wav_path = vl._save_audio_diag(audio, "diag_sample")
-            return {"ok": True, "rms": rms, "raw_bytes": raw_len, "transcript": transcript, "wav": wav_path}
-        except Exception as e:
-            print(f"[DIAG MIC] Capture failed: {e}")
-            return {"ok": False, "error": str(e)}
-
+        # Safely record or report active microphone usage
+        res = vl.diag_record_sample(duration=1.0)
+        return res
     except Exception as e_outer:
         print(f"[DIAG MIC] Unexpected diagnostic failure: {e_outer}")
         return {"ok": False, "error": str(e_outer)}
@@ -508,16 +565,7 @@ def diag_mic():
 @app.post("/api/diag/play_tts")
 async def diag_play_tts():
     """Trigger a sample TTS playback event for diagnostics."""
-    try:
-        from core.pipeline import safe_speak
-        from core.realtime_emit import has_emitters
-        if not has_emitters():
-            return {"ok": False, "error": "No active frontend websocket clients connected."}
-        asyncio.get_running_loop().create_task(safe_speak("This is a sample TTS test from Friday.", web_mode=True))
-        return {"ok": True, "message": "Sample TTS playback triggered."}
-    except Exception as e:
-        print(f"[DIAG TTS] Failed to trigger sample TTS: {e}")
-        return {"ok": False, "error": str(e)}
+    raise NotImplementedError("replaced by cognitive OS in Phase R1")
 
 
 if __name__ == "__main__":

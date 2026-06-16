@@ -24,13 +24,9 @@ class ConflictResolver:
             "state_prior": 0.05
         }
         
-        # Load spaCy NLP small model
-        try:
-            self.nlp = spacy.load("en_core_web_sm")
-        except Exception:
-            # Fallback will be handled gracefully if model is missing
-            self.nlp = None
-            print("[CONFLICT_ENGINE WARNING] spaCy 'en_core_web_sm' model not found. Using fallback regex parser.")
+        # Load spaCy NLP small model via shared cache loader
+        from brain.spacy_loader import get_spacy_model
+        self.nlp = get_spacy_model()
 
         # Weak State Softmax Prior association matrix:
         # matrix[state_name][trigger_name] -> association strength

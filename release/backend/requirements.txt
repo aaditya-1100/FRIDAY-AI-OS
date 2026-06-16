@@ -7,7 +7,7 @@ python-dotenv==1.2.2
 groq==0.10.0
 
 # Voice
-edge-tts==6.1.12
+edge-tts==7.2.8
 SpeechRecognition==3.10.1
 PyAudio==0.2.13
 pygame==2.5.2
@@ -17,12 +17,21 @@ pyttsx3==2.99
 # System Control
 pyautogui==0.9.54
 psutil==6.0.0
+pygetwindow==0.0.9
+pyperclip==1.11.0
+
+# Vision
+pillow==12.2.0
+mss==10.2.0
+pytesseract==0.3.13
+opencv-python-headless==4.13.0.92
 
 # HTTP Client
 httpx==0.27.2
 
 # Web API (React UI)
 fastapi==0.115.6
+starlette>=0.41.1,<0.42.0
 uvicorn[standard]==0.32.1
 websockets==14.1
 
@@ -35,3 +44,6 @@ pydantic==2.13.4
 # Development
 pytest==7.4.4
 pytest-asyncio==0.23.3
+pytest-xdist==3.8.0
+click==8.1.8
+duckduckgo_search==8.1.1

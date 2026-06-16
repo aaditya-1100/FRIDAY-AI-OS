@@ -3,6 +3,11 @@ const path = require('path');
 const { spawn, execSync } = require('child_process');
 const http = require('http');
 const fs = require('fs');
+const crypto = require('crypto');
+
+// Generate high-entropy session authentication token
+const authToken = crypto.randomBytes(32).toString('hex');
+process.env.FRIDAY_AUTH_TOKEN = authToken;
 
 // ── AUMID MUST be set before app.whenReady() ─────────────────────────────────
 // This is the single source of truth for Windows taskbar grouping.
@@ -332,13 +337,13 @@ function createWindow() {
   if (isDev) {
     waitForVite('localhost', 5173, 30, () => {
       if (isQuitting || !mainWindow || mainWindow.isDestroyed()) return;
-      mainWindow.loadURL('http://localhost:5173');
+      mainWindow.loadURL('http://localhost:5173?token=' + process.env.FRIDAY_AUTH_TOKEN);
     });
   } else {
     const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
     logToFile(`[WINDOW] Loading index.html from: ${indexPath} (exists=${fs.existsSync(indexPath)})`);
     if (isQuitting || !mainWindow || mainWindow.isDestroyed()) return;
-    mainWindow.loadFile(indexPath);
+    mainWindow.loadFile(indexPath, { query: { token: process.env.FRIDAY_AUTH_TOKEN } });
   }
 
   mainWindow.on('close', (e) => {

@@ -6,7 +6,8 @@ AGENT_TRUST_MAP: Dict[AgentType, AgentTrustLevel] = {
     AgentType.MEMORY_AGENT: AgentTrustLevel.SYSTEM,
     AgentType.KNOWLEDGE_AGENT: AgentTrustLevel.ELEVATED,
     AgentType.PC_AGENT: AgentTrustLevel.STANDARD,
-    AgentType.WEB_AGENT: AgentTrustLevel.STANDARD
+    AgentType.WEB_AGENT: AgentTrustLevel.STANDARD,
+    AgentType.VISION_AGENT: AgentTrustLevel.STANDARD
 }
 
 TOOL_PERMISSION_MAP: Dict[str, PermissionEnum] = {
@@ -21,6 +22,10 @@ TOOL_PERMISSION_MAP: Dict[str, PermissionEnum] = {
     "CLIPBOARD_READ": PermissionEnum.READ_ONLY,
     "WINDOW_LIST": PermissionEnum.READ_ONLY,
     "BROWSER_SCREENSHOT": PermissionEnum.READ_ONLY,
+    "SCREEN_READ": PermissionEnum.READ_ONLY,
+    "SCREEN_FIND": PermissionEnum.READ_ONLY,
+    "SCREEN_SCREENSHOT": PermissionEnum.READ_ONLY,
+    "SCREEN_DESCRIBE": PermissionEnum.READ_ONLY,
 
     "WRITE_MEMORY": PermissionEnum.WRITE_SAFE,
     "ADD_FACT": PermissionEnum.WRITE_SAFE,

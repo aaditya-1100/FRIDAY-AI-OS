@@ -28,6 +28,13 @@ from brain.spacy_loader import get_spacy_model
 OLLAMA_AVAILABLE = False
 
 
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            return str(obj)
+        return super().default(obj)
+
+
 class AssistantState(str, Enum):
     IDLE = "IDLE"
     PERCEIVING = "PERCEIVING"
@@ -131,7 +138,8 @@ class CognitiveCore:
         event_bus.subscribe("friday.perception.text.input", self.on_perception_input)
         event_bus.subscribe("friday.perception.voice.raw", self.on_perception_input)
         event_bus.subscribe("friday.agent.*.result", self.on_agent_result)
-        logger.info("[CognitiveCore] Started. Subscribed to perception and agent result events.")
+        event_bus.subscribe("friday.core.proactive_trigger", self.on_proactive_trigger)
+        logger.info("[CognitiveCore] Started. Subscribed to perception, agent result, and proactive events.")
 
     def stop(self):
         if not self._is_running:
@@ -140,6 +148,7 @@ class CognitiveCore:
         event_bus.unsubscribe("friday.perception.text.input", self.on_perception_input)
         event_bus.unsubscribe("friday.perception.voice.raw", self.on_perception_input)
         event_bus.unsubscribe("friday.agent.*.result", self.on_agent_result)
+        event_bus.unsubscribe("friday.core.proactive_trigger", self.on_proactive_trigger)
         for future in list(self.pending_requests.values()):
             if not future.done():
                 future.cancel()
@@ -221,6 +230,204 @@ class CognitiveCore:
     async def on_perception_input(self, envelope: EventEnvelope):
         if self._loop:
             self._loop.create_task(self._process_request_turn(envelope))
+
+    async def on_proactive_trigger(self, envelope: EventEnvelope):
+        if not self._loop:
+            return
+        if self.current_state != AssistantState.IDLE:
+            logger.info(f"[CognitiveCore] Suppressed proactive trigger '{envelope.payload.get('rule')}' because FSM is not IDLE (state={self.current_state.value}).")
+            return
+        self._loop.create_task(self._process_proactive_turn(envelope))
+
+    async def _process_proactive_turn(self, envelope: EventEnvelope):
+        corr_id = envelope.correlation_id
+        rule_name = envelope.payload.get("rule", "PROACTIVE")
+        message = envelope.payload.get("message", "")
+        logger.info(f"[CognitiveCore] Starting proactive turn for rule '{rule_name}' (correlation_id={corr_id})")
+
+        # 1. Reset FSM
+        self.fsm.reset_for_new_request(correlation_id=corr_id)
+        
+        # Set the required working_memory fields
+        self.fsm.working_memory["intent"] = rule_name
+        self.fsm.working_memory["confidence"] = 1.0
+        self.fsm.working_memory["raw_input"] = message
+        self.fsm.working_memory["plan_type"] = "DIRECT_LLM"
+        self.fsm.working_memory["clarification"] = False
+        self.fsm.working_memory["agent_type"] = None
+        self.fsm.working_memory["parsed_intent"] = {"intent": rule_name}
+
+        # 2. Transition directly to PLANNING
+        self.fsm.transition_to(AssistantState.PLANNING, reason="Proactive trigger received, entering planning state")
+
+        # Retrieve memory context
+        memory_context = await self._retrieve_memory_context(message, rule_name)
+        self.fsm.working_memory["memory_context"] = memory_context
+
+        # 3. Transition directly to SYNTHESIZING (skipping DELEGATING & WAITING)
+        self.fsm.transition_to(AssistantState.SYNTHESIZING, reason="Proactive turn: direct LLM synthesis")
+
+        # Fetch history turns (last 6 turns/messages)
+        session = SessionMemory()
+        full_history = session.get("conversation_history") or []
+        history_turns = full_history[-6:]
+        self.fsm.working_memory["conversation_history"] = history_turns
+
+        # Assemble system prompt (screen_context is None as VisionAgent was not involved)
+        from friday.system.context import system_context
+        from friday.core.system_prompt import assemble_system_prompt
+        system_prompt = assemble_system_prompt(self.fsm.working_memory, system_context.get_context(), screen_context=None)
+
+        # Call Groq inference using message as query_input
+        async def run_groq_inference():
+            import functools
+            func = functools.partial(
+                ask_groq,
+                message,
+                system_prompt=system_prompt,
+                model="llama-3.3-70b-versatile",
+                history=history_turns,
+                timeout=5.0
+            )
+            return await process_scheduler.schedule_llm(func)
+
+        async def call_ollama_fallback():
+            import functools
+            func = functools.partial(
+                ask_ollama,
+                message,
+                system_prompt=system_prompt,
+                model="qwen2.5:14b",
+                history=history_turns,
+                timeout=3.0
+            )
+            return await process_scheduler.schedule_llm(func)
+
+        final_response = "I encountered an error while formulating my proactive thought."
+        try:
+            final_response = await run_groq_inference()
+        except Exception as e_groq:
+            logger.warning(f"[CognitiveCore] Groq synthesis failed: {e_groq}. Retrying with Ollama fallback...")
+            try:
+                final_response = await call_ollama_fallback()
+            except Exception as e_ollama:
+                logger.error(f"[CognitiveCore] Ollama fallback failed: {e_ollama}")
+                final_response = "I detected an alert but both my brain engines are currently offline, sir."
+
+        self.fsm.working_memory["synthesis_result"] = final_response
+
+        # 4. Transition to RESPONDING
+        self.fsm.transition_to(AssistantState.RESPONDING, reason="Response synthesized, entering responding phase")
+
+        # Publish the response event so backend server / UI gets it
+        resp_envelope = EventEnvelope(
+            topic="friday.core.response",
+            priority=EventPriority.P1,
+            source="cognitive_core.orchestrator",
+            correlation_id=corr_id,
+            session_id=self.fsm.session_id,
+            payload={"response": final_response}
+        )
+        await event_bus.publish(resp_envelope)
+
+        # Voice Responding (standard TTS)
+        tts_req_envelope = EventEnvelope(
+            topic="friday.agent.voice.tts_request",
+            priority=EventPriority.P1,
+            source="cognitive_core.orchestrator",
+            correlation_id=corr_id,
+            session_id=self.fsm.session_id,
+            payload={"text": final_response}
+        )
+        await event_bus.publish(tts_req_envelope)
+
+        # Await tts_complete or timeout
+        loop = asyncio.get_running_loop()
+        tts_completed_event = asyncio.Event()
+
+        async def on_tts_complete(env: EventEnvelope):
+            if env.correlation_id == corr_id:
+                tts_completed_event.set()
+
+        event_bus.subscribe("friday.agent.voice.tts_complete", on_tts_complete)
+        try:
+            await asyncio.wait_for(tts_completed_event.wait(), timeout=10.0)
+            logger.info(f"[CognitiveCore] TTS playback complete (correlation_id={corr_id})")
+        except asyncio.TimeoutError:
+            logger.warning(f"[CognitiveCore] TTS playback timed out (correlation_id={corr_id})")
+        finally:
+            event_bus.unsubscribe("friday.agent.voice.tts_complete", on_tts_complete)
+
+        # 5. Transition to REFLECTING
+        self.fsm.transition_to(AssistantState.REFLECTING, reason="Entering reflection phase")
+
+        import datetime
+        now_iso = datetime.datetime.utcnow().isoformat() + "Z"
+
+        # Build interaction record for memory write
+        interaction_record = {
+            "raw_input": message,
+            "intent": rule_name,
+            "success": True,
+            "response": final_response,
+            "confidence": 1.0,
+            "agent_results": [],
+            "session_id": str(self.fsm.session_id),
+            "correlation_id": str(corr_id),
+            "timestamp": now_iso
+        }
+        
+        # Serialize UUIDs for memory write event
+        try:
+            interaction_record = json.loads(json.dumps(interaction_record, cls=UUIDEncoder))
+        except Exception as ex:
+            logger.error(f"[FSM] Failed to JSON-serialize proactive interaction_record: {ex}")
+
+        memory_envelope = EventEnvelope(
+            topic="friday.memory.write",
+            priority=EventPriority.P3,
+            source="cognitive_core.orchestrator",
+            correlation_id=corr_id,
+            session_id=self.fsm.session_id,
+            payload=interaction_record
+        )
+        await event_bus.publish(memory_envelope)
+
+        # Record proactive turn in UserProfile
+        try:
+            from friday.memory.user_profile import user_profile
+            asyncio.create_task(
+                user_profile.record_turn(
+                    intent=rule_name,
+                    entities=[],
+                    active_window=system_context.get_context().get("active_window", ""),
+                    hour=datetime.datetime.now().hour
+                )
+            )
+        except Exception as e_prof:
+            logger.error(f"[FSM] Failed to record proactive turn in user profile: {e_prof}")
+
+        # Ensure conversation history is updated in SessionMemory
+        new_history = history_turns + [
+            {"role": "user", "content": message},
+            {"role": "assistant", "content": final_response}
+        ]
+        
+        # Enforce history limit
+        while (len(json.dumps(new_history)) / 3) > 2000 and len(new_history) > 2:
+            new_history = new_history[2:]
+            
+        session.set("conversation_history", new_history)
+
+        # Let the event bus loop run to deliver the event
+        await asyncio.sleep(0.05)
+
+        # Clear working memory
+        self.fsm.working_memory = {}
+
+        # 6. Transition to IDLE
+        self.fsm.transition_to(AssistantState.IDLE, reason="Turn completed successfully")
+        logger.info(f"[CognitiveCore] Proactive turn completed successfully (correlation_id={corr_id})")
 
     async def _process_request_turn(self, envelope: EventEnvelope):
         corr_id = envelope.correlation_id
@@ -429,9 +636,29 @@ class CognitiveCore:
         # Populate history in working memory for the prompt assembler
         self.fsm.working_memory["conversation_history"] = history_turns
         
+        # Extract screen context from VisionAgent results if available
+        screen_context_data = None
+        for r in self.fsm.working_memory.get("agent_results", []):
+            payload = {}
+            is_vision = False
+            if hasattr(r, "payload"):
+                payload = r.payload or {}
+                if "ocr_text" in payload or "full_text" in payload:
+                    is_vision = True
+            elif isinstance(r, dict):
+                payload = r.get("payload") or {}
+                if "ocr_text" in payload or "full_text" in payload:
+                    is_vision = True
+            if is_vision:
+                screen_context_data = {
+                    "ocr_text": payload.get("ocr_text") or payload.get("full_text") or "",
+                    "active_window": payload.get("active_window") or ""
+                }
+                break
+        
         from friday.system.context import system_context
         from friday.core.system_prompt import assemble_system_prompt
-        system_prompt = assemble_system_prompt(self.fsm.working_memory, system_context.get_context())
+        system_prompt = assemble_system_prompt(self.fsm.working_memory, system_context.get_context(), screen_context=screen_context_data)
 
         async def run_groq_inference():
             import functools
@@ -555,6 +782,12 @@ class CognitiveCore:
             "timestamp": now_iso
         }
 
+        # Convert all UUID instances to str to ensure JSON serializability
+        try:
+            interaction_record = json.loads(json.dumps(interaction_record, cls=UUIDEncoder))
+        except Exception as ex:
+            logger.error(f"[FSM] Failed to JSON-serialize interaction_record: {ex}")
+
         memory_envelope = EventEnvelope(
             topic="friday.memory.write",
             priority=EventPriority.P3,
@@ -564,6 +797,30 @@ class CognitiveCore:
             payload=interaction_record
         )
         await event_bus.publish(memory_envelope)
+
+        # Record turn in UserProfile
+        try:
+            from brain.spacy_loader import get_spacy_model
+            nlp = get_spacy_model()
+            entities_list = []
+            if nlp:
+                doc = nlp(raw_input)
+                entities_list = [ent.text for ent in doc.ents]
+                
+            from friday.memory.user_profile import user_profile
+            from friday.system.context import system_context
+            import datetime
+            
+            asyncio.create_task(
+                user_profile.record_turn(
+                    intent=classified_intent,
+                    entities=entities_list,
+                    active_window=system_context.get_context().get("active_window", ""),
+                    hour=datetime.datetime.now().hour
+                )
+            )
+        except Exception as e_prof:
+            logger.error(f"[FSM] Failed to record turn in user profile: {e_prof}")
 
         # Update conversation history in session memory
         session = SessionMemory()

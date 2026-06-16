@@ -3,7 +3,7 @@
 from typing import Dict, Any, Optional
 from uuid import UUID
 
-def assemble_system_prompt(working_memory: Dict[str, Any], system_context_data: Dict[str, Any]) -> str:
+def assemble_system_prompt(working_memory: Dict[str, Any], system_context_data: Dict[str, Any], screen_context: Optional[Dict[str, Any]] = None) -> str:
     # 1. Identity (never truncated)
     identity_str = "You are FRIDAY, a personal AI assistant. You are helpful, concise, and intelligent. You never pad responses unnecessarily."
     
@@ -30,6 +30,14 @@ def assemble_system_prompt(working_memory: Dict[str, Any], system_context_data: 
 
     system_context_str = get_system_context(compact=False)
     
+    # 3b. Screen Context
+    screen_context_str = ""
+    if screen_context and isinstance(screen_context, dict):
+        active_window = screen_context.get("active_window") or "Unknown"
+        ocr_text = screen_context.get("ocr_text") or ""
+        ocr_excerpt = ocr_text[:500]
+        screen_context_str = f"Current screen: {active_window}\nScreen text (excerpt): {ocr_excerpt}"
+
     # 4. Tool results
     def get_tool_results(limit=1000) -> str:
         results_list = []
@@ -69,13 +77,15 @@ def assemble_system_prompt(working_memory: Dict[str, Any], system_context_data: 
     history_str = get_history(num_turns=6)
     
     # Helper to construct
-    def construct(s3: str, s4: str, s5: str, s6: str) -> str:
+    def construct(s3: str, s3b: str, s4: str, s5: str, s6: str) -> str:
         parts = [
             f"1. Identity\n{identity_str}",
             f"2. Behavioral Rules\n{rules_str}"
         ]
         if s3:
             parts.append(f"3. System Context\n{s3}")
+        if s3b:
+            parts.append(f"3b. Screen Context\n{s3b}")
         if s4:
             parts.append(f"4. Tool Results\n{s4}")
         if s5:
@@ -84,28 +94,39 @@ def assemble_system_prompt(working_memory: Dict[str, Any], system_context_data: 
             parts.append(f"6. Conversation History\n{s6}")
         return "\n\n".join(parts)
 
-    prompt = construct(system_context_str, tool_results_str, memory_context_str, history_str)
+    prompt = construct(system_context_str, screen_context_str, tool_results_str, memory_context_str, history_str)
     
     # Check budget
+    if len(prompt) / 3 > 8000:
+        # Step 0: truncate screen context to 200 chars
+        if screen_context_str:
+            screen_context_str = screen_context_str[:200] + "... [truncated]"
+        prompt = construct(system_context_str, screen_context_str, tool_results_str, memory_context_str, history_str)
+        
+    if len(prompt) / 3 > 8000:
+        # Step 0b: drop screen context entirely
+        screen_context_str = ""
+        prompt = construct(system_context_str, screen_context_str, tool_results_str, memory_context_str, history_str)
+        
     if len(prompt) / 3 > 8000:
         # Step 1: truncate section 5 (memory context) to 500 chars
         if len(memory_context_str) > 500:
             memory_context_str = memory_context_str[:500] + "... [truncated]"
-        prompt = construct(system_context_str, tool_results_str, memory_context_str, history_str)
+        prompt = construct(system_context_str, screen_context_str, tool_results_str, memory_context_str, history_str)
         
     if len(prompt) / 3 > 8000:
         # Step 2: truncate section 6 (history) to last 2 turns
         history_str = get_history(num_turns=2)
-        prompt = construct(system_context_str, tool_results_str, memory_context_str, history_str)
+        prompt = construct(system_context_str, screen_context_str, tool_results_str, memory_context_str, history_str)
         
     if len(prompt) / 3 > 8000:
         # Step 3: truncate section 3 (system context) to time+date only
         system_context_str = get_system_context(compact=True)
-        prompt = construct(system_context_str, tool_results_str, memory_context_str, history_str)
+        prompt = construct(system_context_str, screen_context_str, tool_results_str, memory_context_str, history_str)
         
     if len(prompt) / 3 > 8000:
         # Step 4: truncate section 4 (tool results) to 200 chars each
         tool_results_str = get_tool_results(limit=200)
-        prompt = construct(system_context_str, tool_results_str, memory_context_str, history_str)
+        prompt = construct(system_context_str, screen_context_str, tool_results_str, memory_context_str, history_str)
         
     return prompt

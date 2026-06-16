@@ -17,8 +17,10 @@ if os.path.exists(env_path):
                 if k.strip() == "FRIDAY_AUTH_TOKEN":
                     token = v.strip().strip('"').strip("'")
 
+current_query_num = 0
+
 # Log file
-log_path = os.path.join(os.path.dirname(__file__), "smoke_test_r4.log")
+log_path = os.path.join(os.path.dirname(__file__), "smoke_test_r5_sealed.log")
 log_file = open(log_path, "w", encoding="utf-8")
 
 def log(msg):
@@ -36,6 +38,7 @@ def delete_qdrant_lock():
             log(f"[SMOKE WARNING] Could not delete Qdrant lock file: {e}")
 
 async def read_stdout(proc):
+    global current_query_num
     loop = asyncio.get_running_loop()
     while True:
         line = await loop.run_in_executor(None, proc.stdout.readline)
@@ -43,6 +46,14 @@ async def read_stdout(proc):
             break
         decoded = line.decode("utf-8", errors="ignore").strip()
         log(f"[SERVER] {decoded}")
+        if "Groq response:" in decoded:
+            try:
+                parts = decoded.split("Groq response:")
+                if len(parts) > 1:
+                    resp_text = parts[1].strip().strip("'\"")
+                    log(f"[SMOKE VERIFY] Query {current_query_num} Groq response: {resp_text}")
+            except Exception as e:
+                log(f"[SMOKE VERIFY ERROR] Failed to parse Groq response line: {e}")
 
 async def wait_for_idle(ws, last_corr_id=None, timeout=30.0):
     start_time = asyncio.get_event_loop().time()
@@ -133,9 +144,9 @@ async def main():
         ws_url += f"?token={token}"
 
     ws = None
-    for attempt in range(15):
+    for attempt in range(45):
         try:
-            log(f"[SMOKE] Connecting to WebSocket (attempt {attempt+1}/15): {ws_url}")
+            log(f"[SMOKE] Connecting to WebSocket (attempt {attempt+1}/45): {ws_url}")
             ws = await websockets.connect(ws_url)
             log("[SMOKE] Connected successfully!")
             break
@@ -144,7 +155,7 @@ async def main():
             await asyncio.sleep(2.0)
 
     if not ws:
-        log("[SMOKE ERROR] WebSocket client failed to connect after 15 attempts")
+        log("[SMOKE ERROR] WebSocket client failed to connect after 45 attempts")
     else:
         try:
             # Wait for server startup tasks to settle down
@@ -167,13 +178,15 @@ async def main():
                     break
 
             queries = [
-                "open Notepad",
-                "what is the system status?",
-                "delete C:/test.txt"
+                "what does my screen say?",
+                "take a screenshot",
+                "what is the system status?"
             ]
             
             last_corr_id = None
-            for query in queries:
+            for idx, query in enumerate(queries):
+                global current_query_num
+                current_query_num = idx + 1
                 log(f"\n[SMOKE] --- Processing Query: '{query}' ---")
                 await ws.send(json.dumps({
                     "type": "command",

@@ -7,7 +7,12 @@ from typing import List, Dict, Any
 class EpisodicMemory:
     def __init__(self, db_path: str = None):
         if db_path is None:
-            self.db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "episodic.db"))
+            base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "episodic.db"))
+            worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+            if worker_id:
+                self.db_path = f"{os.path.splitext(base_path)[0]}_{worker_id}.db"
+            else:
+                self.db_path = base_path
         else:
             self.db_path = db_path
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)

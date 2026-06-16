@@ -25,7 +25,12 @@ class SemanticMemory:
     def __init__(self, qdrant_path: str = None):
         global _client_instance
         if qdrant_path is None:
-            self.qdrant_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "qdrant"))
+            base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "qdrant"))
+            worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+            if worker_id:
+                self.qdrant_path = f"{base_path}_{worker_id}"
+            else:
+                self.qdrant_path = base_path
         else:
             self.qdrant_path = os.path.abspath(qdrant_path)
         os.makedirs(self.qdrant_path, exist_ok=True)

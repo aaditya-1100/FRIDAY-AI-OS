@@ -26,6 +26,7 @@ class AgentType(str, Enum):
     MEMORY_AGENT = "MEMORY_AGENT"
     KNOWLEDGE_AGENT = "KNOWLEDGE_AGENT"
     VOICE_AGENT = "VOICE_AGENT"
+    VISION_AGENT = "VISION_AGENT"
 
 class AgentStatus(str, Enum):
     IDLE = "IDLE"

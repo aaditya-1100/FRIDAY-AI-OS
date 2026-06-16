@@ -1,14 +1,22 @@
 import { useAtomValue } from "jotai";
 import { motion, AnimatePresence } from "framer-motion";
-import { aiStateAtom, transcriptAtom, speakTextAtom, commandErrorAtom, wsConnectedAtom, mapModeAtom } from "../atoms";
+import { aiStateAtom, transcriptAtom, speakTextAtom, commandErrorAtom, wsConnectedAtom, mapModeAtom, type AiState } from "../atoms";
 
-const STATE_META = {
-  IDLE:      { label: "STANDBY",   dot: "#6366f1", glow: "rgba(99,102,241,0.4)"  },
-  LISTENING: { label: "LISTENING", dot: "#06b6d4", glow: "rgba(6,182,212,0.4)"   },
-  THINKING:  { label: "THINKING",  dot: "#a855f7", glow: "rgba(168,85,247,0.4)"  },
-  EXECUTING: { label: "EXECUTING", dot: "#f59e0b", glow: "rgba(245,158,11,0.4)"  },
-  SPEAKING:  { label: "SPEAKING",  dot: "#22c55e", glow: "rgba(34,197,94,0.4)"   },
-  ERROR:     { label: "ERROR",     dot: "#ef4444", glow: "rgba(239,68,68,0.4)"   },
+const STATE_META: Record<AiState, { label: string; dot: string; glow: string }> = {
+  IDLE:         { label: "STANDBY",      dot: "#4f46e5", glow: "rgba(79,70,229,0.4)"   },
+  PERCEIVING:   { label: "PERCEIVING",   dot: "#06b6d4", glow: "rgba(6,182,212,0.4)"   },
+  PLANNING:     { label: "PLANNING",     dot: "#ec4899", glow: "rgba(236,72,153,0.4)"  },
+  DELEGATING:   { label: "DELEGATING",   dot: "#ec4899", glow: "rgba(236,72,153,0.4)"  },
+  WAITING:      { label: "WAITING",      dot: "#6366f1", glow: "rgba(99,102,241,0.4)"  },
+  SYNTHESIZING: { label: "SYNTHESIZING", dot: "#a855f7", glow: "rgba(168,85,247,0.4)"  },
+  RESPONDING:   { label: "RESPONDING",   dot: "#f59e0b", glow: "rgba(245,158,11,0.4)"  },
+  REFLECTING:   { label: "REFLECTING",   dot: "#312e81", glow: "rgba(49,46,129,0.4)"   },
+  INTERRUPTED:  { label: "INTERRUPTED",  dot: "#f43f5e", glow: "rgba(244,63,94,0.4)"   },
+  ERROR:        { label: "ERROR",        dot: "#ef4444", glow: "rgba(239,68,68,0.4)"   },
+  LISTENING:    { label: "LISTENING",    dot: "#06b6d4", glow: "rgba(6,182,212,0.4)"   },
+  THINKING:     { label: "THINKING",     dot: "#a855f7", glow: "rgba(168,85,247,0.4)"  },
+  EXECUTING:    { label: "EXECUTING",    dot: "#ec4899", glow: "rgba(236,72,153,0.4)"  },
+  SPEAKING:     { label: "SPEAKING",     dot: "#f59e0b", glow: "rgba(245,158,11,0.4)"  },
 };
 
 export function StatusCard() {
