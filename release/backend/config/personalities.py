@@ -1,1 +1,0 @@
-"""Personality definitions stub."""

@@ -65,12 +65,11 @@ function ReminderPill({ item, onCancel }: { item: ReminderItem; onCancel: (id: s
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: 24, scale: 0.92 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 24, scale: 0.88 }}
-      transition={{ type: "spring", stiffness: 340, damping: 28 }}
-      className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 backdrop-blur-xl ${typeColor}`}
-      style={{ minWidth: 190, maxWidth: 240 }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 12 }}
+      transition={{ duration: 0.35 }}
+      className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 backdrop-blur-xl w-full ${typeColor}`}
     >
       {/* Icon */}
       <span className="shrink-0 opacity-80"><TypeIcon type={item.type} /></span>
@@ -86,7 +85,7 @@ function ReminderPill({ item, onCancel }: { item: ReminderItem; onCancel: (id: s
       {/* Dismiss button */}
       <button
         onClick={() => onCancel(item.id)}
-        className="shrink-0 opacity-40 hover:opacity-80 transition-opacity"
+        className="shrink-0 opacity-45 hover:opacity-85 transition-opacity"
         title="Cancel"
       >
         <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -116,13 +115,13 @@ export function RemindersPanel() {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 8 }}
-          className="absolute bottom-36 right-4 z-30 flex flex-col gap-2 items-end"
+          exit={{ opacity: 0, y: 12 }}
+          className="w-full flex flex-col gap-2 items-stretch mt-4"
         >
-          <p className="text-[9px] tracking-widest text-white/20 font-black uppercase mb-0.5 pr-1">
-            Active Schedule
+          <p className="text-[9px] tracking-widest text-white/20 font-black font-mono uppercase mb-0.5 pr-1">
+            ACTIVE SCHEDULE // TIMERS
           </p>
           <AnimatePresence mode="popLayout">
             {reminders.map(item => (

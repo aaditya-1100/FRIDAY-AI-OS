@@ -11,3 +11,11 @@ Thumbs.db
 .DS_Store
 frontend/dist-electron/
 release/
+
+# Professional clean up rules
+*.db
+*.pid
+backend/data/qdrant*/
+backend/data/screenshots/
+release/
+requirements.txt

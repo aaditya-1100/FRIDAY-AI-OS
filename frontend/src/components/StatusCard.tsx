@@ -37,20 +37,16 @@ export function StatusCard() {
       {isVisible && (
         <motion.div
           key="status-panel"
-          initial={{ opacity: 0, x: 32, scale: 0.97 }}
-          animate={{ opacity: 1, x: 0,  scale: 1    }}
-          exit={{    opacity: 0, x: 32, scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 280, damping: 28 }}
-          // Right-side floating panel — doesn't overlap orb or mic
-          className="absolute right-4 top-1/2 z-50 w-64 -translate-y-1/2 md:right-6 md:w-72"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.35 }}
+          className="w-full relative"
         >
           <div
-            className="relative overflow-hidden rounded-2xl border border-white/[0.08] shadow-2xl"
+            className="glass-panel overflow-hidden rounded-2xl shadow-2xl"
             style={{
-              background: "linear-gradient(135deg, rgba(5,8,20,0.85) 0%, rgba(10,14,30,0.92) 100%)",
-              backdropFilter: "blur(24px)",
-              WebkitBackdropFilter: "blur(24px)",
-              boxShadow: `0 0 0 1px rgba(255,255,255,0.05), 0 24px 48px rgba(0,0,0,0.5), 0 0 20px ${meta.glow}22`,
+              boxShadow: `0 0 20px ${meta.glow}22`,
             }}
           >
             {/* Top accent glow bar */}

@@ -62,20 +62,16 @@ export function ClockWidget() {
       {show && (
         <motion.div
           key="clock-widget"
-          initial={{ opacity: 0, y: -20, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -16, scale: 0.96 }}
-          transition={{ type: "spring", stiffness: 240, damping: 26, delay: 0.2 }}
-          className="absolute top-28 right-4 z-30 md:top-32 md:right-5"
-          style={{ width: 220 }}
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.35 }}
+          className="w-full relative"
         >
           <div
-            className="relative overflow-hidden rounded-2xl border border-white/[0.07] select-none"
+            className="glass-panel overflow-hidden rounded-2xl select-none"
             style={{
-              background: "linear-gradient(135deg, rgba(4,6,15,0.85) 0%, rgba(8,10,24,0.9) 100%)",
-              backdropFilter: "blur(22px)",
-              WebkitBackdropFilter: "blur(22px)",
-              boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 16px 40px rgba(0,0,0,0.50), 0 0 24px ${getGlowColor()}`,
+              boxShadow: `0 0 24px ${getGlowColor()}`,
             }}
           >
             {/* Top scanning HUD element */}
@@ -85,44 +81,42 @@ export function ClockWidget() {
               animate={{ opacity: [0.4, 0.9, 0.4] }}
               transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
             />
-
+ 
             {/* Inner visual scanner */}
             <motion.div
-              className="absolute right-3 top-3 h-2 w-2 rounded-full"
+              className="absolute right-4 top-4 h-2 w-2 rounded-full animate-pulse-hud"
               style={{
                 background: connected ? "#22c55e" : "#ef4444",
                 boxShadow: connected ? "0 0 8px #22c55e" : "0 0 8px #ef4444",
               }}
-              animate={{ opacity: [1, 0.4, 1] }}
-              transition={{ duration: 1.8, repeat: Infinity }}
             />
-
-            <div className="px-4 py-3.5">
+ 
+            <div className="px-5 py-4">
               {/* Header Label */}
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[8px] font-black tracking-[0.25em] text-white/30 uppercase">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-black tracking-[0.25em] text-white/35 font-mono uppercase">
                   CHRONOFEED // GLOBAL
                 </span>
               </div>
-
+ 
               {/* Live updating digital clock */}
               <div className="flex items-baseline font-mono text-white tracking-tight">
-                <span className="text-2xl font-bold font-display tracking-wide">{formattedTime}</span>
+                <span className="text-3xl font-extrabold tracking-wide font-space text-white/90">{formattedTime}</span>
               </div>
-
+ 
               {/* Date string */}
-              <p className="text-[9px] font-bold font-mono tracking-widest text-white/55 mt-1">
+              <p className="text-[10px] font-semibold font-mono tracking-widest text-white/50 mt-1.5 uppercase">
                 {formattedDate}
               </p>
-
+ 
               {/* System Link Stats */}
-              <div className="mt-2.5 pt-2 border-t border-white/[0.05] flex items-center justify-between">
-                <span className="text-[7.5px] font-black tracking-wider text-white/20 uppercase">
-                  SYSTEM CORE:
+              <div className="mt-3.5 pt-2.5 border-t border-white/[0.04] flex items-center justify-between">
+                <span className="text-[8px] font-bold tracking-wider text-white/25 font-mono uppercase">
+                  STATE CORE:
                 </span>
                 <span 
-                  className="text-[8px] font-bold font-mono tracking-wider"
-                  style={{ color: accent }}
+                  className="text-[9px] font-black font-mono tracking-widest uppercase"
+                  style={{ color: accent, textShadow: `0 0 8px ${accent}44` }}
                 >
                   {aiState}
                 </span>

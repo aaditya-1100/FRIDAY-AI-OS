@@ -91,16 +91,7 @@ const WeatherIcon = ({ kind, size = 28 }: { kind: string; size?: number }) => {
   return <span className="text-xl">🌡️</span>;
 };
 
-// ── Sky gradient per condition ────────────────────────────────────────────────
-const GRADIENTS: Record<string, string> = {
-  clear:   "linear-gradient(160deg, rgba(12,20,60,0.90) 0%, rgba(20,40,100,0.85) 100%)",
-  cloudy:  "linear-gradient(160deg, rgba(10,14,30,0.90) 0%, rgba(30,35,60,0.88) 100%)",
-  rain:    "linear-gradient(160deg, rgba(8,14,35,0.92) 0%, rgba(10,25,55,0.90) 100%)",
-  drizzle: "linear-gradient(160deg, rgba(8,14,35,0.92) 0%, rgba(10,25,55,0.90) 100%)",
-  snow:    "linear-gradient(160deg, rgba(12,18,40,0.90) 0%, rgba(30,40,70,0.88) 100%)",
-  thunder: "linear-gradient(160deg, rgba(8,8,24,0.94) 0%, rgba(20,15,45,0.92) 100%)",
-  fog:     "linear-gradient(160deg, rgba(12,14,28,0.90) 0%, rgba(25,28,50,0.88) 100%)",
-};
+
 
 const ACCENT: Record<string, string> = {
   clear:   "#fbbf24", cloudy: "#94a3b8", rain: "#60a5fa",
@@ -165,28 +156,23 @@ export function WeatherWidget() {
   const show = !mapMode;
   const kind    = data?.kind ?? "clear";
   const accent  = ACCENT[kind] ?? ACCENT.clear;
-  const gradient = GRADIENTS[kind] ?? GRADIENTS.clear;
 
   return (
     <AnimatePresence>
       {show && (
         <motion.div
           key="weather-widget"
-          initial={{ opacity: 0, x: -20, scale: 0.96 }}
-          animate={{ opacity: 1, x: 0,   scale: 1    }}
-          exit={{    opacity: 0, x: -16, scale: 0.96 }}
-          transition={{ type: "spring", stiffness: 240, damping: 26, delay: 0.4 }}
-          className="absolute bottom-28 left-4 z-30 md:bottom-32 md:left-5"
-          style={{ width: 176 }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 12 }}
+          transition={{ duration: 0.35 }}
+          className="w-full relative"
         >
           {/* Card */}
           <motion.div
-            className="relative overflow-hidden rounded-2xl border border-white/[0.07] cursor-pointer select-none"
+            className="glass-panel overflow-hidden rounded-2xl cursor-pointer select-none"
             style={{
-              background: gradient,
-              backdropFilter: "blur(22px)",
-              WebkitBackdropFilter: "blur(22px)",
-              boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 16px 40px rgba(0,0,0,0.50), 0 0 24px ${accent}18`,
+              boxShadow: `0 0 24px ${accent}12`,
             }}
             onClick={() => setExpanded(e => !e)}
             whileTap={{ scale: 0.98 }}

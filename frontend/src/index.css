@@ -3,10 +3,9 @@
 @tailwind utilities;
 
 :root {
-  /* System stack only — no third-party font CDNs */
-  --font-display:
-    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
-    "Liberation Sans", sans-serif;
+  --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-space: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 html,
@@ -15,4 +14,106 @@ body,
   height: 100%;
   margin: 0;
   overflow: hidden;
+  font-family: var(--font-display);
+  background-color: #020408;
 }
+
+/* Custom Webkit scrollbars for a premium dark interface */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Glassmorphism panel base utility */
+.glass-panel {
+  background: linear-gradient(135deg, rgba(5, 8, 20, 0.45) 0%, rgba(10, 14, 30, 0.65) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 16px 36px rgba(0, 0, 0, 0.45);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 20px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* Keyframes for futuristic HUD animations */
+@keyframes hud-spin-cw {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes hud-spin-ccw {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(1.03); }
+}
+
+@keyframes pulse-hud {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.75; }
+}
+
+@keyframes ambient-morph {
+  0% {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    border-radius: 70% 30% 52% 48% / 60% 40% 60% 40%;
+    transform: translate(10%, -10%) scale(1.1) rotate(120deg);
+  }
+  66% {
+    border-radius: 50% 50% 30% 70% / 50% 60% 40% 50%;
+    transform: translate(-5%, 8%) scale(0.95) rotate(240deg);
+  }
+  100% {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+    transform: translate(0, 0) scale(1) rotate(360deg);
+  }
+}
+
+.animate-hud-spin-cw {
+  animation: hud-spin-cw 25s linear infinite;
+}
+
+.animate-hud-spin-ccw {
+  animation: hud-spin-ccw 35s linear infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}
+
+.animate-pulse-hud {
+  animation: pulse-hud 3s ease-in-out infinite;
+}
+
+.animate-ambient-morph {
+  animation: ambient-morph 20s ease-in-out infinite alternate;
+}
+
