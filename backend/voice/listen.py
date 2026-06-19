@@ -619,9 +619,9 @@ def is_hotkey_held() -> bool:
         ctrl = (ctypes.windll.user32.GetAsyncKeyState(0x11) & 0x8000) != 0
         # Check Alt (VK_MENU = 0x12)
         alt = (ctypes.windll.user32.GetAsyncKeyState(0x12) & 0x8000) != 0
-        # Check Space (VK_SPACE = 0x20)
-        space = (ctypes.windll.user32.GetAsyncKeyState(0x20) & 0x8000) != 0
-        return ctrl and alt and space
+        # Check Shift (VK_SHIFT = 0x10)
+        shift = (ctypes.windll.user32.GetAsyncKeyState(0x10) & 0x8000) != 0
+        return ctrl and alt and shift
     except Exception as e:
         print(f"[HOTKEY POLLING ERROR] {e}")
         return True

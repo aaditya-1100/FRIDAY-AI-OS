@@ -443,7 +443,7 @@ function createTray() {
 }
 
 function setupGlobalShortcut() {
-  const shortcutString = 'Ctrl+Alt+Space';
+  const shortcutString = 'Ctrl+Shift+Alt';
   logToFile(`[HOTKEY] Attempting to register global shortcut: ${shortcutString}`);
 
   try {
