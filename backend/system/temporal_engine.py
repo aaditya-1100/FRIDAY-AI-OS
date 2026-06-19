@@ -413,8 +413,14 @@ class TemporalEngine:
                 if not it.get("active", True):
                     continue
                 
-                target = datetime.fromisoformat(it["target_time"])
-                if now >= target:
+                creation_time = datetime.fromisoformat(it["created_at"])
+                delay_seconds = it.get("duration_seconds")
+                if delay_seconds is None:
+                    target_time = datetime.fromisoformat(it["target_time"])
+                    delay_seconds = int((target_time - creation_time).total_seconds())
+                
+                fire_time = creation_time + timedelta(seconds=delay_seconds)
+                if now >= fire_time:
                     triggered.append(it)
 
             for it in triggered:

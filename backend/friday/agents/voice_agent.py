@@ -134,6 +134,13 @@ class VoiceAgent(BaseAgent):
                         )
                         await event_bus.publish(envelope)
                 else:
+                    from friday.core.fsm import cognitive_core, AssistantState
+                    try:
+                        if cognitive_core.fsm.current_state == AssistantState.LISTENING:
+                            logger.info("[VoiceAgent] listen() returned None in LISTENING state. Resetting to IDLE.")
+                            cognitive_core.fsm.transition_to(AssistantState.IDLE, reason="Speech ended with no content")
+                    except Exception as e_state:
+                        logger.error(f"[VoiceAgent] Error resetting state: {e_state}")
                     await asyncio.sleep(0.1)
             except asyncio.CancelledError:
                 break

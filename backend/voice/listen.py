@@ -21,6 +21,7 @@ from config.settings import LISTEN_TIMEOUT, PHRASE_TIME_LIMIT
 
 # ── Conversational Realism & Adaptive Listening ─────────────────────────────────
 USE_ADAPTIVE_LISTENING = True
+_MIC_MODE = "hold_to_talk"
 
 # ── Diagnostic audio save directory ───────────────────────────────────────────
 _AUDIO_DIAG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs", "audio_diags")
@@ -150,6 +151,10 @@ def is_mic_enabled() -> bool:
     with _MIC_LOCK:
         return _MIC_ENABLED
 
+def get_mic_mode() -> str | None:
+    with _MIC_LOCK:
+        return _MIC_MODE
+
 # Microphone caching & resolution state
 _microphone = None
 _resolved_device_index = None
@@ -179,6 +184,21 @@ def _get_recognizer() -> sr.Recognizer:
         _recognizer.non_speaking_duration = 0.4
         print(f"[TRACE] [MIC_RECOGNIZER] Persistent recognizer created. Initial energy_threshold={_recognizer.energy_threshold}")
     return _recognizer
+
+
+_whisper_model = None
+_whisper_model_lock = threading.Lock()
+
+def _get_whisper_model():
+    global _whisper_model
+    if _whisper_model is None:
+        with _whisper_model_lock:
+            if _whisper_model is None:
+                print("[STT] Loading Faster-Whisper model: base.en (first use)...")
+                from faster_whisper import WhisperModel
+                # Load multilingual model size "base" to support auto-detection
+                _whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
+    return _whisper_model
 
 
 def _list_all_microphones() -> None:
@@ -430,11 +450,15 @@ def _invalidate_microphone():
         _recognizer = None  # Also reset recognizer so it re-calibrates on next device
 
 
-def set_mic_enabled(enabled: bool) -> None:
-    global _MIC_ENABLED, _microphone, _ambient_calibrated, _recognizer
-    print(f"[TRACE] [MIC_CONTROL] set_mic_enabled({enabled}) called")
+def set_mic_enabled(enabled: bool, mode: str = None) -> None:
+    global _MIC_ENABLED, _microphone, _ambient_calibrated, _recognizer, _MIC_MODE
+    print(f"[TRACE] [MIC_CONTROL] set_mic_enabled({enabled}, mode={mode}) called")
     with _MIC_LOCK:
         _MIC_ENABLED = enabled
+        if enabled:
+            _MIC_MODE = mode if mode is not None else "hold_to_talk"
+        else:
+            _MIC_MODE = None
     if not enabled:
         _STOP_EVENT.set()
         # Safely acquire _listen_execution_lock to ensure listen thread stops reading before stream close
@@ -585,6 +609,23 @@ def get_open_microphone() -> ResilientMicrophone:
         return mic
 
 
+def is_hotkey_held() -> bool:
+    import os
+    if os.path.exists("C:\\FRIDAY\\mock_hotkey_held.txt"):
+        return True
+    import ctypes
+    try:
+        # Check Ctrl (VK_CONTROL = 0x11)
+        ctrl = (ctypes.windll.user32.GetAsyncKeyState(0x11) & 0x8000) != 0
+        # Check Alt (VK_MENU = 0x12)
+        alt = (ctypes.windll.user32.GetAsyncKeyState(0x12) & 0x8000) != 0
+        # Check Space (VK_SPACE = 0x20)
+        space = (ctypes.windll.user32.GetAsyncKeyState(0x20) & 0x8000) != 0
+        return ctrl and alt and space
+    except Exception as e:
+        print(f"[HOTKEY POLLING ERROR] {e}")
+        return True
+
 def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout: float = None, phrase_time_limit: float = None, state: str = "CASUAL_CHAT", generation_id: int = 0) -> sr.AudioData | None:
     """
     Custom chunk-by-chunk listener that implements real-time adaptive pause thresholds
@@ -620,6 +661,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
     elapsed_time = 0
     buffer = b""
     frames = collections.deque()
+    total_active_speech_chunks = 0
 
     # ── Mic-level streaming to frontend ──────────────────────────────────────
     # Every MIC_LEVEL_EMIT_INTERVAL chunks, send mic RMS to frontend via WS.
@@ -643,6 +685,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
     print("[E2E_TRACE] [STAGE 2: Raw Audio Received] listen() started. Awaiting voice input...", flush=True)
     first_chunk_logged = False
     consecutive_speech_chunks = 0
+    consecutive_releases = 0
     
     while True:
         if _STOP_EVENT.is_set():
@@ -657,6 +700,22 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
             return None
 
         elapsed_time += seconds_per_buffer
+        if _MIC_MODE == "hold_to_talk":
+            if not is_hotkey_held():
+                consecutive_releases += 1
+                if consecutive_releases >= 6:  # Confirmed released (~200ms)
+                    print(f"[TRACE] [MIC_ADAPTIVE] Hold-to-talk keys released in Phase 1 (consecutive_releases={consecutive_releases}).")
+                    if elapsed_time > 0.4:
+                        break
+                    else:
+                        return None
+            else:
+                consecutive_releases = 0
+
+            if elapsed_time > 45.0:
+                print("[TRACE] [MIC_ADAPTIVE] Max hold-to-talk limit reached (45s) in Phase 1. Breaking to process.")
+                break
+
         if timeout and elapsed_time > timeout:
             print("[E2E_TRACE] [STAGE 3: VAD Triggered] FAIL. WaitTimeoutError - no speech detected above threshold.", flush=True)
             raise sr.WaitTimeoutError("listening timed out while waiting for phrase to start")
@@ -688,6 +747,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
         # Phase 1: Sustained-energy VAD trigger (Require 3 consecutive chunks above threshold)
         if energy > recognizer.energy_threshold:
             consecutive_speech_chunks += 1
+            total_active_speech_chunks += 1
             if consecutive_speech_chunks >= 3:
                 print(f"[TRACE] [MIC_VAD] Speech detected! energy={energy:.1f} vs threshold={recognizer.energy_threshold:.1f} (accepted)")
                 print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] PASS. Speech detected! energy={energy:.1f} > threshold={recognizer.energy_threshold:.1f}", flush=True)
@@ -715,8 +775,9 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
     current_speaking_streak = 0
     current_pause_streak = 0
     adaptive_pause_threshold = base_pause
-    total_active_speech_chunks = consecutive_speech_chunks
+    total_active_speech_chunks = max(total_active_speech_chunks, consecutive_speech_chunks)
 
+    consecutive_releases = 0
     while True:
         if _STOP_EVENT.is_set():
             return None
@@ -730,6 +791,19 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
             return None
 
         elapsed_time += seconds_per_buffer
+        if _MIC_MODE == "hold_to_talk":
+            if not is_hotkey_held():
+                consecutive_releases += 1
+                if consecutive_releases >= 6:  # Confirmed released (~200ms)
+                    print(f"[TRACE] [MIC_ADAPTIVE] Hold-to-talk keys released in Phase 2 (consecutive_releases={consecutive_releases}). Breaking to process.")
+                    break
+            else:
+                consecutive_releases = 0
+
+            if elapsed_time - phrase_start_time > 45.0:
+                print("[TRACE] [MIC_ADAPTIVE] Max hold-to-talk limit reached (45s) in Phase 2. Breaking to process.")
+                break
+
         if phrase_time_limit and elapsed_time - phrase_start_time > phrase_time_limit:
             break
 
@@ -813,22 +887,32 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
         adaptive_pause_threshold = tmp_threshold
         pause_buffer_count = int(math.ceil(adaptive_pause_threshold / seconds_per_buffer))
 
-        if pause_count > pause_buffer_count:
-            break
+        if _MIC_MODE == "hold_to_talk":
+            # Bypass automatic silence detection cutoff; we only cut off on key release or max limit
+            pass
+        else:
+            if pause_count > pause_buffer_count:
+                break
 
     # Exclude trailing non-speaking frames
     phrase_count -= pause_count
     if phrase_count < phrase_buffer_count and len(buffer) > 0:
-        # Phrase was too short to be speech, return None
-        print(f"[TRACE] [MIC_VAD] Phrase duration too short ({phrase_count * seconds_per_buffer:.2f}s < {phrase_threshold}s), rejected as noise pulse.")
-        print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] FAIL. Rejected as noise pulse. Duration={phrase_count * seconds_per_buffer:.2f}s < threshold={phrase_threshold}s", flush=True)
-        return None
+        if _MIC_MODE == "hold_to_talk":
+            pass
+        else:
+            # Phrase was too short to be speech, return None
+            print(f"[TRACE] [MIC_VAD] Phrase duration too short ({phrase_count * seconds_per_buffer:.2f}s < {phrase_threshold}s), rejected as noise pulse.")
+            print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] FAIL. Rejected as noise pulse. Duration={phrase_count * seconds_per_buffer:.2f}s < threshold={phrase_threshold}s", flush=True)
+            return None
 
     # STT Protection Layer: Reject if we didn't get enough actual speech chunks (e.g., just a transient pop)
     if total_active_speech_chunks < 3:
-        print(f"[TRACE] [MIC_VAD] Phase 2 STT Protection: Rejected as noise pulse. Active speech chunks={total_active_speech_chunks} < 3.")
-        print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] FAIL. STT Protection rejected phrase. Active chunks={total_active_speech_chunks} < 3", flush=True)
-        return None
+        if _MIC_MODE == "hold_to_talk":
+            pass
+        else:
+            print(f"[TRACE] [MIC_VAD] Phase 2 STT Protection: Rejected as noise pulse. Active speech chunks={total_active_speech_chunks} < 3.")
+            print(f"[E2E_TRACE] [STAGE 3: VAD Triggered] FAIL. STT Protection rejected phrase. Active chunks={total_active_speech_chunks} < 3", flush=True)
+            return None
 
     # Remove extra non-speaking frames at the end
     for _ in range(pause_count - non_speaking_buffer_count):
@@ -863,6 +947,16 @@ def sync_listen() -> str | None:
 
         recognizer = _get_recognizer()
         print(f"[TRACE] [MIC_SYNC] Recognizer energy_threshold={recognizer.energy_threshold:.1f}")
+
+        if _MIC_MODE == "hold_to_talk":
+            print("[TRACE] [MIC_SYNC] Hold-to-talk mode active. Waiting for key press before opening mic stream...")
+            while not is_hotkey_held():
+                if _STOP_EVENT.is_set():
+                    return None
+                with _MIC_LOCK:
+                    if not _MIC_ENABLED:
+                        return None
+                time.sleep(0.05)
 
         print("[TRACE] [MIC_SYNC] Resolving microphone...")
         print("[E2E_TRACE] [STAGE 1: Microphone Capture] Resolving active microphone...", flush=True)
@@ -1012,25 +1106,45 @@ def sync_listen() -> str | None:
                 print("[TRACE] [MIC_SYNC] Mic disabled post-listening, exiting")
                 return None
 
-        print("[TRACE] [MIC_SYNC] Sending audio to Google Speech Recognition...")
-        print(f"[E2E_TRACE] [STAGE 4: Speech Recognition Executed] Sending {audio_duration_s:.2f}s of captured audio (RMS={rms:.1f}) to Google Speech Recognition...", flush=True)
-        try:
-            query = recognizer.recognize_google(audio, language="en-IN").lower().strip()
-            print(f"[TRACE] [MIC_SYNC] ✓ TRANSCRIPT: '{query}' (speech accepted)")
-            print(f"[E2E_TRACE] [STAGE 5: Transcript Generated] PASS. Transcript: '{query}'", flush=True)
-            if query:
-                print(f"Sir: {query}")
-            return query or None
-        except sr.UnknownValueError:
-            print(f"[TRACE] [MIC_SYNC] Google could not understand audio "
-                  f"(RMS={rms:.1f}, duration={audio_duration_s:.2f}s, "
-                  f"threshold={recognizer.energy_threshold:.1f}, speech rejected)")
-            print(f"[E2E_TRACE] [STAGE 5: Transcript Generated] FAIL (UnknownValueError). Google SR did not understand the audio (likely empty or background noise).", flush=True)
+        # Transcription with 45s safety timeout.
+        # _get_whisper_model() loads weights on first call (~4-10s cold start).
+        # If it blocks beyond 45s (OOM, disk I/O stall), the timeout fires and
+        # sync_listen returns None, allowing the finally block to reset LISTENING.
+        _stt_result = [None]
+        _stt_exc = [None]
+        _stt_done = threading.Event()
+
+        def _run_stt():
+            try:
+                model = _get_whisper_model()
+                print("[STT] Model loaded. Transcribing audio...")
+                import io as _io
+                wav_io = _io.BytesIO(audio.get_wav_data())
+                segs, _info = model.transcribe(wav_io, beam_size=1)
+                segs = list(segs)
+                q = "".join(s.text for s in segs).strip().lower()
+                avg_lp = sum(s.avg_logprob for s in segs) / len(segs) if segs else 0.0
+                print(f"[STT] Transcript: '{q}' (confidence: {avg_lp:.2f})")
+                print(f"[TRACE] [MIC_SYNC] \u2713 TRANSCRIPT: '{q}' (speech accepted)")
+                print(f"[E2E_TRACE] [STAGE 5: Transcript Generated] PASS. Transcript: '{q}'", flush=True)
+                if q:
+                    print(f"Sir: {q}")
+                _stt_result[0] = q or None
+            except Exception as e_stt:
+                print(f"[TRACE] [MIC_SYNC] [STT ERROR] Transcription failed: {e_stt}")
+                _stt_exc[0] = e_stt
+            finally:
+                _stt_done.set()
+
+        _stt_thread = threading.Thread(target=_run_stt, daemon=True)
+        _stt_thread.start()
+        completed = _stt_done.wait(timeout=45.0)
+        if not completed:
+            print("[LISTEN] Safety timeout: 45s exceeded during STT, forcing return to IDLE")
             return None
-        except sr.RequestError as e:
-            print(f"[TRACE] [MIC_SYNC] [SR API ERROR] Google SR request failed: {e} (rejected)")
-            print(f"[E2E_TRACE] [STAGE 5: Transcript Generated] FAIL (RequestError). Google SR request failed: {e}", flush=True)
+        if _stt_exc[0] is not None:
             return None
+        return _stt_result[0]
 
     except sr.WaitTimeoutError:
         print("[TRACE] [MIC_SYNC] WaitTimeoutError (outer block)")
@@ -1041,6 +1155,26 @@ def sync_listen() -> str | None:
         _STOP_EVENT.wait(timeout=1.0)
         return None
     finally:
+        # FSM safety reset: if sync_listen is returning None (no transcript)
+        # and the FSM is still stuck in LISTENING, force it back to IDLE.
+        # This covers: STT timeout, mic error, model load failure, or any
+        # unhandled exception that bypassed a normal state transition.
+        try:
+            from core.state_manager import get_state as _gs, set_state as _ss, AssistantState as _AS
+            if _gs() == _AS.LISTENING:
+                print("[LISTEN] Safety reset: FSM stuck in LISTENING after sync_listen exit, forcing IDLE")
+                _ss(_AS.IDLE, force=True)
+        except Exception as _e_reset:
+            print(f"[LISTEN] Safety reset attempt failed: {_e_reset}")
+
+        if _MIC_MODE == "hold_to_talk":
+            try:
+                global _microphone
+                if _microphone is not None and _microphone.stream is not None:
+                    print("[TRACE] [MIC_SYNC] Closing microphone stream after hold-to-talk session...")
+                    _microphone.__exit__(None, None, None)
+            except Exception as e_close:
+                print(f"[TRACE] [MIC_SYNC] Error closing mic stream: {e_close}")
         _listen_execution_lock.release()
 
 
@@ -1068,7 +1202,15 @@ def diag_record_sample(duration: float = 1.0) -> dict:
         raw_len = len(audio.get_raw_data())
         transcript = None
         try:
-            transcript = recognizer.recognize_google(audio, language="en-IN")
+            model = _get_whisper_model()
+            print("[STT] Model loaded. Transcribing audio...")
+            import io
+            wav_io = io.BytesIO(audio.get_wav_data())
+            segments, info = model.transcribe(wav_io, beam_size=1)
+            segments = list(segments)
+            transcript = "".join(seg.text for seg in segments).strip()
+            avg_logprob = sum(seg.avg_logprob for seg in segments) / len(segments) if segments else 0.0
+            print(f"[STT] Transcript: '{transcript}' (confidence: {avg_logprob:.2f})")
         except Exception as e_rec:
             transcript = f"(recognition failed: {e_rec})"
         

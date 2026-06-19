@@ -109,8 +109,8 @@ def set_state(state, force=False):
 
     # Globally enforce that IDLE is only allowed if mic is disabled
     try:
-        from voice.listen import is_mic_enabled
-        if state == AssistantState.IDLE and is_mic_enabled():
+        from voice.listen import is_mic_enabled, get_mic_mode
+        if state == AssistantState.IDLE and is_mic_enabled() and get_mic_mode() != "hold_to_talk":
             print(f"[STATE SYSTEM] Intercepted transition to IDLE while microphone is ON. Forcing state to LISTENING instead.")
             state = AssistantState.LISTENING
     except Exception as e:

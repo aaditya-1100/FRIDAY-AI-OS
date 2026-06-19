@@ -12,7 +12,7 @@ from enum import Enum
 from typing import Dict, Any, List, Optional
 from uuid import UUID, uuid4
 from loguru import logger
-from friday.core.events import EventEnvelope, EventPriority
+from friday.core.events import EventEnvelope, EventPriority, TaskStatus
 from friday.core.event_bus import event_bus
 
 from brain.intent_parser import parse_intent
@@ -59,6 +59,7 @@ class CognitiveFSM:
         self.goal_stack: List[Dict[str, Any]] = []
         self.working_memory: Dict[str, Any] = {}
         self.error_message: Optional[str] = None
+        self.session_language: Optional[str] = None
 
         # Define valid transitions map
         self._transitions = {
@@ -129,6 +130,16 @@ class CognitiveCore:
         self.pending_requests: Dict[UUID, asyncio.Future] = {}
         self._loop = None
         self._is_running = False
+        self.active_correlation_id = None
+        self.current_turn_task = None
+
+    @property
+    def current_state(self) -> AssistantState:
+        return self.fsm.current_state
+
+    @current_state.setter
+    def current_state(self, val: AssistantState):
+        self.fsm.current_state = val
 
     def start(self, loop: Optional[asyncio.AbstractEventLoop] = None):
         if self._is_running:
@@ -155,7 +166,45 @@ class CognitiveCore:
         self.pending_requests.clear()
         logger.info("[CognitiveCore] Stopped.")
 
-    async def _retrieve_memory_context(self, raw_input: str, intent: str) -> Dict[str, Any]:
+    def abort_current_turn(self):
+        if hasattr(self, "current_turn_task") and self.current_turn_task is not None:
+            if not self.current_turn_task.done():
+                logger.info("[CognitiveCore] Aborting current turn task.")
+                self.current_turn_task.cancel()
+        
+        self.fsm.working_memory = {}
+        self.active_correlation_id = None
+        self.fsm.transition_to(AssistantState.IDLE, reason="Forced abort to IDLE", force=True)
+    def _detect_language(self, text: str) -> str:
+        if not text or not text.strip():
+            return "en"
+        # 1. Devanagari script check
+        if any("\u0900" <= char <= "\u097F" for char in text):
+            return "hi"
+        # 2. Hinglish stopwords check
+        hinglish_words = {
+            "hai", "karo", "bhai", "bhi", "kya", "kar", "se", "ko", "par", "ek",
+            "yeh", "woh", "ki", "ka", "ke", "mein", "toh", "naam", "batao", "likho",
+            "acha", "theek", "sab", "kuch", "hota", "sakte", "yahi", "daru", "sari",
+            "jo", "ho", "tum", "aap", "mera", "meri", "hum", "mujhe", "apna", "apni",
+            "hoga", "raha", "rahi", "rahe", "gaya", "gayi", "karna", "kr", "rha",
+            "rhi", "hu", "hoon", "tha", "thi", "the"
+        }
+        import re
+        words = set(re.findall(r'\b\w+\b', text.lower()))
+        if words.intersection(hinglish_words):
+            return "hi"
+        # 3. Langdetect fallback
+        try:
+            import langdetect
+            det = langdetect.detect(text)
+            if det == "hi":
+                return "hi"
+        except Exception:
+            pass
+        return "en"
+
+    async def _retrieve_memory_context(self, raw_input: str, intent: str, app_id: str = "general") -> Dict[str, Any]:
         """Retrieves semantic, episodic, and entity relations context with a 500ms timeout."""
         loop = asyncio.get_running_loop()
         
@@ -163,7 +212,7 @@ class CognitiveCore:
             # 1. Semantic Memory
             try:
                 sem = SemanticMemory()
-                sem_results = sem.search(raw_input, limit=3)
+                sem_results = sem.search(raw_input, limit=3, app_id=app_id)
                 semantic_facts = [hit.get("payload", {}).get("text", "") for hit in sem_results if hit.get("payload")]
             except Exception as e:
                 logger.error(f"[FSM] SemanticMemory search failed: {e}")
@@ -173,9 +222,9 @@ class CognitiveCore:
             try:
                 epi = EpisodicMemory()
                 if hasattr(epi, "get_recent"):
-                    recent_episodes = epi.get_recent(limit=3)
+                    recent_episodes = epi.get_recent(limit=3, app_id=app_id)
                 else:
-                    recent_episodes = epi.get_recent_episodes(limit=3)
+                    recent_episodes = epi.get_recent_episodes(limit=3, app_id=app_id)
             except Exception as e:
                 logger.error(f"[FSM] EpisodicMemory search failed: {e}")
                 recent_episodes = []
@@ -229,7 +278,8 @@ class CognitiveCore:
 
     async def on_perception_input(self, envelope: EventEnvelope):
         if self._loop:
-            self._loop.create_task(self._process_request_turn(envelope))
+            self.active_correlation_id = envelope.correlation_id
+            self.current_turn_task = self._loop.create_task(self._process_request_turn(envelope))
 
     async def on_proactive_trigger(self, envelope: EventEnvelope):
         if not self._loop:
@@ -237,7 +287,8 @@ class CognitiveCore:
         if self.current_state != AssistantState.IDLE:
             logger.info(f"[CognitiveCore] Suppressed proactive trigger '{envelope.payload.get('rule')}' because FSM is not IDLE (state={self.current_state.value}).")
             return
-        self._loop.create_task(self._process_proactive_turn(envelope))
+        self.active_correlation_id = envelope.correlation_id
+        self.current_turn_task = self._loop.create_task(self._process_proactive_turn(envelope))
 
     async def _process_proactive_turn(self, envelope: EventEnvelope):
         corr_id = envelope.correlation_id
@@ -245,9 +296,20 @@ class CognitiveCore:
         message = envelope.payload.get("message", "")
         logger.info(f"[CognitiveCore] Starting proactive turn for rule '{rule_name}' (correlation_id={corr_id})")
 
-        # 1. Reset FSM
+        # 1. Reset FSM and set active correlation ID
         self.fsm.reset_for_new_request(correlation_id=corr_id)
+        self.active_correlation_id = corr_id
         
+        # 1b. Extract app_id and detect language
+        from friday.system.context import system_context
+        ctx = system_context.get_context()
+        app_id = ctx.get("app_id", "general")
+        self.fsm.working_memory["current_app_id"] = app_id
+        
+        detected_language = self.fsm.session_language or self._detect_language(message)
+        self.fsm.working_memory["detected_language"] = detected_language
+        logger.info(f"[CognitiveCore] Proactive turn: app_id='{app_id}' detected_language='{detected_language}'")
+
         # Set the required working_memory fields
         self.fsm.working_memory["intent"] = rule_name
         self.fsm.working_memory["confidence"] = 1.0
@@ -261,7 +323,7 @@ class CognitiveCore:
         self.fsm.transition_to(AssistantState.PLANNING, reason="Proactive trigger received, entering planning state")
 
         # Retrieve memory context
-        memory_context = await self._retrieve_memory_context(message, rule_name)
+        memory_context = await self._retrieve_memory_context(message, rule_name, app_id=app_id)
         self.fsm.working_memory["memory_context"] = memory_context
 
         # 3. Transition directly to SYNTHESIZING (skipping DELEGATING & WAITING)
@@ -269,7 +331,7 @@ class CognitiveCore:
 
         # Fetch history turns (last 6 turns/messages)
         session = SessionMemory()
-        full_history = session.get("conversation_history") or []
+        full_history = session.get("conversation_history", app_id=app_id) or []
         history_turns = full_history[-6:]
         self.fsm.working_memory["conversation_history"] = history_turns
 
@@ -417,7 +479,7 @@ class CognitiveCore:
         while (len(json.dumps(new_history)) / 3) > 2000 and len(new_history) > 2:
             new_history = new_history[2:]
             
-        session.set("conversation_history", new_history)
+        session.set("conversation_history", new_history, app_id=app_id)
 
         # Let the event bus loop run to deliver the event
         await asyncio.sleep(0.05)
@@ -434,9 +496,42 @@ class CognitiveCore:
         text = envelope.payload.get("text", "")
         logger.info(f"[CognitiveCore] Starting turn for input: '{text}' (correlation_id={corr_id})")
 
-        # 1. Reset FSM
+        # 1. Reset FSM and set active correlation ID
         self.fsm.reset_for_new_request(correlation_id=corr_id)
+        self.active_correlation_id = corr_id
         self.fsm.working_memory["raw_input"] = text
+
+        # 1b. Extract app_id and detect language
+        from friday.system.context import system_context
+        ctx = system_context.get_context()
+        app_id = ctx.get("app_id", "general")
+        self.fsm.working_memory["current_app_id"] = app_id
+
+        # Language lock and override logic
+        text_lower = text.lower()
+        if "speak in hindi" in text_lower or "switch to hindi" in text_lower:
+            self.fsm.session_language = "hi"
+            logger.info("[CognitiveCore] session_language explicitly overridden to Hindi")
+        elif "speak in english" in text_lower or "switch to english" in text_lower:
+            self.fsm.session_language = "en"
+            logger.info("[CognitiveCore] session_language explicitly overridden to English")
+        elif self.fsm.session_language is None:
+            try:
+                import langdetect
+                probs = langdetect.detect_langs(text)
+                if probs:
+                    top_lang = probs[0]
+                    if top_lang.prob >= 0.85:
+                        self.fsm.session_language = top_lang.lang
+                        logger.info(f"[CognitiveCore] Locked session_language to '{top_lang.lang}' with confidence {top_lang.prob}")
+                    else:
+                        logger.info(f"[CognitiveCore] Ambiguous language confidence {top_lang.prob} for '{top_lang.lang}'. Not locking.")
+            except Exception as e:
+                logger.warning(f"[CognitiveCore] Langdetect failed: {e}")
+
+        detected_language = self.fsm.session_language or self._detect_language(text)
+        self.fsm.working_memory["detected_language"] = detected_language
+        logger.info(f"[CognitiveCore] Request turn: app_id='{app_id}' detected_language='{detected_language}'")
 
         # 2. Transition to PERCEIVING
         self.fsm.transition_to(AssistantState.PERCEIVING, reason="Raw input received, starting perception")
@@ -485,7 +580,7 @@ class CognitiveCore:
         self.fsm.transition_to(AssistantState.PLANNING, reason="Input perceived, constructing execution plan")
 
         # Retrieve memory context during PLANNING state
-        memory_context = await self._retrieve_memory_context(text, intent)
+        memory_context = await self._retrieve_memory_context(text, intent, app_id=app_id)
         self.fsm.working_memory["memory_context"] = memory_context
 
         try:
@@ -597,6 +692,9 @@ class CognitiveCore:
             expected_ids = {str(tid) for tid in dispatched_task_ids}
 
             async def on_agent_result(env: EventEnvelope) -> None:
+                if self.active_correlation_id is not None and env.correlation_id != self.active_correlation_id:
+                    logger.info(f"late result discarded for correlation_id {env.correlation_id}")
+                    return
                 payload = env.payload
                 t_id = payload.get("task_id")
                 if t_id and str(t_id) in expected_ids:
@@ -619,6 +717,22 @@ class CognitiveCore:
 
             self.fsm.working_memory["agent_results"] = collected_results
 
+            # Check for failed agent tasks
+            has_failed = False
+            error_msg = "Unknown task execution error"
+            for res in collected_results:
+                status_val = res.get("status")
+                if status_val == TaskStatus.FAILED or status_val == "FAILED" or status_val == TaskStatus.TIMEOUT or status_val == "TIMEOUT":
+                    has_failed = True
+                    error_msg = res.get("payload", {}).get("error") or res.get("payload", {}).get("reason") or "Agent task failed"
+                    break
+            
+            if has_failed:
+                logger.warning(f"[CognitiveCore] Agent task failed: {error_msg}. Entering ERROR state.")
+                self.fsm.error_message = error_msg
+                self.fsm.transition_to(AssistantState.ERROR, reason=f"Task execution failed: {error_msg}")
+                return
+
             # Transition to SYNTHESIZING
             self.fsm.transition_to(AssistantState.SYNTHESIZING, reason="Agent execution phase finished, generating response")
 
@@ -630,7 +744,7 @@ class CognitiveCore:
 
         # Fetch history turns (last 6 turns/messages)
         session = SessionMemory()
-        full_history = session.get("conversation_history") or []
+        full_history = session.get("conversation_history", app_id=app_id) or []
         history_turns = full_history[-6:]
         
         # Populate history in working memory for the prompt assembler
@@ -695,21 +809,58 @@ class CognitiveCore:
                 resp_json = r.json()
                 return resp_json["message"]["content"]
 
+        # Check empty search results gate
+        is_empty_search = False
+        if intent in ("WEB_SEARCH", "SEARCH"):
+            agent_results = self.fsm.working_memory.get("agent_results", [])
+            for res in agent_results:
+                payload = res.get("payload", {})
+                if res.get("status") == "FAILED" or res.get("status") == TaskStatus.FAILED:
+                    if payload.get("reason") == "no_results" or "no_results" in str(payload.get("error")):
+                        is_empty_search = True
+                        break
+                elif "results" in payload and not payload["results"]:
+                    is_empty_search = True
+                    break
+            else:
+                if not agent_results:
+                    is_empty_search = True
+
         response_text = None
-        try:
-            logger.info(f"[CognitiveCore] Attempting Groq synthesis (correlation_id={corr_id})")
-            response_text = await run_groq_inference()
-            logger.info(f"[CognitiveCore] Groq response: '{response_text}'")
-        except Exception as e_groq:
-            logger.error(f"[CognitiveCore] Groq synthesis failed: {e_groq}")
-            if OLLAMA_AVAILABLE:
-                try:
-                    response_text = await call_ollama_fallback()
-                except Exception as e_ollama:
-                    logger.error(f"[CognitiveCore] Ollama fallback failed: {e_ollama}")
-            
-            if response_text is None:
-                response_text = "I encountered an issue processing that. Please try again."
+        if is_empty_search:
+            logger.info("[CognitiveCore] Empty search results detected. Skipping LLM synthesis.")
+            response_text = "No current results found for that query, Sir."
+        else:
+            try:
+                logger.info(f"[CognitiveCore] Attempting Groq synthesis (correlation_id={corr_id})")
+                response_text = await run_groq_inference()
+                logger.info(f"[CognitiveCore] Groq response: '{response_text}'")
+            except Exception as e_groq:
+                logger.error(f"[CognitiveCore] Groq synthesis failed: {e_groq}")
+                if OLLAMA_AVAILABLE:
+                    try:
+                        response_text = await call_ollama_fallback()
+                    except Exception as e_ollama:
+                        logger.error(f"[CognitiveCore] Ollama fallback failed: {e_ollama}")
+                
+                if response_text is None:
+                    response_text = "I encountered an issue processing that. Please try again."
+
+            # Append search attribution URLs if results exist
+            if response_text and intent in ("WEB_SEARCH", "SEARCH"):
+                agent_results = self.fsm.working_memory.get("agent_results", [])
+                urls = []
+                for res in agent_results:
+                    payload = res.get("payload", {})
+                    results_list = payload.get("results", [])
+                    for item in results_list:
+                        url = item.get("url")
+                        if url and url not in urls:
+                            urls.append(url)
+                if urls:
+                    top_urls = urls[:3]
+                    attribution = "\n\nSources:\n" + "\n".join(f"- {u}" for u in top_urls)
+                    response_text += attribution
 
         # Store response
         self.fsm.working_memory["response"] = response_text
@@ -824,14 +975,14 @@ class CognitiveCore:
 
         # Update conversation history in session memory
         session = SessionMemory()
-        full_history = session.get("conversation_history") or []
+        full_history = session.get("conversation_history", app_id=app_id) or []
         full_history.append({"role": "user", "content": raw_input})
         full_history.append({"role": "assistant", "content": response_text})
         
         while (len(json.dumps(full_history)) / 3) > 2000 and len(full_history) > 2:
             full_history = full_history[2:]
             
-        session.set("conversation_history", full_history)
+        session.set("conversation_history", full_history, app_id=app_id)
 
         # Let the event bus loop run to deliver the event
         await asyncio.sleep(0.05)
@@ -845,6 +996,9 @@ class CognitiveCore:
 
     async def on_agent_result(self, envelope: EventEnvelope):
         corr_id = envelope.correlation_id
+        if self.active_correlation_id is not None and corr_id != self.active_correlation_id:
+            logger.info(f"late result discarded for correlation_id {corr_id}")
+            return
         if corr_id in self.pending_requests:
             future = self.pending_requests[corr_id]
             if not future.done():

@@ -67,11 +67,12 @@ class SemanticMemory:
             except Exception as e:
                 logger.error(f"[SemanticMemory] Error checking/creating collection {col}: {e}")
 
-    def add_fact(self, text: str, metadata: Optional[Dict[str, Any]] = None, collection: str = "friday_semantic") -> None:
+    def add_fact(self, text: str, metadata: Optional[Dict[str, Any]] = None, collection: str = "friday_semantic", app_id: str = "general") -> None:
         try:
             embedding = self.model.encode(text).tolist()
             payload = metadata or {}
             payload["text"] = text
+            payload["app_id"] = app_id
             
             import uuid
             point_id = str(uuid.uuid4())
@@ -86,16 +87,33 @@ class SemanticMemory:
                     )
                 ]
             )
-            logger.info(f"[SemanticMemory] Successfully indexed fact in {collection}.")
+            logger.info(f"[SemanticMemory] Successfully indexed fact in {collection} for app_id {app_id}.")
         except Exception as e:
             logger.error(f"[SemanticMemory] Failed to add fact to Qdrant: {e}", exc_info=True)
 
-    def search(self, query: str, limit: int = 5, collection: str = "friday_semantic") -> List[Dict[str, Any]]:
+    def search(self, query: str, limit: int = 5, collection: str = "friday_semantic", app_id: Optional[str] = None) -> List[Dict[str, Any]]:
         try:
             query_vector = self.model.encode(query).tolist()
+            
+            query_filter = None
+            if app_id:
+                query_filter = models.Filter(
+                    should=[
+                        models.FieldCondition(
+                            key="app_id",
+                            match=models.MatchValue(value=app_id)
+                        ),
+                        models.FieldCondition(
+                            key="app_id",
+                            match=models.MatchValue(value="global")
+                        )
+                    ]
+                )
+            
             response = self.client.query_points(
                 collection_name=collection,
                 query=query_vector,
+                query_filter=query_filter,
                 limit=limit
             )
             

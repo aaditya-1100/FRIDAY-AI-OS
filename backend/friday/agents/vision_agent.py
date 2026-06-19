@@ -47,11 +47,21 @@ class VisionAgent(BaseAgent):
             if intent == "SCREEN_READ":
                 image = await asyncio.to_thread(screen_reader.screenshot)
                 result = await asyncio.to_thread(screen_reader.extract_structured, image)
+                full_text = result.get("full_text", "").strip() if isinstance(result, dict) else ""
+                if not full_text:
+                    logger.warning("[VisionAgent] SCREEN_READ returned empty OCR result.")
+                    return TaskResult(
+                        task_id=dispatch.task_id,
+                        agent_id=self.agent_id,
+                        status=TaskStatus.FAILED,
+                        payload={"error": "could not read text from screen"},
+                        correlation_id=dispatch.correlation_id
+                    )
                 return TaskResult(
                     task_id=dispatch.task_id,
                     agent_id=self.agent_id,
                     status=TaskStatus.SUCCESS,
-                    payload=result,
+                    payload={"text": result, **(result if isinstance(result, dict) else {})},
                     correlation_id=dispatch.correlation_id
                 )
 
@@ -84,13 +94,13 @@ class VisionAgent(BaseAgent):
 
             elif intent == "SCREEN_DESCRIBE":
                 image = await asyncio.to_thread(screen_reader.screenshot)
-                ocr_text = await asyncio.to_thread(screen_reader.extract_text, image)
+                description = await asyncio.to_thread(screen_reader.describe_screen, image)
                 active_window = system_context.get_context().get("active_window", "")
                 return TaskResult(
                     task_id=dispatch.task_id,
                     agent_id=self.agent_id,
                     status=TaskStatus.SUCCESS,
-                    payload={"ocr_text": ocr_text, "active_window": active_window},
+                    payload={"ocr_text": description, "description": description, "active_window": active_window},
                     correlation_id=dispatch.correlation_id
                 )
 

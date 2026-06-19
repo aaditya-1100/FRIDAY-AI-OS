@@ -5,7 +5,13 @@ from uuid import UUID
 
 def assemble_system_prompt(working_memory: Dict[str, Any], system_context_data: Dict[str, Any], screen_context: Optional[Dict[str, Any]] = None) -> str:
     # 1. Identity (never truncated)
-    identity_str = "You are FRIDAY, a personal AI assistant. You are helpful, concise, and intelligent. You never pad responses unnecessarily."
+    detected_lang = working_memory.get("detected_language", "en")
+    lang_name = "Hindi" if detected_lang == "hi" else ("English" if detected_lang == "en" else detected_lang)
+    if detected_lang == "hi":
+        lang_instruction = " The user's message is in Hindi/Hinglish. Respond in the same language. If the message is in Hindi or Hinglish, respond in Hindi or Hinglish to match."
+    else:
+        lang_instruction = f" The user's message is in {lang_name}. Respond in the same language."
+    identity_str = f"You are FRIDAY, a personal AI assistant. You are helpful, concise, and intelligent. You never pad responses unnecessarily.{lang_instruction}"
     
     # 2. Behavioral rules (never truncated)
     rules_str = "Rules: Be direct. Never verbosely restate the question. If uncertain: say so. If information is unavailable: say so clearly."

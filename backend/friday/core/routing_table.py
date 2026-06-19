@@ -41,6 +41,8 @@ INTENT_TO_AGENT: Dict[str, Optional[str]] = {
     "WINDOW_CONTROL": "PC_AGENT",
 
     # File / System
+    "FILE_SYSTEM": "PC_AGENT",
+    "OPEN_FOLDER": "PC_AGENT",
     "FILE_READ": "PC_AGENT",
     "FILE_WRITE": "PC_AGENT",
     "SYSTEM_STATUS": "PC_AGENT",

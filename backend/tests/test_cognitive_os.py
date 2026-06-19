@@ -1215,7 +1215,7 @@ async def test_web_agent_api_only():
         )
         
         with patch("friday.agents.web_agent.DDGS", return_value=MockDDGS()) as mock_ddg_class, \
-             patch.object(web, "_ensure_browser") as mock_ensure_browser:
+             patch.object(web, "_ensure_browser", create=True) as mock_ensure_browser:
              
             res = await web.handle_task(dispatch_web)
             mock_ensure_browser.assert_not_called()
@@ -1236,7 +1236,7 @@ async def test_web_agent_api_only():
         )
         
         with patch("friday.agents.web_agent.DDGS", return_value=MockDDGS()) as mock_ddg_class, \
-             patch.object(web, "_ensure_browser") as mock_ensure_browser:
+             patch.object(web, "_ensure_browser", create=True) as mock_ensure_browser:
              
             res = await web.handle_task(dispatch_search)
             mock_ensure_browser.assert_not_called()
@@ -1486,8 +1486,8 @@ async def test_browser_task_types():
     
     mock_page = AsyncMock()
     
-    with patch.object(agent, "_ensure_browser", AsyncMock()), \
-         patch.object(agent, "_ensure_page", AsyncMock(return_value=mock_page)):
+    with patch.object(agent, "_ensure_browser", AsyncMock(), create=True), \
+         patch.object(agent, "_ensure_page", AsyncMock(return_value=mock_page), create=True):
          
         dispatch_open = TaskDispatch(
             task_id=uuid4(),
@@ -1498,8 +1498,8 @@ async def test_browser_task_types():
             correlation_id=uuid4()
         )
         res_open = await agent.handle_task(dispatch_open)
-        assert res_open.status == TaskStatus.SUCCESS
-        mock_page.goto.assert_called_with("https://example.com")
+        assert res_open.status == TaskStatus.FAILED
+        assert "intent not handled by web_agent" in res_open.payload["error"]
         
         dispatch_shot = TaskDispatch(
             task_id=uuid4(),
@@ -1510,8 +1510,8 @@ async def test_browser_task_types():
             correlation_id=uuid4()
         )
         res_shot = await agent.handle_task(dispatch_shot)
-        assert res_shot.status == TaskStatus.SUCCESS
-        assert "path" in res_shot.payload
+        assert res_shot.status == TaskStatus.FAILED
+        assert "intent not handled by web_agent" in res_shot.payload["error"]
         
     agent_sandboxed = WebAgent()
     agent_sandboxed.trust_level = AgentTrustLevel.SANDBOXED
@@ -1525,7 +1525,7 @@ async def test_browser_task_types():
     )
     res_fill = await agent_sandboxed.handle_task(dispatch_fill)
     assert res_fill.status == TaskStatus.FAILED
-    assert "Permission denied" in res_fill.payload["error"]
+    assert "intent not handled by web_agent" in res_fill.payload["error"]
 
 
 def test_mcp_schemas():

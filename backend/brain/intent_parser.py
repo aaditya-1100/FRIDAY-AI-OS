@@ -50,6 +50,7 @@ REALTIME_QUERY   → ANY question about current/recent/upcoming events, weather,
 AI_QUERY         → general conversation, opinions, coding help, explanations (timeless facts)
 SCREENSHOT       → take a screenshot
 SCREEN_UNDERSTANDING → explain active screen contents, derivations, graphs, code, active websites or videos currently visible on screen. Use this when the user asks "what is on my screen?", "explain this derivation", "summarize this video", "what is this webpage?", "explain this graph", "analyze this visible UI", etc.
+SCREEN_READ          → read raw text, comments, subtitles, or extract text/code blocks visible on the screen. Use this when the user asks "read comments on screen", "extract text from screen", "read text on screen", "read subtitles", etc.
 SYSTEM_STATUS    → CPU, RAM, disk usage queries
 WEATHER          → explicit weather/temperature/forecast/rain/humidity questions
 NEWS             → explicit news/headlines requests
@@ -211,7 +212,7 @@ ALLOWED_INTENTS = frozenset({
     "SET_REMINDER", "SET_TIMER", "STOPWATCH_CONTROL", "SET_ALARM",
     "SET_SCHEDULED_TASK", "SET_RECURRING_REMINDER", "LIST_REMINDERS",
     "CANCEL_REMINDER", "MAP_ROUTE", "PLACE_DISCOVERY", "TRAVEL_ETA",
-    "SCREEN_UNDERSTANDING", "MAP_FOLLOWUP",
+    "SCREEN_UNDERSTANDING", "SCREEN_READ", "MAP_FOLLOWUP",
     "YOUTUBE_TOPIC_SEARCH", "LATEST_CREATOR_VIDEO", "LATEST_CREATOR_SHORT",
     "VIDEO_BY_TITLE", "CHANNEL_OPEN", "PLAY_SEARCH_RESULT", "MAP_LOCATION",
     "CASUAL_CHAT", "SET_FACT"
@@ -366,6 +367,16 @@ def _keyword_fallback(query: str, history: list | None = None) -> dict:
     if "screenshot" in q or "take screenshot" in q:
         return {"intent": "SCREENSHOT"}
 
+    # Screen read fallback
+    screen_read_words = {
+        "read comments on screen", "read comments on my screen", "extract text from screen",
+        "extract text from my screen", "read what's written on screen", "read what is written on screen",
+        "read text on screen", "read text on my screen", "read subtitles on screen", "read subtitles on my screen",
+        "read subtitles", "read comments"
+    }
+    if any(w in q for w in screen_read_words) or any(phrase in q for phrase in ["read comments", "read text on", "extract text", "read subtitles"]):
+        return {"intent": "SCREEN_READ"}
+
     # Screen understanding fallback
     screen_words = {"what's on my screen", "what is on my screen", "explain my screen", "explain this derivation", "explain this graph", "summarize this video", "what is this website", "what's on screen", "explain what's on my screen", "explain what you see on my screen"}
     if any(w in q for w in screen_words):
@@ -472,7 +483,7 @@ def _keyword_fallback(query: str, history: list | None = None) -> dict:
 
     # 3. YOUTUBE CAPABILITY MATCHING
     comparison_words = {"vs", "compare", "difference between", "differences between"}
-    is_comparison = any(re.search(rf"\b{w}\b", q_clean) for w in comparison_words)
+    is_comparison = any(re.search(rf"\b{w}\b", q_clean) for w in comparison_words) and "vs code" not in q_clean
     has_explicit_media_verb = any(re.search(rf"\b{w}\b", q_clean) for w in ("play", "watch", "open youtube", "search youtube"))
     
     is_youtube = False
@@ -911,7 +922,7 @@ def validate_intent_sanity(intent_data: dict, query: str, planner_hint: str | No
     
     # ── Comparison Query Guard ──
     comparison_words = {"vs", "compare", "difference between", "differences between"}
-    is_comparison = any(re.search(rf"\b{w}\b", q) for w in comparison_words)
+    is_comparison = any(re.search(rf"\b{w}\b", q) for w in comparison_words) and "vs code" not in q
     has_explicit_media_verb = any(re.search(rf"\b{w}\b", q) for w in ("play", "watch", "open youtube", "search youtube"))
     
     if is_comparison and not has_explicit_media_verb:

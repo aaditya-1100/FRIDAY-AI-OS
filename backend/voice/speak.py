@@ -225,6 +225,21 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
         import uuid
         response_id = str(uuid.uuid4())[:8]
     
+    # Determine language and select voice
+    try:
+        from friday.core.fsm import cognitive_core
+        lang = cognitive_core.fsm.session_language or cognitive_core.fsm.working_memory.get("detected_language", "en")
+    except Exception:
+        print("[TTS_SPEAK] Could not read session_language or detected_language, defaulting to English voice")
+        lang = "en"
+        
+    if lang == "hi":
+        VOICE = "hi-IN-MadhurNeural"
+    else:
+        VOICE = "en-IN-NeerjaNeural"
+        
+    print(f"[TTS_SPEAK] Selected voice '{VOICE}' because detected language is '{lang}'")
+    
     print(f"[E2E_TRACE] [STAGE 10: TTS Generated] Synthesis started for text: '{text[:60]}...' | web_mode={web_mode} | response_id={response_id}", flush=True)
     # Acquire Single-Speech Mutex to prevent overlapping voice collisions
     async with _speak_lock:

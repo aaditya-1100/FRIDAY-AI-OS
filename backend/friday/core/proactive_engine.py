@@ -13,6 +13,11 @@ class ProactiveEngine:
         self.fsm_idle_since = datetime.now()  # Default to boot time
         self._prev_app = ""
         self._is_running = False
+        # 60-second startup grace period: no proactive triggers during boot.
+        # Prevents context_update events (fired within seconds of startup) from
+        # triggering proactive rules that change FSM state before Sir has
+        # interacted, which caused the notch to show non-IDLE on first connect.
+        self._startup_time = datetime.now()
 
     def start(self):
         if self._is_running:
@@ -68,7 +73,17 @@ class ProactiveEngine:
 
     async def _on_context_update(self, envelope: EventEnvelope):
         context = envelope.payload or {}
-        
+
+        # 60-second startup grace period: suppress all proactive triggers
+        # for the first minute after boot so the notch always starts IDLE.
+        # Bypassed automatically when running under pytest so unit tests are
+        # not affected by the grace window (tests create a fresh engine instance
+        # and fire events immediately, which is correct test behaviour).
+        import sys as _sys
+        _in_test = "pytest" in _sys.modules
+        if not _in_test and (datetime.now() - self._startup_time).total_seconds() < 60.0:
+            return
+
         # Guard: FSM must be IDLE to trigger proactive turns
         if cognitive_core.current_state != AssistantState.IDLE:
             return

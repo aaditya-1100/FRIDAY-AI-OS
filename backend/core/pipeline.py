@@ -234,8 +234,8 @@ def cancel_speak() -> None:
     from core.realtime_emit import emit_json_sync
     emit_json_sync({"type": "cancel_audio"})
     
-    from voice.listen import is_mic_enabled
-    target_state = AssistantState.LISTENING if is_mic_enabled() else AssistantState.IDLE
+    from voice.listen import is_mic_enabled, get_mic_mode
+    target_state = AssistantState.LISTENING if (is_mic_enabled() and get_mic_mode() != "hold_to_talk") else AssistantState.IDLE
     set_state(target_state)
     # Microphone activation must happen only through the main listening lifecycle.
     pass
@@ -359,8 +359,8 @@ async def safe_speak(text: str, web_mode: bool | None = None) -> None:
             reset_stop()
             set_mic_enabled(True)
             
-        from voice.listen import is_mic_enabled
-        target_idle_state = AssistantState.LISTENING if is_mic_enabled() else AssistantState.IDLE
+        from voice.listen import is_mic_enabled, get_mic_mode
+        target_idle_state = AssistantState.LISTENING if (is_mic_enabled() and get_mic_mode() != "hold_to_talk") else AssistantState.IDLE
         set_state(target_idle_state)
         print(f"[TRACE] [SPEAK] [{response_id}] STATE SET TO {target_idle_state} | SPEAK FINISHED")
         # Non-blocking Spotify unduck — fire and forget to avoid holding the pipeline lock
@@ -440,15 +440,15 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None, is
                 print(f"[TRACE] [PIPELINE] Error cancelling active execution tasks: {e_cancel}")
             
             # Immediately force release backend state to IDLE or LISTENING
-            from voice.listen import is_mic_enabled
-            target_state = AssistantState.LISTENING if is_mic_enabled() else AssistantState.IDLE
+            from voice.listen import is_mic_enabled, get_mic_mode
+            target_state = AssistantState.LISTENING if (is_mic_enabled() and get_mic_mode() != "hold_to_talk") else AssistantState.IDLE
             set_state(target_state, force=True)
             return
         else:
             print(f"[TRACE] [PIPELINE] Lock is active. Command '{raw_query}' received but system is busy — discarding to prevent lag.")
             # Reset state so the orb doesn't stay stuck on THINKING
-            from voice.listen import is_mic_enabled
-            busy_state = AssistantState.LISTENING if is_mic_enabled() else AssistantState.IDLE
+            from voice.listen import is_mic_enabled, get_mic_mode
+            busy_state = AssistantState.LISTENING if (is_mic_enabled() and get_mic_mode() != "hold_to_talk") else AssistantState.IDLE
             set_state(busy_state)
             # Give user feedback that their command was heard but system is busy
             await emit_json({"type": "hint", "text": "One moment sir, still processing..."})
@@ -783,8 +783,8 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None, is
             orchestrator.deregister_task(task_id)
             context_manager.clear_expired_payloads()
             if not is_speaking:
-                from voice.listen import is_mic_enabled
-                target_idle_state = AssistantState.LISTENING if is_mic_enabled() else AssistantState.IDLE
+                from voice.listen import is_mic_enabled, get_mic_mode
+                target_idle_state = AssistantState.LISTENING if (is_mic_enabled() and get_mic_mode() != "hold_to_talk") else AssistantState.IDLE
                 set_state(target_idle_state)
                 # Trigger proactive low-entropy cleanup when returning to IDLE
                 try:

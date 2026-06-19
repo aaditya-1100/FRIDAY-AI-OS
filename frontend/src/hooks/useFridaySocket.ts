@@ -17,6 +17,8 @@ import {
   speakTextAtom,
   remindersAtom,
   reminderToastAtom,
+  proactiveTriggerAtom,
+  activeAgentAtom,
   type ReminderItem,
   type ReminderToast,
 } from "../atoms";
@@ -328,7 +330,8 @@ function formatResultError(data: { reason?: string; detail?: string }): string {
   return r;
 }
 
-export function useFridaySocket() {
+export function useFridaySocket(options?: { disabled?: boolean }) {
+  const disabled = options?.disabled ?? false;
   const setBackendState = useSetAtom(backendStateAtom);
   const setIsTtsPlaying = useSetAtom(isTtsPlayingAtom);
   const setConnected    = useSetAtom(wsConnectedAtom);
@@ -343,6 +346,8 @@ export function useFridaySocket() {
   const setMapLon       = useSetAtom(mapLonAtom);
   const setReminders    = useSetAtom(remindersAtom);
   const setReminderToast = useSetAtom(reminderToastAtom);
+  const setProactiveTrigger = useSetAtom(proactiveTriggerAtom);
+  const setActiveAgent  = useSetAtom(activeAgentAtom);
   const micMuted        = useAtomValue(micMutedAtom);
   const micMutedRef     = useRef(micMuted);
   const wsRef           = useRef<WebSocket | null>(null);
@@ -379,6 +384,12 @@ export function useFridaySocket() {
   }, []);
 
   useEffect(() => {
+    if (disabled) {
+      console.log("[TRACE] [SOCKET_HOOK] WebSocket connection is disabled by option");
+      setConnected(false);
+      wsRef.current = null;
+      return;
+    }
     let cancelled = false;
     let ws: WebSocket | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
@@ -425,6 +436,11 @@ export function useFridaySocket() {
             const newState = data.state as AiState;
             console.log(`[TRACE] [WS_MSG] State change: "${newState}"`);
             setBackendState(newState);
+            if (typeof data.active_agent === "string") {
+              setActiveAgent(data.active_agent);
+            } else {
+              setActiveAgent(null);
+            }
             if (newState === "LISTENING" || newState === "PERCEIVING") {
               setTranscript("");
               setSpeakText("");
@@ -507,6 +523,14 @@ export function useFridaySocket() {
             if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
             toastTimerRef.current = setTimeout(() => setReminderToast(null), 6000);
           }
+          if (data.type === "proactive_trigger" && typeof data.message === "string") {
+            console.log(`[TRACE] [WS_MSG] proactive_trigger: ${data.message}`);
+            setProactiveTrigger({
+              message: data.message,
+              rule: data.rule || "",
+              timestamp: data.timestamp || ""
+            });
+          }
         } catch (err) {
           console.error("[TRACE] [WS_MSG_PARSE_ERROR] Failed to parse raw event data:", err);
         }
@@ -560,7 +584,7 @@ export function useFridaySocket() {
       setConnected(false);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [disabled]);
 
   const sendCommand = (text: string) => {
     const socket = wsRef.current;

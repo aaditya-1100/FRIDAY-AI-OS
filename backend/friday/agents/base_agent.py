@@ -89,6 +89,87 @@ class BaseAgent(abc.ABC):
         except Exception as e:
             logger.error(f"[AGENT] Error parsing TaskDispatch payload: {e}")
 
+    def _get_activity_string(self, intent: str, parameters: dict) -> str:
+        params = parameters or {}
+        # PC Agent intents
+        if intent == "CLIPBOARD_READ":
+            return "Reading Clipboard"
+        elif intent == "CLIPBOARD_WRITE":
+            return "Writing Clipboard"
+        elif intent in ("FILE_READ", "READ_FILE"):
+            return "Reading File"
+        elif intent in ("FILE_WRITE", "FILE_CREATE", "WRITE_FILE", "CREATE_FILE"):
+            return "Writing File"
+        elif intent in ("FILE_MOVE", "MOVE_FILE"):
+            return "Moving File"
+        elif intent in ("FILE_DELETE", "DELETE_FILE"):
+            return "Deleting File"
+        elif intent in ("SCREENSHOT", "SCREEN_SCREENSHOT"):
+            return "Taking Screenshot"
+        elif intent in ("SCREEN_UNDERSTANDING", "READ_SCREEN", "OCR_PROCESS", "VISION_ANALYZE"):
+            return "Reading Screen"
+        elif intent == "APP_FOCUS":
+            app = params.get("app") or params.get("title") or "Application"
+            return f"Opening {app}"
+        elif intent == "OPEN_APP":
+            app = params.get("app") or params.get("title") or "Application"
+            if app.lower() == "notepad":
+                return "Opening Notepad"
+            if app.lower() == "chrome":
+                return "Opening Chrome"
+            return f"Opening {app.title()}"
+        elif intent == "CLOSE_APP":
+            app = params.get("app") or params.get("title") or "Application"
+            if app.lower() == "notepad":
+                return "Closing Notepad"
+            if app.lower() == "chrome":
+                return "Closing Chrome"
+            return f"Closing {app.title()}"
+        elif intent == "SYSTEM_STATUS":
+            return "Checking System Status"
+        elif intent == "CHECK_BATTERY":
+            return "Checking Battery"
+        elif intent == "CHECK_CPU":
+            return "Checking CPU Usage"
+        elif intent == "CHECK_MEMORY":
+            return "Checking Memory Usage"
+        elif intent in ("SET_REMINDER", "CREATE_REMINDER"):
+            return "Setting Reminder"
+        elif intent in ("SET_ALARM", "CREATE_ALARM"):
+            return "Setting Alarm"
+        elif intent in ("START_TIMER", "CREATE_TIMER"):
+            return "Starting Timer"
+        
+        # Web Agent intents
+        elif intent in ("OPEN_WEBSITE", "OPEN_URL"):
+            return "Opening Website"
+        elif intent in ("WEB_SEARCH", "SEARCH_WEB", "GOOGLE_SEARCH"):
+            return "Searching Web"
+        elif intent in ("CLICK_ELEMENT", "FILL_FORM", "BROWSER_ACTION", "BROWSER_AUTOMATION"):
+            return "Browser Automation Active"
+        
+        # Memory Agent intents
+        elif intent in ("WRITE_MEMORY", "UPDATE_MEMORY", "SAVE_CONVERSATION"):
+            return "Updating Memory"
+        elif intent in ("READ_MEMORY", "SEARCH_MEMORY", "RETRIEVE_CONTEXT"):
+            return "Searching Memory"
+        
+        # Vision Agent intents
+        elif intent in ("DESCRIBE_SCREEN", "ANALYZE_SCREENSHOT"):
+            return "Describing Screen"
+        elif intent == "FIND_TEXT":
+            return "Finding Text On Screen"
+        
+        # Fallbacks based on Agent Type
+        if self.agent_type.value == "MEMORY_AGENT":
+            return "Searching Memory"
+        elif self.agent_type.value == "VISION_AGENT":
+            return "Reading Screen"
+        elif self.agent_type.value == "WEB_AGENT":
+            return "Browser Automation Active"
+        
+        return "Processing Request"
+
     async def _receive_loop(self):
         """Task queue consumer loop."""
         while self._running:
@@ -96,6 +177,24 @@ class BaseAgent(abc.ABC):
                 dispatch = await self._task_queue.get()
                 self.status = AgentStatus.BUSY
                 start_time = asyncio.get_event_loop().time()
+                
+                activity_str = self._get_activity_string(dispatch.intent, dispatch.parameters)
+                
+                # Publish activity started event
+                start_envelope = EventEnvelope(
+                    topic="friday.system.activity",
+                    priority=EventPriority.P2,
+                    source=f"agent.{self.agent_type.value.lower()}",
+                    correlation_id=dispatch.correlation_id,
+                    session_id=dispatch.session_id,
+                    payload={
+                        "status": "started",
+                        "intent": dispatch.intent,
+                        "activity": activity_str,
+                        "agent": self.agent_type.value
+                    }
+                )
+                await event_bus.publish(start_envelope)
                 
                 try:
                     logger.info(f"[AGENT] {self.agent_type.value} executing intent: '{dispatch.intent}' (task_id={dispatch.task_id})")
@@ -121,6 +220,22 @@ class BaseAgent(abc.ABC):
                         payload={"error": str(e)},
                         correlation_id=dispatch.correlation_id
                     )
+                finally:
+                    # Publish activity completed event
+                    end_envelope = EventEnvelope(
+                        topic="friday.system.activity",
+                        priority=EventPriority.P2,
+                        source=f"agent.{self.agent_type.value.lower()}",
+                        correlation_id=dispatch.correlation_id,
+                        session_id=dispatch.session_id,
+                        payload={
+                            "status": "completed",
+                            "intent": dispatch.intent,
+                            "activity": activity_str,
+                            "agent": self.agent_type.value
+                        }
+                    )
+                    await event_bus.publish(end_envelope)
 
                 end_time = asyncio.get_event_loop().time()
                 result.latency_ms = int((end_time - start_time) * 1000)

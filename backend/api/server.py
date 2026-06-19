@@ -44,11 +44,11 @@ class TeeLogger:
     def __init__(self, original):
         self.terminal = original
         self.log_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "friday_runtime.log")
-        # Overwrite on start
+        # Append on start to preserve electron startup logs
         if original == sys.stdout:
             try:
-                with open(self.log_file, "w", encoding="utf-8") as f:
-                    f.write(f"--- FRIDAY RUNTIME LOG START {datetime.datetime.now()} ---\n")
+                with open(self.log_file, "a", encoding="utf-8") as f:
+                    f.write(f"\n--- FRIDAY RUNTIME LOG START {datetime.datetime.now()} ---\n")
             except Exception:
                 pass
         
@@ -143,7 +143,31 @@ from friday.core.fsm import cognitive_core, AssistantState
 
 # Replaced state manager and pipeline functions for Cognitive OS
 def get_state() -> str:
-    return cognitive_core.fsm.current_state.value
+    try:
+        state = cognitive_core.fsm.current_state
+        if hasattr(state, "value"):
+            return state.value
+        return str(state)
+    except Exception as e:
+        print(f"[GET_STATE ERROR] {e}")
+        return "IDLE"
+
+def get_active_agent():
+    try:
+        working_memory = cognitive_core.fsm.working_memory or {}
+        plan_type = working_memory.get("plan_type")
+        if plan_type == "SINGLE":
+            return working_memory.get("agent_type")
+        elif plan_type == "MULTI":
+            actions = working_memory.get("parsed_intent", {}).get("actions", [])
+            if actions and isinstance(actions, list):
+                from friday.core.routing_table import INTENT_TO_AGENT
+                first_action = actions[0]
+                sub_intent = first_action.get("intent")
+                return INTENT_TO_AGENT.get(sub_intent, "PC_AGENT")
+    except Exception:
+        pass
+    return None
 
 def set_main_loop(loop):
     raise NotImplementedError("replaced by cognitive OS in Phase R1")
@@ -216,6 +240,12 @@ async def lifespan(app: FastAPI):
     from friday.api.websocket import fsm_ws_manager
     event_bus.start(loop)
     fsm_ws_manager.start()
+
+    # Bridge legacy state_manager callback to WS manager broadcast
+    from core.state_manager import register_state_callback as sm_register
+    async def sm_callback(state):
+        await fsm_ws_manager.broadcast({"type": "state", "state": state})
+    sm_register(sm_callback)
     
     register_json_emitter(emit_to_clients)
     # Register the event loop so emit_json_sync() can schedule coroutines from
@@ -248,10 +278,30 @@ async def lifespan(app: FastAPI):
     reset_stop()                         # arm the mic listener
     agent_task = loop.create_task(agent_loop())
 
+    # Pre-warm Faster-Whisper model in a background thread.
+    # WhisperModel() only loads weights into RAM — it does NOT open any audio
+    # device, so this is Bluetooth A2DP safe. By the time Sir presses the
+    # hotkey the model is already loaded and first transcription is instant.
+    def _prewarm_whisper():
+        try:
+            from voice.listen import _get_whisper_model
+            _get_whisper_model()
+            print("[STARTUP] Faster-Whisper model pre-warmed successfully.")
+        except Exception as e_pw:
+            print(f"[STARTUP WARNING] Whisper pre-warm failed (non-fatal): {e_pw}")
+    loop.run_in_executor(None, _prewarm_whisper)
+
     try:
         yield
     finally:
         print("[SERVER] Shutting down — stopping all subsystems...")
+
+        # Unregister legacy state_manager callback bridge
+        from core.state_manager import unregister_state_callback as sm_unregister
+        try:
+            sm_unregister(sm_callback)
+        except Exception:
+            pass
 
         # Stop Runtime Stability Janitor
         try:
@@ -459,7 +509,18 @@ async def websocket_endpoint(websocket: WebSocket):
     # Re-arm mic stopping state cleanly. Do not enable mic automatically —
     # wait for the client's explicit "mic_on" / "mic_off" sync message.
     reset_stop()
-    await _prune_send(websocket, {"type": "state", "state": get_state()})
+    # Bug 2 fix: Never send LISTENING/PERCEIVING as the initial snapshot.
+    # If the FSM is mid-active-turn at connection time, reflect it.
+    # If it's LISTENING or any other non-active state at connection open, send
+    # IDLE — LISTENING without a keypress means a stale or race-condition state.
+    _ACTIVE_FSM_STATES = {
+        "PERCEIVING", "PLANNING", "DELEGATING", "WAITING",
+        "SYNTHESIZING", "RESPONDING", "REFLECTING"
+    }
+    _snap_state = get_state()
+    if _snap_state not in _ACTIVE_FSM_STATES:
+        _snap_state = "IDLE"
+    await _prune_send(websocket, {"type": "state", "state": _snap_state, "active_agent": get_active_agent()})
 
     from core.runtime_orchestrator import orchestrator
     orchestrator.set_websocket_state("CONNECTED")
@@ -497,11 +558,25 @@ async def websocket_endpoint(websocket: WebSocket):
                 cognitive_core.fsm.transition_to(AssistantState.IDLE, reason="UI disabled mic", force=True)
                 print("[MIC] Disabled by UI")
 
+            elif msg_type == "force_idle":
+                cognitive_core.abort_current_turn()
+                cancel_speak()
+                set_mic_enabled(False)
+                cognitive_core.fsm.transition_to(AssistantState.IDLE, reason="Forced idle by UI double click", force=True)
+                print("[WS INCOMING] Forced state to IDLE by client request")
+
             elif msg_type == "mic_on":
                 # Re-enable backend microphone listener
+                mode = msg.get("mode")
                 reset_stop()
-                set_mic_enabled(True)
-                print("[MIC] Enabled by UI")
+                set_mic_enabled(True, mode=mode)
+                from core.state_manager import set_state
+                # Only transition to LISTENING immediately if this is an active voice turn command (mode is provided)
+                if mode is not None:
+                    set_state("LISTENING")
+                    print(f"[MIC] Enabled by UI. Transitioned state to LISTENING immediately. Mode={mode}")
+                else:
+                    print(f"[MIC] Enabled by UI (mic_on synced). Mode={mode}")
 
             elif msg_type == "shutdown":
                 # UI-initiated full shutdown

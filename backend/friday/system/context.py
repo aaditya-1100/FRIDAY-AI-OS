@@ -63,12 +63,32 @@ class SystemContext:
         except Exception as e:
             logger.error(f"[SystemContext] Critical error collecting metrics: {e}")
             
+    def get_app_id(self, title: Optional[str]) -> str:
+        if not title:
+            return "general"
+        title_lower = title.lower()
+        if "visual studio code" in title_lower or "code -" in title_lower:
+            return "vscode"
+        if "chrome" in title_lower or "chromium" in title_lower:
+            return "chrome"
+        if "firefox" in title_lower:
+            return "firefox"
+        if "premiere" in title_lower:
+            return "premiere"
+        if "spotify" in title_lower:
+            return "spotify"
+        if "explorer" in title_lower:
+            return "explorer"
+        return "general"
+
     def get_context(self) -> Dict[str, Any]:
+        app_id = self.get_app_id(self.active_window)
         return {
             "current_time": self.current_time,
             "current_date": self.current_date,
             "battery_level": self.battery_level,
             "active_window": self.active_window,
+            "app_id": app_id,
             "cpu_percent": self.cpu_percent,
             "memory_percent": self.memory_percent
         }

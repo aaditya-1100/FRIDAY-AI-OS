@@ -40,13 +40,36 @@ class SessionMemory:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS session_store (
                 key TEXT PRIMARY KEY,
-                value TEXT
+                value TEXT,
+                app_id TEXT DEFAULT 'general'
             )
         """)
+        try:
+            cursor.execute("ALTER TABLE session_store ADD COLUMN app_id TEXT DEFAULT 'general'")
+        except sqlite3.OperationalError:
+            pass
         conn.commit()
         conn.close()
 
-    def set(self, key: str, value: Any, ex: Optional[int] = None) -> None:
+    def _namespace_key(self, key: str, app_id: Optional[str] = None) -> str:
+        if key == "conversation_history":
+            if app_id is None:
+                try:
+                    from friday.system.context import system_context
+                    app_id = system_context.get_context().get("app_id", "general")
+                except Exception:
+                    app_id = "general"
+            return f"conversation_history_{app_id}"
+        return key
+
+    def set(self, key: str, value: Any, ex: Optional[int] = None, app_id: Optional[str] = None) -> None:
+        if app_id is None:
+            try:
+                from friday.system.context import system_context
+                app_id = system_context.get_context().get("app_id", "general")
+            except Exception:
+                app_id = "general"
+        key = self._namespace_key(key, app_id)
         val_str = json.dumps(value)
         if self.redis_client:
             try:
@@ -57,11 +80,21 @@ class SessionMemory:
         
         conn = sqlite3.connect(self.sqlite_path)
         cursor = conn.cursor()
-        cursor.execute("INSERT OR REPLACE INTO session_store (key, value) VALUES (?, ?)", (key, val_str))
+        cursor.execute("""
+            INSERT OR REPLACE INTO session_store (key, value, app_id)
+            VALUES (?, ?, ?)
+        """, (key, val_str, app_id))
         conn.commit()
         conn.close()
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: Any = None, app_id: Optional[str] = None) -> Any:
+        if app_id is None:
+            try:
+                from friday.system.context import system_context
+                app_id = system_context.get_context().get("app_id", "general")
+            except Exception:
+                app_id = "general"
+        key = self._namespace_key(key, app_id)
         if self.redis_client:
             try:
                 val_str = self.redis_client.get(key)
@@ -73,14 +106,18 @@ class SessionMemory:
         
         conn = sqlite3.connect(self.sqlite_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT value FROM session_store WHERE key = ?", (key,))
+        cursor.execute("""
+            SELECT value FROM session_store 
+            WHERE key = ? AND (app_id = ? OR app_id = 'global')
+        """, (key, app_id))
         row = cursor.fetchone()
         conn.close()
         if row:
             return json.loads(row[0])
         return default
 
-    def delete(self, key: str) -> None:
+    def delete(self, key: str, app_id: Optional[str] = None) -> None:
+        key = self._namespace_key(key, app_id)
         if self.redis_client:
             try:
                 self.redis_client.delete(key)

@@ -179,8 +179,8 @@ class RuntimeStabilityManager:
                         if inactive_dur > timeout_dur:
                             print(f"[WATCHDOG] Conversational attention window expired ({inactive_dur:.1f}s of silence in {conv_state}). Reverting to passive wake-word mode.")
                             pipeline.set_web_session_active(False)
-                            from voice.listen import is_mic_enabled
-                            target_state = AssistantState.LISTENING if is_mic_enabled() else AssistantState.IDLE
+                            from voice.listen import is_mic_enabled, get_mic_mode
+                            target_state = AssistantState.LISTENING if (is_mic_enabled() and get_mic_mode() != "hold_to_talk") else AssistantState.IDLE
                             set_state(target_state, force=True)
                 except Exception as e_attn:
                     print(f"[WATCHDOG WARNING] Attention window check error: {e_attn}")

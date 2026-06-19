@@ -71,3 +71,15 @@ export const speakTextAtom    = atom<string>("");
 export const remindersAtom     = atom<ReminderItem[]>([]);
 /** Fires when a reminder/timer/alarm triggers — cleared after 6s */
 export const reminderToastAtom = atom<ReminderToast | null>(null);
+
+// ── Proactive notifications ──────────────────────────────────────────────────
+export interface ProactiveTrigger {
+  message: string;
+  rule: string;
+  timestamp: string;
+}
+
+export const proactiveTriggerAtom = atom<ProactiveTrigger | null>(null);
+
+export const activeAgentAtom = atom<string | null>(null);
+export const isWindowVisibleAtom = atom<boolean>(true);

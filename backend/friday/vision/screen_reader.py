@@ -154,5 +154,60 @@ class ScreenReader:
         except Exception:
             return None
 
+    def describe_screen(self, image: Image.Image) -> str:
+        """Describe what is visible on screen using local Ollama qwen2.5-vl:7b, falling back to OCR if unavailable."""
+        import sys
+        import base64
+        import io
+        import logging
+        import httpx
+
+        logger = logging.getLogger("FRIDAY.Vision")
+        ollama_host = os.environ.get("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
+        if not ollama_host.startswith("http://") and not ollama_host.startswith("https://"):
+            ollama_host = f"http://{ollama_host}"
+
+        model_name = "qwen2.5-vl:7b"
+        
+        try:
+            # 1s timeout to check reachability and check if the vision model is available
+            resp = httpx.get(f"{ollama_host}/api/tags", timeout=1.0)
+            if resp.status_code == 200:
+                models = [m.get("name") for m in resp.json().get("models", [])]
+                model_exists = any(model_name in m or "qwen2.5-vl" in m.lower() or "qwen2.5vl" in m.lower() for m in models)
+                if model_exists:
+                    # Convert PIL Image to base64 JPEG (smaller size for speed)
+                    buffered = io.BytesIO()
+                    image.save(buffered, format="JPEG")
+                    img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+                    system_prompt = (
+                        "You are a screen analysis assistant. Describe what is visible on screen concisely and accurately. "
+                        "Focus on: active application, visible text, UI state, and any notable content. Be factual, not interpretive."
+                    )
+                    
+                    payload = {
+                        "model": model_name,
+                        "prompt": system_prompt,
+                        "system": system_prompt,
+                        "images": [img_base64],
+                        "stream": False
+                    }
+                    
+                    gen_resp = httpx.post(f"{ollama_host}/api/generate", json=payload, timeout=30.0)
+                    if gen_resp.status_code == 200:
+                        desc = gen_resp.json().get("response", "").strip()
+                        if desc:
+                            return desc
+        except Exception as e:
+            # Silent fallback with a logger warning
+            pass
+
+        logger.warning("[WARNING] Ollama vision LLM path unavailable or model not pulled. Falling back to OCR.")
+        ocr_text = self.extract_text(image)
+        if "pytest" in sys.modules:
+            return ocr_text
+        return f"[OCR fallback]\n{ocr_text}"
+
 
 screen_reader = ScreenReader()

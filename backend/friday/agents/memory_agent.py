@@ -54,6 +54,10 @@ class MemoryAgent(BaseAgent):
         }
         full_metadata.update(metadata)
         
+        # Get app_id from system context
+        from friday.system.context import system_context
+        app_id = system_context.get_context().get("app_id", "general")
+        
         # Run pipeline in threadpool (since it uses spacy and is CPU-bound)
         loop = asyncio.get_running_loop()
         res = await loop.run_in_executor(
@@ -66,7 +70,8 @@ class MemoryAgent(BaseAgent):
                 goal_relevance=goal_relevance,
                 emotional_weight=emotional_weight,
                 recency=recency,
-                metadata=full_metadata
+                metadata=full_metadata,
+                app_id=app_id
             )
         )
         
@@ -103,6 +108,9 @@ class MemoryAgent(BaseAgent):
                 recency = params.get("recency", 1.0)
                 metadata = params.get("metadata", {})
                 
+                from friday.system.context import system_context
+                app_id = system_context.get_context().get("app_id", "general")
+                
                 res = memory_pipeline.process_memory_formation(
                     query=query,
                     intent=task_intent,
@@ -111,7 +119,8 @@ class MemoryAgent(BaseAgent):
                     goal_relevance=goal_relevance,
                     emotional_weight=emotional_weight,
                     recency=recency,
-                    metadata=metadata
+                    metadata=metadata,
+                    app_id=app_id
                 )
                 
                 return TaskResult(

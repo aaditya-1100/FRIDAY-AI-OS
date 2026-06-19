@@ -1,5 +1,16 @@
 {
-  "reminders": [],
+  "reminders": [
+    {
+      "id": "201c28d9",
+      "type": "reminder",
+      "text": "drink water",
+      "created_at": "2026-06-19T19:04:42.019416",
+      "target_time": "2026-06-19T19:06:42.019416",
+      "recurrence": null,
+      "duration_seconds": 120,
+      "active": false
+    }
+  ],
   "stopwatch": {
     "start_time": null,
     "elapsed_seconds": 44.208473,

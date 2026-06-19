@@ -19,6 +19,7 @@ pyautogui==0.9.54
 psutil==6.0.0
 pygetwindow==0.0.9
 pyperclip==1.11.0
+pycaw==20240210
 
 # Vision
 pillow==12.2.0
@@ -47,3 +48,5 @@ pytest-asyncio==0.23.3
 pytest-xdist==3.8.0
 click==8.1.8
 duckduckgo_search==8.1.1
+langdetect==1.0.9
+

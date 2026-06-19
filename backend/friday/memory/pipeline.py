@@ -81,7 +81,8 @@ class MemoryPipeline:
         goal_relevance: float = 0.5,
         emotional_weight: float = 0.0,
         recency: float = 1.0,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        app_id: str = "general"
     ) -> Dict[str, Any]:
         # Extract entities and relations (always run regardless of salience)
         entities = self.extract_entities(query)
@@ -110,11 +111,11 @@ class MemoryPipeline:
         })
 
         # Save to stores
-        episode_id = self.episodic_store.add_episode(query, intent, success, score, full_metadata)
+        episode_id = self.episodic_store.add_episode(query, intent, success, score, full_metadata, app_id=app_id)
         
         # Save semantic fact
         semantic_text = f"User query: {query}. Intent detected: {intent}."
-        self.semantic_store.add_fact(semantic_text, metadata={"episode_id": episode_id, "intent": intent, "success": success})
+        self.semantic_store.add_fact(semantic_text, metadata={"episode_id": episode_id, "intent": intent, "success": success}, app_id=app_id)
 
         # Save relation to knowledge graph
         for rel in relations:

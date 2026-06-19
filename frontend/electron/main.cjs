@@ -1,9 +1,10 @@
-const { app, BrowserWindow, session, shell } = require('electron');
+const { app, BrowserWindow, session, shell, ipcMain, screen, Tray, Menu, nativeImage, globalShortcut } = require('electron');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
 const http = require('http');
 const fs = require('fs');
 const crypto = require('crypto');
+
 
 // Generate high-entropy session authentication token
 const authToken = crypto.randomBytes(32).toString('hex');
@@ -116,9 +117,13 @@ if (!gotTheLock) {
   process.exit(0);
 }
 
-let mainWindow = null;
+let notchWindow = null;
+let tray = null;
+let isListening = false;
+let lastHotkeyFireTime = 0;
 let backendProcess = null;
 let isQuitting = false;
+let isBackendReady = false;
 
 // ── Watchdog State Variables ────────────────────────────────────────────────
 let pingInterval = null;
@@ -198,6 +203,28 @@ function clearAllTimeouts() {
     clearTimeout(id);
   }
   activeTimeouts = [];
+}
+
+function readNotchConfig() {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'notch_config.json');
+    if (fs.existsSync(configPath)) {
+      const data = fs.readFileSync(configPath, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    // Fail silently
+  }
+  return { notchVisible: true };
+}
+
+function writeNotchConfig(config) {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'notch_config.json');
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+  } catch (err) {
+    // Fail silently
+  }
 }
 
 function logToFile(message) {
@@ -289,73 +316,179 @@ function startBackend() {
   });
 }
 
-function createWindow() {
-  if (isQuitting) return;
 
-  mainWindow = new BrowserWindow({
-    width: 600,
-    height: 800,
+
+function createNotchWindow() {
+  if (isQuitting || notchWindow) return;
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth } = primaryDisplay.bounds;
+  const paddingX = 16;
+  const paddingY = 16;
+  const initialVisibleWidth = 120;
+  const initialVisibleHeight = 26;
+  
+  const initialWidth = initialVisibleWidth + paddingX * 2;
+  const initialHeight = initialVisibleHeight + paddingY * 2;
+  const x = Math.round((screenWidth - initialWidth) / 2);
+  const y = 8 - paddingY;
+
+  notchWindow = new BrowserWindow({
+    width: initialWidth,
+    height: initialHeight,
+    x: x,
+    y: y,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: false,
+    skipTaskbar: true,
+    focusable: false,
+    hasShadow: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      preload: path.join(__dirname, 'preload.cjs'),
       autoplayPolicy: 'no-user-gesture-required'
-    },
-    autoHideMenuBar: true,
-    title: 'FRIDAY',
-    icon: path.join(__dirname, '../public/favicon.ico')
-  });
-
-  // Capture all frontend console messages and pipe them to the unified log file with strict window guards
-  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
-    if (isQuitting || !mainWindow || mainWindow.isDestroyed()) return;
-    const levelStr = ['DEBUG', 'INFO', 'WARN', 'ERROR'][level] || 'LOG';
-    logToFile(`[FRONTEND CONSOLE] [${levelStr}] ${message}`);
-  });
-
-  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
-    if (isQuitting) {
-      callback(false);
-      return;
     }
-    callback(permission === 'media');
   });
 
-  // Bypass iframe security restrictions dynamically to allow maps.google.com inside local file:// origin
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    const responseHeaders = { ...details.responseHeaders };
-    Object.keys(responseHeaders).forEach(header => {
-      const lower = header.toLowerCase();
-      if (lower === 'x-frame-options' || lower === 'content-security-policy') {
-        delete responseHeaders[header];
-      }
-    });
-    callback({ cancel: false, responseHeaders });
+  notchWindow.setAlwaysOnTop(true, 'screen-saver');
+  notchWindow.setVisibleOnAllWorkspaces(true);
+  notchWindow.setIgnoreMouseEvents(true, { forward: true });
+
+  // Capture all notch console messages
+  notchWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    if (isQuitting || !notchWindow || notchWindow.isDestroyed()) return;
+    const levelStr = ['DEBUG', 'INFO', 'WARN', 'ERROR'][level] || 'LOG';
+    logToFile(`[NOTCH CONSOLE] [${levelStr}] ${message}`);
   });
 
   const isDev = process.env.NODE_ENV === 'development';
 
   if (isDev) {
     waitForVite('localhost', 5173, 30, () => {
-      if (isQuitting || !mainWindow || mainWindow.isDestroyed()) return;
-      mainWindow.loadURL('http://localhost:5173?token=' + process.env.FRIDAY_AUTH_TOKEN);
+      if (isQuitting || !notchWindow || notchWindow.isDestroyed()) return;
+      notchWindow.loadURL('http://localhost:5173/?token=' + process.env.FRIDAY_AUTH_TOKEN);
     });
   } else {
-    const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-    logToFile(`[WINDOW] Loading index.html from: ${indexPath} (exists=${fs.existsSync(indexPath)})`);
-    if (isQuitting || !mainWindow || mainWindow.isDestroyed()) return;
-    mainWindow.loadFile(indexPath, { query: { token: process.env.FRIDAY_AUTH_TOKEN } });
+    const notchPath = path.join(__dirname, '..', 'dist', 'index.html');
+    logToFile(`[NOTCH] Loading index.html from: ${notchPath} (exists=${fs.existsSync(notchPath)})`);
+    if (isQuitting || !notchWindow || notchWindow.isDestroyed()) return;
+    notchWindow.loadFile(notchPath, { query: { token: process.env.FRIDAY_AUTH_TOKEN } });
   }
 
-  mainWindow.on('close', (e) => {
-    if (!isQuitting) {
-      e.preventDefault();
-      performShutdown();
-    }
+  notchWindow.on('closed', () => {
+    notchWindow = null;
   });
+}
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+function resizeNotch(visibleWidth, visibleHeight) {
+  if (!notchWindow || notchWindow.isDestroyed()) return;
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth } = primaryDisplay.bounds;
+
+  const paddingX = 16;
+  const paddingY = 16;
+
+  const windowWidth = visibleWidth + paddingX * 2;
+  const windowHeight = visibleHeight + paddingY * 2;
+
+  const x = Math.round((screenWidth - windowWidth) / 2);
+  const y = 8 - paddingY;
+
+  notchWindow.setBounds({
+    x: x,
+    y: y,
+    width: windowWidth,
+    height: windowHeight
+  }, true);
+}
+
+function createTray() {
+  if (tray) return;
+
+  let trayIcon;
+  const iconPath = path.join(__dirname, '../public/tray-icon.png');
+  if (fs.existsSync(iconPath)) {
+    trayIcon = nativeImage.createFromPath(iconPath);
+    logToFile(`[TRAY] Loaded icon from: ${iconPath}`);
+  } else {
+    // Fallback: valid 16x16 transparent PNG as base64 — Windows requires a real icon for system tray
+    const TRANSPARENT_PNG =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9h' +
+      'AAAAC0lEQVQ4y2NgAAIABQAANjN9GQAAAABJRkJggg==';
+    trayIcon = nativeImage.createFromDataURL(TRANSPARENT_PNG);
+    logToFile('[TRAY WARNING] tray-icon.png not found — using transparent PNG fallback');
+  }
+
+  try {
+    tray = new Tray(trayIcon);
+  } catch (err) {
+    logToFile(`[TRAY ERROR] new Tray() threw: ${err.message} — skipping tray, app will continue`);
+    return;
+  }
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Quit FRIDAY',
+      click: () => {
+        performShutdown();
+      }
+    }
+  ]);
+
+  tray.setToolTip('FRIDAY AI Assistant');
+  tray.setContextMenu(contextMenu);
+}
+
+function setupGlobalShortcut() {
+  const shortcutString = 'Ctrl+Alt+Space';
+  logToFile(`[HOTKEY] Attempting to register global shortcut: ${shortcutString}`);
+
+  try {
+    // Unregister any prior attempt before re-registering
+    globalShortcut.unregister(shortcutString);
+
+    const registered = globalShortcut.register(shortcutString, () => {
+      const now = Date.now();
+      const gap = now - lastHotkeyFireTime;
+      lastHotkeyFireTime = now;
+      if (gap < 250) {
+        return;
+      }
+
+      logToFile(`[HOTKEY] *** SHORTCUT FIRED: ${shortcutString} ***`);
+
+      if (!isBackendReady) {
+        logToFile('[HOTKEY] Backend is not ready yet — ignoring hotkey press during boot');
+        return;
+      }
+
+      if (!notchWindow || notchWindow.isDestroyed()) {
+        logToFile('[HOTKEY] notchWindow is null or destroyed — cannot send IPC');
+        return;
+      }
+
+      if (isListening) {
+        logToFile('[HOTKEY] Already listening — ignoring repeat press trigger');
+        return;
+      }
+
+      // Key pressed fresh — activate mic
+      logToFile('[HOTKEY] Sending hotkey-mic-on to notch renderer');
+      notchWindow.webContents.send('hotkey-mic-on');
+      isListening = true;
+    });
+
+    if (registered) {
+      logToFile(`[HOTKEY] SUCCESS: Global shortcut registered: ${shortcutString}`);
+    } else {
+      logToFile(`[HOTKEY] FAILED: globalShortcut.register returned false for '${shortcutString}' — combo may be taken by another app`);
+    }
+  } catch (err) {
+    logToFile(`[HOTKEY CRITICAL ERROR] Global shortcut '${shortcutString}' threw registration exception: ${err.message}`);
+  }
 }
 
 function setupBackendWatchdog() {
@@ -435,9 +568,9 @@ function handleBackendFailure() {
       clearInterval(pingInterval);
       pingInterval = null;
     }
-    if (mainWindow && !mainWindow.isDestroyed()) {
+    if (notchWindow && !notchWindow.isDestroyed()) {
       try {
-        mainWindow.webContents.send('backend-status', { status: 'degraded', reason: 'too_many_restarts' });
+        notchWindow.webContents.send('backend-status', { status: 'degraded', reason: 'too_many_restarts' });
       } catch (e) {
         // fail silently if ipc not ready
       }
@@ -475,6 +608,14 @@ function performShutdown() {
   clearAllTimeouts(); // Cleanly prune all active pending setTimeout tasks
   logToFile('[SHUTDOWN] Initiating full process teardown...');
 
+  // Unregister all global keyboard shortcuts
+  try {
+    globalShortcut.unregisterAll();
+    logToFile('[SHUTDOWN] Unregistered all global shortcuts.');
+  } catch (err) {
+    logToFile(`[SHUTDOWN WARNING] Failed to unregister shortcuts: ${err.message}`);
+  }
+
   if (pingInterval) {
     clearInterval(pingInterval);
     pingInterval = null;
@@ -490,11 +631,20 @@ function performShutdown() {
   logToFile('[SHUTDOWN] All backend processes terminated. Quitting Electron.');
 
   // Cleanly dismiss window references
-  if (mainWindow) {
-    if (!mainWindow.isDestroyed()) {
-      mainWindow.destroy();
+
+
+  if (notchWindow) {
+    if (!notchWindow.isDestroyed()) {
+      notchWindow.destroy();
     }
-    mainWindow = null;
+    notchWindow = null;
+  }
+
+  if (tray) {
+    try {
+      tray.destroy();
+    } catch (e) {}
+    tray = null;
   }
 
   app.quit();
@@ -546,11 +696,95 @@ function waitForBackend(host, port, retriesLeft, onReady) {
   req.end();
 }
 
+ipcMain.on('set-notch-state', (event, { state, connected }) => {
+  if (isQuitting) return;
+  if (!connected) {
+    isListening = false;
+    resizeNotch(120, 26);
+    return;
+  }
+  
+  // Keep isListening synced with FSM state
+  if (state === 'IDLE' || state === 'REFLECTING') {
+    isListening = false;
+    resizeNotch(100, 26);
+  } else {
+    if (state === 'LISTENING' || state === 'PERCEIVING') {
+      isListening = true;
+    }
+    resizeNotch(120, 26);
+  }
+});
+
+ipcMain.on('set-ignore-mouse-events', (event, { ignore, forward }) => {
+  if (isQuitting || !notchWindow || notchWindow.isDestroyed()) return;
+  if (forward) {
+    notchWindow.setIgnoreMouseEvents(ignore, { forward: true });
+  } else {
+    notchWindow.setIgnoreMouseEvents(ignore);
+  }
+});
+
+
+
+ipcMain.on('toggle-notch-visibility', (event, { visible }) => {
+  if (isQuitting) return;
+  logToFile(`[IPC] Received toggle-notch-visibility: ${visible}`);
+  
+  const config = readNotchConfig();
+  config.notchVisible = visible;
+  writeNotchConfig(config);
+
+  if (visible) {
+    if (!notchWindow) {
+      createNotchWindow();
+    } else {
+      notchWindow.show();
+    }
+  } else {
+    if (notchWindow) {
+      notchWindow.hide();
+    }
+  }
+});
+
+ipcMain.handle('get-notch-config', () => {
+  if (isQuitting) return { notchVisible: true };
+  return readNotchConfig();
+});
+
+ipcMain.handle('is-backend-ready', () => {
+  if (isQuitting) return false;
+  return isBackendReady;
+});
+
+ipcMain.on('show-notch-context-menu', () => {
+  if (isQuitting) return;
+  logToFile('[IPC] Received show-notch-context-menu request');
+  const menu = Menu.buildFromTemplate([
+    {
+      label: 'Restart FRIDAY',
+      click: () => {
+        logToFile('[CONTEXT MENU] Restart selected — relaunching app');
+        app.relaunch();
+        performShutdown();
+      }
+    },
+    {
+      label: 'End FRIDAY',
+      click: () => {
+        logToFile('[CONTEXT MENU] End selected — shutting down');
+        performShutdown();
+      }
+    }
+  ]);
+  menu.popup({ window: notchWindow || undefined });
+});
+
 app.on('second-instance', (event, commandLine, workingDirectory) => {
-  logToFile('[STARTUP] Second instance launched. Focusing existing window...');
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.focus();
+  logToFile('[STARTUP] Second instance launched. Showing notch window...');
+  if (notchWindow && !notchWindow.isDestroyed()) {
+    notchWindow.show();
   }
 });
 
@@ -560,6 +794,23 @@ app.whenReady().then(() => {
   
   // Update Windows taskbar pinned shortcuts to prevent separate taskbar icons
   updateAppShortcuts();
+
+  // Idempotent login item setting to ensure autostart on boot
+  try {
+    app.setLoginItemSettings({ openAtLogin: true, path: app.getPath('exe') });
+    logToFile('[STARTUP] OpenAtLogin setting applied successfully.');
+  } catch (err) {
+    logToFile(`[STARTUP WARNING] Failed to set OpenAtLogin setting: ${err.message}`);
+  }
+
+  // Create and display the notch window IMMEDIATELY on boot
+  const config = readNotchConfig();
+  if (config.notchVisible !== false) {
+    logToFile('[STARTUP] Creating notch window immediately on boot...');
+    createNotchWindow();
+  } else {
+    logToFile('[STARTUP] Notch is disabled in settings. Skipping window creation.');
+  }
   
   logToFile('[STARTUP] Port cleaned up. Waiting 600ms for OS sockets and PortAudio endpoints to release...');
   safeSetTimeout(() => {
@@ -568,25 +819,34 @@ app.whenReady().then(() => {
     startBackend();
     
     logToFile('[STARTUP] Waiting for backend to be ready...');
-    waitForBackend('127.0.0.1', 8001, 30, () => {
+    waitForBackend('127.0.0.1', 8001, 90, () => {
       if (isQuitting) return;
-      logToFile('[STARTUP] Backend ready. Creating window...');
-      createWindow();
+      logToFile('[STARTUP] Backend ready. Initializing Hotkey, Watchdog, and sending backend-ready event...');
+      
+      isBackendReady = true;
+
+      if (notchWindow && !notchWindow.isDestroyed()) {
+        logToFile('[STARTUP] Sending backend-ready event to notch window.');
+        notchWindow.webContents.send('backend-ready');
+      } else {
+        logToFile('[STARTUP WARNING] Notch window not available to receive backend-ready event.');
+      }
+      
+      setupGlobalShortcut();
       setupBackendWatchdog();
     });
   }, 600);
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+    const config = readNotchConfig();
+    if (config.notchVisible !== false && (!notchWindow || notchWindow.isDestroyed())) {
+      createNotchWindow();
     }
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    performShutdown();
-  }
+  // Intentionally empty - app stays alive via the notch window only
 });
 
 app.on('before-quit', () => {
