@@ -473,8 +473,6 @@ def set_mic_enabled(enabled: bool, mode: str = None) -> None:
         finally:
             if acquired:
                 _listen_execution_lock.release()
-        _ambient_calibrated = False
-        _recognizer = None
         from core.state_manager import set_state, AssistantState, get_state
         if get_state() != AssistantState.SPEAKING:
             set_state(AssistantState.IDLE, force=True)
@@ -615,13 +613,10 @@ def is_hotkey_held() -> bool:
         return True
     import ctypes
     try:
-        # Check Ctrl (VK_CONTROL = 0x11)
         ctrl = (ctypes.windll.user32.GetAsyncKeyState(0x11) & 0x8000) != 0
-        # Check Alt (VK_MENU = 0x12)
         alt = (ctypes.windll.user32.GetAsyncKeyState(0x12) & 0x8000) != 0
-        # Check Shift (VK_SHIFT = 0x10)
-        shift = (ctypes.windll.user32.GetAsyncKeyState(0x10) & 0x8000) != 0
-        return ctrl and alt and shift
+        z_key = (ctypes.windll.user32.GetAsyncKeyState(0x5A) & 0x8000) != 0
+        return ctrl and alt and z_key
     except Exception as e:
         print(f"[HOTKEY POLLING ERROR] {e}")
         return True

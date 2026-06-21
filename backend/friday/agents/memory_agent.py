@@ -140,7 +140,7 @@ class MemoryAgent(BaseAgent):
                     val = self.working.get(key)
                     payload = {"key": key, "value": val}
                 elif store_type == "session":
-                    val = self.session.get(key)
+                    val = await self.session.get(key)
                     payload = {"key": key, "value": val}
                 elif store_type == "episodic":
                     episodes = self.episodic.get_recent_episodes(limit=limit)

@@ -38,8 +38,11 @@ class SemanticMemory:
         if _client_instance is None:
             _client_instance = QdrantClient(path=self.qdrant_path)
         self.client = _client_instance
-        self.model = get_embedding_model()
         self._init_collections()
+
+    @property
+    def model(self):
+        return get_embedding_model()
 
 
     def _init_collections(self):

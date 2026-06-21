@@ -835,7 +835,7 @@ async def test_tts_responding():
         original_wait_for = asyncio.wait_for
         
         async def mock_wait_for_timeout(fut, timeout, **kwargs):
-            if timeout == 10.0:
+            if timeout == 200.0:
                 raise asyncio.TimeoutError()
             return await original_wait_for(fut, timeout, **kwargs)
             
@@ -1023,6 +1023,7 @@ async def test_memory_retrieval_in_planning():
             time.sleep(0.6)
             return [{"payload": {"text": "ignored"}}]
             
+        core.stop()
         fsm2 = CognitiveFSM()
         core2 = CognitiveCore(fsm=fsm2)
         core2.start(loop)
@@ -1073,7 +1074,7 @@ async def test_conversation_history():
     import json
     
     session = SessionMemory()
-    session.clear()
+    await session.clear()
     
     fsm = CognitiveFSM()
     core = CognitiveCore(fsm=fsm)
@@ -1125,7 +1126,7 @@ async def test_conversation_history():
                         break
                 await asyncio.sleep(0.1)
                 
-        history = session.get("conversation_history")
+        history = await session.get("conversation_history")
         assert len(history) == 6
         assert history[0]["content"] == "query 1"
         assert history[1]["content"] == "response 1"
@@ -1147,7 +1148,7 @@ async def test_conversation_history():
             large_history.append({"role": "assistant", "content": "b" * 150})
             
         assert len(json.dumps(large_history)) > 6000
-        session.set("conversation_history", large_history)
+        await session.set("conversation_history", large_history)
         
         c_id_trunc = uuid4()
         with patch("friday.core.fsm.parse_intent", return_value={"intent": "CASUAL_CHAT", "confidence": 1.0}), \
@@ -1169,7 +1170,7 @@ async def test_conversation_history():
                     break
             await asyncio.sleep(0.1)
             
-        final_history = session.get("conversation_history")
+        final_history = await session.get("conversation_history")
         assert len(json.dumps(final_history)) / 3 <= 2000
         assert final_history[-2]["content"] == "trunc query"
         assert final_history[-1]["content"] == "trunc response"
@@ -1370,12 +1371,12 @@ async def test_redis_session():
     from friday.memory.session import SessionMemory
     
     session = SessionMemory()
-    session.set("test_key", "test_val")
-    val = session.get("test_key")
+    await session.set("test_key", "test_val")
+    val = await session.get("test_key")
     assert val == "test_val"
     
-    session.delete("test_key")
-    assert session.get("test_key") is None
+    await session.delete("test_key")
+    assert await session.get("test_key") is None
 
 
 @pytest.mark.asyncio
@@ -1901,5 +1902,102 @@ async def test_user_profile():
         if os.path.exists(temp_db_path):
             os.remove(temp_db_path)
 
+@pytest.mark.asyncio
+async def test_tts_long_playback_timeout_cutoff():
+    from friday.core.fsm import CognitiveFSM, CognitiveCore, AssistantState
+    from friday.core.events import EventEnvelope, EventPriority
+    from friday.core.event_bus import event_bus
+    from unittest.mock import patch
+    from uuid import uuid4
+    import asyncio
+
+    fsm = CognitiveFSM()
+    core = CognitiveCore(fsm=fsm)
+    loop = asyncio.get_running_loop()
+    event_bus.start(loop)
+    core.start(loop)
+    
+    c_id = uuid4()
+    envelope = EventEnvelope(
+        topic="friday.perception.text.input",
+        priority=EventPriority.P1,
+        source="test",
+        correlation_id=c_id,
+        session_id=fsm.session_id,
+        payload={"text": "hello"}
+    )
+    
+    wait_for_calls = []
+    async def mock_wait_for(fut, timeout=None):
+        if timeout is not None:
+            wait_for_calls.append(timeout)
+        async def fire_complete():
+            await asyncio.sleep(0.05)
+            complete_envelope = EventEnvelope(
+                topic="friday.agent.voice.tts_complete",
+                priority=EventPriority.P1,
+                source="agent.voice.tts",
+                correlation_id=c_id,
+                session_id=fsm.session_id,
+                payload={"status": "complete"}
+            )
+            await event_bus.publish(complete_envelope)
+        asyncio.create_task(fire_complete())
+        return await fut
+
+    with patch("friday.core.fsm.parse_intent", return_value={"intent": "CASUAL_CHAT", "confidence": 1.0}), \
+         patch("friday.core.fsm.ask_groq", return_value="hello back"), \
+         patch("friday.core.fsm.asyncio.wait_for", side_effect=mock_wait_for), \
+         patch("friday.core.fsm.SessionMemory") as mock_session_class:
+         
+         mock_session = mock_session_class.return_value
+         async def mock_get(*args, **kwargs): return []
+         async def mock_set(*args, **kwargs): pass
+         mock_session.get = mock_get
+         mock_session.set = mock_set
+         
+         await event_bus.publish(envelope)
+         
+         for _ in range(50):
+             await asyncio.sleep(0.02)
+             if fsm.current_state == AssistantState.IDLE:
+                 break
+                 
+         assert 200.0 in wait_for_calls
+         assert fsm.current_state == AssistantState.IDLE
 
 
+@pytest.mark.asyncio
+async def test_high_memory_proactive_silent_trigger():
+    from friday.core.fsm import CognitiveFSM, CognitiveCore, AssistantState
+    from friday.core.events import EventEnvelope, EventPriority
+    from friday.core.event_bus import event_bus
+    from uuid import uuid4
+    import asyncio
+
+    fsm = CognitiveFSM()
+    core = CognitiveCore(fsm=fsm)
+    loop = asyncio.get_running_loop()
+    event_bus.start(loop)
+    core.start(loop)
+    
+    assert fsm.current_state == AssistantState.IDLE
+    
+    c_id = uuid4()
+    envelope = EventEnvelope(
+        topic="friday.core.proactive_trigger",
+        priority=EventPriority.P2,
+        source="proactive_engine",
+        correlation_id=c_id,
+        session_id=uuid4(),
+        payload={
+            "rule": "HIGH_MEMORY",
+            "message": "Memory usage is at 91.9%. Applications may slow down."
+        }
+    )
+    
+    await event_bus.publish(envelope)
+    await asyncio.sleep(0.1)
+    
+    assert fsm.current_state == AssistantState.IDLE
+    assert core.active_correlation_id is None or core.active_correlation_id != c_id

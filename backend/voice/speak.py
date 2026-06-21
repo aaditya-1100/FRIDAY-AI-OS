@@ -388,7 +388,7 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
                             os.remove(temp_path)
                         except Exception:
                             pass
-                    return
+                    raise RuntimeError("All TTS providers failed to synthesize speech.") from e
 
             print(f"[TRACE] [TTS_SPEAK] [{response_id}] TTS GENERATION COMPLETE | provider={provider_used} | file_size={audio_file_size} bytes")
             # NOTE: Intentional cancellations are handled by _play_cancelled (set by cancel_play())
@@ -454,6 +454,7 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
             raise
         except Exception as e:
             print(f"[TRACE] [TTS_SPEAK] [{response_id}] EXCEPTION: {e}\n{traceback.format_exc()}")
+            raise
         finally:
             if temp_path and os.path.exists(temp_path):
                 for _ in range(6):

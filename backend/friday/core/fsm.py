@@ -284,8 +284,12 @@ class CognitiveCore:
     async def on_proactive_trigger(self, envelope: EventEnvelope):
         if not self._loop:
             return
+        rule_name = envelope.payload.get("rule", "PROACTIVE")
+        if rule_name == "HIGH_MEMORY":
+            logger.info(f"[CognitiveCore] Suppressing FSM transitions/voice turn for proactive rule 'HIGH_MEMORY'. Notch UI will handle silently.")
+            return
         if self.current_state != AssistantState.IDLE:
-            logger.info(f"[CognitiveCore] Suppressed proactive trigger '{envelope.payload.get('rule')}' because FSM is not IDLE (state={self.current_state.value}).")
+            logger.info(f"[CognitiveCore] Suppressed proactive trigger '{rule_name}' because FSM is not IDLE (state={self.current_state.value}).")
             return
         self.active_correlation_id = envelope.correlation_id
         self.current_turn_task = self._loop.create_task(self._process_proactive_turn(envelope))
@@ -320,7 +324,7 @@ class CognitiveCore:
         self.fsm.working_memory["parsed_intent"] = {"intent": rule_name}
 
         # 2. Transition directly to PLANNING
-        self.fsm.transition_to(AssistantState.PLANNING, reason="Proactive trigger received, entering planning state")
+        self.fsm.transition_to(AssistantState.PLANNING, reason="Proactive trigger received, entering planning state", force=True)
 
         # Retrieve memory context
         memory_context = await self._retrieve_memory_context(message, rule_name, app_id=app_id)
@@ -331,7 +335,7 @@ class CognitiveCore:
 
         # Fetch history turns (last 6 turns/messages)
         session = SessionMemory()
-        full_history = session.get("conversation_history", app_id=app_id) or []
+        full_history = await session.get("conversation_history", app_id=app_id) or []
         history_turns = full_history[-6:]
         self.fsm.working_memory["conversation_history"] = history_turns
 
@@ -406,17 +410,24 @@ class CognitiveCore:
         # Await tts_complete or timeout
         loop = asyncio.get_running_loop()
         tts_completed_event = asyncio.Event()
+        tts_failed = False
 
         async def on_tts_complete(env: EventEnvelope):
+            nonlocal tts_failed
             if env.correlation_id == corr_id:
+                if env.payload.get("status") == "failed":
+                    tts_failed = True
                 tts_completed_event.set()
 
         event_bus.subscribe("friday.agent.voice.tts_complete", on_tts_complete)
         try:
-            await asyncio.wait_for(tts_completed_event.wait(), timeout=10.0)
+            await asyncio.wait_for(tts_completed_event.wait(), timeout=200.0)
             logger.info(f"[CognitiveCore] TTS playback complete (correlation_id={corr_id})")
+            if tts_failed:
+                self.fsm.transition_to(AssistantState.ERROR, reason="TTS playback failed (all providers exhausted)")
+                return
         except asyncio.TimeoutError:
-            logger.warning(f"[CognitiveCore] TTS playback timed out (correlation_id={corr_id})")
+            logger.warning(f"[CognitiveCore] TTS playback timed out (200s limit) (correlation_id={corr_id})")
         finally:
             event_bus.unsubscribe("friday.agent.voice.tts_complete", on_tts_complete)
 
@@ -479,7 +490,7 @@ class CognitiveCore:
         while (len(json.dumps(new_history)) / 3) > 2000 and len(new_history) > 2:
             new_history = new_history[2:]
             
-        session.set("conversation_history", new_history, app_id=app_id)
+        await session.set("conversation_history", new_history, app_id=app_id)
 
         # Let the event bus loop run to deliver the event
         await asyncio.sleep(0.05)
@@ -585,8 +596,10 @@ class CognitiveCore:
 
         try:
             from friday.memory.knowledge_graph import KnowledgeGraph
-            kg = KnowledgeGraph()
-            kg_nodes_count = len(kg.graph.nodes)
+            def _get_kg_nodes():
+                kg = KnowledgeGraph()
+                return len(kg.graph.nodes)
+            kg_nodes_count = await asyncio.to_thread(_get_kg_nodes)
         except Exception as e:
             logger.warning(f"[FSM] Failed to load Knowledge Graph node count: {e}")
             kg_nodes_count = 0
@@ -596,8 +609,8 @@ class CognitiveCore:
 
         from friday.core.routing_table import INTENT_TO_AGENT, DIRECT_LLM_INTENTS, MULTI_ACTION_INTENT
 
-        # Direct LLM check or low-confidence/clarification
-        if intent in DIRECT_LLM_INTENTS or confidence < 0.6:
+        # Direct LLM check or low-confidence/clarification or None/unrecognized intent
+        if intent is None or intent not in INTENT_TO_AGENT or intent in DIRECT_LLM_INTENTS or confidence < 0.6:
             self.fsm.working_memory["plan_type"] = "DIRECT_LLM"
             self.fsm.working_memory["agent_type"] = None
             if confidence < 0.6:
@@ -744,7 +757,7 @@ class CognitiveCore:
 
         # Fetch history turns (last 6 turns/messages)
         session = SessionMemory()
-        full_history = session.get("conversation_history", app_id=app_id) or []
+        full_history = await session.get("conversation_history", app_id=app_id) or []
         history_turns = full_history[-6:]
         
         # Populate history in working memory for the prompt assembler
@@ -895,18 +908,25 @@ class CognitiveCore:
         await event_bus.publish(tts_request_envelope)
 
         tts_completed_event = asyncio.Event()
+        tts_failed = False
 
         async def on_tts_complete(env: EventEnvelope) -> None:
+            nonlocal tts_failed
             if env.correlation_id == corr_id:
+                if env.payload.get("status") == "failed":
+                    tts_failed = True
                 tts_completed_event.set()
 
         event_bus.subscribe("friday.agent.voice.tts_complete", on_tts_complete)
 
         try:
-            await asyncio.wait_for(tts_completed_event.wait(), timeout=10.0)
+            await asyncio.wait_for(tts_completed_event.wait(), timeout=200.0)
             logger.info(f"[CognitiveCore] TTS playback complete (correlation_id={corr_id})")
+            if tts_failed:
+                self.fsm.transition_to(AssistantState.ERROR, reason="TTS playback failed (all providers exhausted)")
+                return
         except asyncio.TimeoutError:
-            logger.warning(f"[CognitiveCore] TTS playback completion timed out (10s limit) (correlation_id={corr_id})")
+            logger.warning(f"[CognitiveCore] TTS playback completion timed out (200s limit) (correlation_id={corr_id})")
         finally:
             event_bus.unsubscribe("friday.agent.voice.tts_complete", on_tts_complete)
 
@@ -975,14 +995,14 @@ class CognitiveCore:
 
         # Update conversation history in session memory
         session = SessionMemory()
-        full_history = session.get("conversation_history", app_id=app_id) or []
+        full_history = await session.get("conversation_history", app_id=app_id) or []
         full_history.append({"role": "user", "content": raw_input})
         full_history.append({"role": "assistant", "content": response_text})
         
         while (len(json.dumps(full_history)) / 3) > 2000 and len(full_history) > 2:
             full_history = full_history[2:]
             
-        session.set("conversation_history", full_history, app_id=app_id)
+        await session.set("conversation_history", full_history, app_id=app_id)
 
         # Let the event bus loop run to deliver the event
         await asyncio.sleep(0.05)

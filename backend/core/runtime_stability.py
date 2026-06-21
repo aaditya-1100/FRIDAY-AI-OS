@@ -8,7 +8,7 @@ import gc
 import time
 import os
 import re
-from core.state_manager import get_state, AssistantState
+from friday.core.fsm import cognitive_core, AssistantState
 
 # Global manager instance
 stability_manager = None
@@ -145,13 +145,14 @@ class RuntimeStabilityManager:
 
     async def _watchdog_loop(self):
         """High-speed failure recovery watchdog checking state every 5 seconds."""
-        from core.state_manager import get_state, set_state, AssistantState
+        import friday.core.fsm as fsm_module
+        from friday.core.fsm import AssistantState
         from voice.speak import cancel_play
         
         while True:
             try:
                 await asyncio.sleep(5)
-                current = get_state()
+                current = fsm_module.cognitive_core.fsm.current_state
                 
                 # Run the continuous health audit
                 try:
@@ -166,7 +167,9 @@ class RuntimeStabilityManager:
                 try:
                     from core import pipeline
                     from core.state_manager import get_conversational_state
-                    if pipeline.active and current in (AssistantState.IDLE, AssistantState.LISTENING):
+                    # Legacy pipeline state tracking compatibility
+                    from core.state_manager import AssistantState as SMAssistantState
+                    if pipeline.active and current in (AssistantState.IDLE,):
                         conv_state = get_conversational_state()
                         if conv_state == "TASK_MODE":
                             timeout_dur = 20.0
@@ -180,8 +183,9 @@ class RuntimeStabilityManager:
                             print(f"[WATCHDOG] Conversational attention window expired ({inactive_dur:.1f}s of silence in {conv_state}). Reverting to passive wake-word mode.")
                             pipeline.set_web_session_active(False)
                             from voice.listen import is_mic_enabled, get_mic_mode
-                            target_state = AssistantState.LISTENING if (is_mic_enabled() and get_mic_mode() != "hold_to_talk") else AssistantState.IDLE
-                            set_state(target_state, force=True)
+                            target_state = SMAssistantState.LISTENING if (is_mic_enabled() and get_mic_mode() != "hold_to_talk") else SMAssistantState.IDLE
+                            from core.state_manager import set_state as sm_set_state
+                            sm_set_state(target_state, force=True)
                 except Exception as e_attn:
                     print(f"[WATCHDOG WARNING] Attention window check error: {e_attn}")
                 
@@ -202,11 +206,18 @@ class RuntimeStabilityManager:
                     if dur >= 3.0:
                         print(f"[WATCHDOG] Force-recovering from ERROR state (active for {dur:.1f}s) -> IDLE")
                         cancel_play()
-                        set_state(AssistantState.IDLE, force=True)
+                        fsm_module.cognitive_core.fsm.transition_to(AssistantState.IDLE, reason="Watchdog recovery from ERROR", force=True)
                         self._state_durations.clear()
                         
-                # 2. Stranded THINKING / EXECUTING state recovery (force reset back to IDLE after 45 seconds)
-                elif current in (AssistantState.THINKING, AssistantState.EXECUTING):
+                # 2. Stranded active cognitive/execution states recovery (force reset back to IDLE after 45 seconds)
+                elif current in (
+                    AssistantState.PERCEIVING,
+                    AssistantState.PLANNING,
+                    AssistantState.DELEGATING,
+                    AssistantState.WAITING,
+                    AssistantState.SYNTHESIZING,
+                    AssistantState.REFLECTING
+                ):
                     dur = self._state_durations.get(current, 0.0)
                     if dur >= 45.0:
                         print(f"[WATCHDOG WARNING] Assistant is stuck in {current} for {dur:.1f}s! Triggering force-recovery state reset.")
@@ -216,15 +227,15 @@ class RuntimeStabilityManager:
                         # Clean up stranded tasks
                         self.clean_orphaned_tasks()
                         
-                        set_state(AssistantState.IDLE, force=True)
+                        fsm_module.cognitive_core.abort_current_turn()
                         self._state_durations.clear()
 
-                # 3. LISTENING state: Expected idle state, no action required.
-                elif current == AssistantState.LISTENING:
+                # 3. Intermediate passive states: IDLE or INTERRUPTED
+                elif current in (AssistantState.IDLE, AssistantState.INTERRUPTED):
                     pass
 
-                # 4. Stuck SPEAKING state recovery (force reset back to IDLE after a dynamic timeout based on audio duration)
-                elif current == AssistantState.SPEAKING:
+                # 4. Stuck RESPONDING state recovery (force reset back to IDLE after a dynamic timeout based on audio duration)
+                elif current == AssistantState.RESPONDING:
                     dur = self._state_durations.get(current, 0.0)
                     # Safe-guard stuck speaking recovery watchdog with a 10s buffer
                     try:
@@ -233,12 +244,12 @@ class RuntimeStabilityManager:
                     except Exception:
                         limit = 60.0
                     if dur >= limit:
-                        print(f"[WATCHDOG WARNING] Assistant is stuck in SPEAKING for {dur:.1f}s (limit {limit:.1f}s)! Triggering self-healing recovery.")
+                        print(f"[WATCHDOG WARNING] Assistant is stuck in RESPONDING for {dur:.1f}s (limit {limit:.1f}s)! Triggering self-healing recovery.")
                         # Cancel pygame music playback, force release speech lock
                         cancel_play()
                         from voice.speak import force_unlock_speech
                         force_unlock_speech("watchdog_recovery")
-                        set_state(AssistantState.IDLE, force=True)
+                        fsm_module.cognitive_core.fsm.transition_to(AssistantState.IDLE, reason="Watchdog recovery from stuck RESPONDING", force=True)
                         self._state_durations.clear()
                         
             except asyncio.CancelledError:
@@ -316,8 +327,8 @@ class RuntimeStabilityManager:
                 # We skip core system tasks like 'agent_loop', '_cleanup_loop', and server lifespans.
                 is_execution_task = "process_transcript" in coro_name or "_run_command" in coro_name or "realtime_web_query" in coro_name
                 if is_execution_task:
-                    # Check task age or simply prune if they exist during idle state
-                    if get_state() == AssistantState.IDLE:
+                    import friday.core.fsm as fsm_module
+                    if fsm_module.cognitive_core.fsm.current_state == AssistantState.IDLE:
                         print(f"[JANITOR] Cancelling stranded execution task: {task.get_name()} -> {coro_name}")
                         task.cancel()
                         cleaned_count += 1

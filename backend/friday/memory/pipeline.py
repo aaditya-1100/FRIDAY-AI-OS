@@ -7,15 +7,19 @@ from friday.memory.knowledge_graph import KnowledgeGraph
 
 class MemoryPipeline:
     def __init__(self):
-        try:
-            self.nlp = spacy.load("en_core_web_sm")
-            logger.info("[MemoryPipeline] Loaded spaCy en_core_web_sm successfully.")
-        except Exception:
+        from brain.spacy_loader import get_spacy_model
+        self.nlp = get_spacy_model()
+        if self.nlp is None:
             logger.info("[MemoryPipeline] spaCy en_core_web_sm not found, downloading...")
-            import spacy.cli
             try:
-                spacy.cli.download("en_core_web_sm")
-                self.nlp = spacy.load("en_core_web_sm")
+                from spacy import cli as spacy_cli
+                spacy_cli.download("en_core_web_sm")
+                import spacy
+                # Load and cache in the unified spacy_loader
+                import brain.spacy_loader as sl
+                sl._nlp_model = spacy.load("en_core_web_sm")
+                self.nlp = sl._nlp_model
+                logger.info("[MemoryPipeline] Loaded spaCy en_core_web_sm successfully after download.")
             except Exception as e:
                 logger.error(f"[MemoryPipeline] Failed to download/load spaCy model: {e}")
                 self.nlp = None

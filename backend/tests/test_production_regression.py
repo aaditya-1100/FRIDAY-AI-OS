@@ -225,5 +225,120 @@ class TestProductionRegression(unittest.TestCase):
         self.assertEqual(resolved.get("intent"), "OPEN")
         self.assertEqual(resolved.get("target"), "VS Code")
 
+    # 8. NONE INTENT & UNREGISTERED INTENT ROUTING REGRESSION
+    def test_none_and_unregistered_intent_routing(self):
+        """
+        Verifies that when intent is None or not in INTENT_TO_AGENT, the FSM
+        routes to DIRECT_LLM and transitions to SYNTHESIZING instead of crashing.
+        """
+        import asyncio
+        from unittest.mock import MagicMock, patch
+        from friday.core.fsm import CognitiveFSM, CognitiveCore, AssistantState
+        from friday.core.events import EventEnvelope, EventPriority
+        from uuid import uuid4
+
+        # Run test for intent=None
+        fsm_none = CognitiveFSM()
+        core_none = CognitiveCore(fsm=fsm_none)
+        core_none.start = MagicMock()
+
+        envelope_none = EventEnvelope(
+            topic="friday.system.user_input",
+            priority=EventPriority.P1,
+            source="test",
+            correlation_id=uuid4(),
+            session_id=uuid4(),
+            payload={"text": "some random input that results in None intent"}
+        )
+
+        with patch("friday.core.fsm.parse_intent", return_value={"intent": None, "confidence": 0.9}):
+            loop = asyncio.new_event_loop()
+            try:
+                asyncio.set_event_loop(loop)
+                with patch.object(core_none, "_retrieve_memory_context", return_value={"semantic_facts": [], "recent_episodes": [], "entity_context": []}), \
+                     patch("friday.core.fsm.event_bus.publish") as mock_publish:
+                    loop.run_until_complete(core_none._process_request_turn(envelope_none))
+            finally:
+                loop.close()
+
+        self.assertEqual(fsm_none.current_state, AssistantState.IDLE)
+
+        # Run test for unregistered intent
+        fsm_unreg = CognitiveFSM()
+        core_unreg = CognitiveCore(fsm=fsm_unreg)
+        core_unreg.start = MagicMock()
+
+        envelope_unreg = EventEnvelope(
+            topic="friday.system.user_input",
+            priority=EventPriority.P1,
+            source="test",
+            correlation_id=uuid4(),
+            session_id=uuid4(),
+            payload={"text": "some input resulting in unrecognized intent"}
+        )
+
+        with patch("friday.core.fsm.parse_intent", return_value={"intent": "SOME_UNREGISTERED_JUNK_INTENT", "confidence": 0.9}):
+            loop = asyncio.new_event_loop()
+            try:
+                asyncio.set_event_loop(loop)
+                with patch.object(core_unreg, "_retrieve_memory_context", return_value={"semantic_facts": [], "recent_episodes": [], "entity_context": []}), \
+                     patch("friday.core.fsm.event_bus.publish") as mock_publish:
+                    loop.run_until_complete(core_unreg._process_request_turn(envelope_unreg))
+            finally:
+                loop.close()
+
+        self.assertEqual(fsm_unreg.current_state, AssistantState.IDLE)
+
+    def test_tts_silent_failure_propagation(self):
+        """
+        Verifies that when all 3 TTS providers fail, speak() raises an exception,
+        and VoiceAgent publishes tts_complete with 'status': 'failed' payload,
+        which FSM receives to transition to ERROR state.
+        """
+        import asyncio
+        from unittest.mock import patch, MagicMock
+        from voice.speak import speak
+        from friday.agents.voice_agent import VoiceAgent
+        from friday.core.events import EventEnvelope, EventPriority
+        from uuid import uuid4
+
+        # Mock all 3 providers to fail to verify speak raises RuntimeError
+        with patch("edge_tts.Communicate", side_effect=Exception("Edge-TTS failed")), \
+             patch("gtts.gTTS", side_effect=Exception("gTTS failed")), \
+             patch("voice.speak._run_sapi_tts", side_effect=Exception("SAPI5 failed")), \
+             patch("brain.routing_telemetry.telemetry_engine") as mock_telemetry:
+
+            loop = asyncio.new_event_loop()
+            try:
+                asyncio.set_event_loop(loop)
+                with self.assertRaises(Exception):
+                    loop.run_until_complete(speak("Hello", web_mode=False))
+            finally:
+                loop.close()
+
+        # Verify VoiceAgent catches the speak error and publishes failed status
+        agent = VoiceAgent()
+        envelope = EventEnvelope(
+            topic="friday.agent.voice.tts_request",
+            priority=EventPriority.P1,
+            source="test",
+            correlation_id=uuid4(),
+            session_id=uuid4(),
+            payload={"text": "Hello"}
+        )
+
+        with patch("friday.agents.voice_agent.tts_speak", side_effect=RuntimeError("TTS failure")), \
+             patch("friday.agents.voice_agent.event_bus.publish") as mock_publish:
+            loop = asyncio.new_event_loop()
+            try:
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(agent.on_tts_request(envelope))
+            finally:
+                loop.close()
+            
+            published_envelope = mock_publish.call_args[0][0]
+            self.assertEqual(published_envelope.topic, "friday.agent.voice.tts_complete")
+            self.assertEqual(published_envelope.payload.get("status"), "failed")
+
 if __name__ == "__main__":
     unittest.main()

@@ -10,11 +10,13 @@ export default function NotchApp() {
   const activeAgent = useAtomValue(activeAgentAtom);
 
   const [backendReady, setBackendReady] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   // Initialize socket hook so it connects to backend in this window's process
   useFridaySocket();
 
   const isIdleLike = aiState === "IDLE" || aiState === "WAITING" || aiState === "REFLECTING";
+  const showProactive = Boolean(proactiveTrigger && isIdleLike && isHovered);
 
   // Query backend readiness on mount and subscribe to ready events
   useEffect(() => {
@@ -108,16 +110,17 @@ export default function NotchApp() {
   useEffect(() => {
     const api = (window as any).electronAPI;
     if (api) {
-      const stateToSync = (proactiveTrigger && isIdleLike) ? "PROACTIVE" : aiState;
+      const stateToSync = showProactive ? "PROACTIVE" : aiState;
       api.setNotchState({ state: stateToSync, connected });
     }
-  }, [aiState, connected, proactiveTrigger, isIdleLike]);
+  }, [aiState, connected, showProactive]);
 
   const handleMouseEnter = () => {
     const api = (window as any).electronAPI;
     if (api) {
       api.setIgnoreMouseEvents(false);
     }
+    setIsHovered(true);
   };
 
   const handleMouseLeave = () => {
@@ -125,6 +128,7 @@ export default function NotchApp() {
     if (api) {
       api.setIgnoreMouseEvents(true, true);
     }
+    setIsHovered(false);
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -156,7 +160,7 @@ export default function NotchApp() {
     stateKey = "disconnected";
     label    = "Offline";
     showDot  = false;
-  } else if (proactiveTrigger && isIdleLike) {
+  } else if (showProactive) {
     stateKey = "suggestion";
     label    = "Suggestion";
     showDot  = true;
@@ -203,10 +207,12 @@ export default function NotchApp() {
       onMouseLeave={handleMouseLeave}
       onContextMenu={handleContextMenu}
       onDoubleClick={handleDoubleClick}
+      title={proactiveTrigger ? proactiveTrigger.message : undefined}
     >
       {showDot && <span className="notch-dot" />}
       <span className="notch-label">{label}</span>
     </div>
   );
 }
+
 

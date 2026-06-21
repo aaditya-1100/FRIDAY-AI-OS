@@ -73,6 +73,12 @@ LIST_REMINDERS   → list all active reminders, timers, and alarms (e.g. "what a
 CANCEL_REMINDER  → cancel/delete an active reminder or timer by description (e.g. "cancel reminder to drink water")
 CASUAL_CHAT      → conversational greetings, hello, how are you, greeting check-ins, simple casual chat (e.g. "hello", "hi friday", "good morning", "friday are you there", "hello friday")
 SET_FACT         → remember a fact about the user or project (e.g. "Remember FRIDAY is my AI project", "Remember my JEE rank is 42", "Remember that the capital of France is Paris")
+URL_OPEN         → open a specific URL in browser (e.g. "open http://google.com")
+BLUETOOTH_TOGGLE → turn bluetooth on or off (e.g. "turn bluetooth on", "disable bluetooth", "toggle bluetooth")
+BRIGHTNESS_CONTROL → set or change screen brightness (e.g. "set brightness to 80%", "dim the screen")
+DELETE_PATH      → delete a file or directory safely (e.g. "delete file C:/data/temp.txt", "remove folder C:/temp/old")
+CLEAN_TEMP       → clean up temporary files in %TEMP% (e.g. "clean temp files", "empty temp directory")
+SYSTEM_STATUS_FULL → retrieve comprehensive platform, memory, CPU and disk partition usage (e.g. "show full system resources", "give me a detailed system monitor report")
 
 == STATEFUL & PRONOUN CONTEXT RESOLUTION ==
 You are provided with CONVERSATION HISTORY showing the latest turns. Use this history to resolve pronouns ("it", "that", "there", "them", "him", "her") or contextual commands:
@@ -215,7 +221,9 @@ ALLOWED_INTENTS = frozenset({
     "SCREEN_UNDERSTANDING", "SCREEN_READ", "MAP_FOLLOWUP",
     "YOUTUBE_TOPIC_SEARCH", "LATEST_CREATOR_VIDEO", "LATEST_CREATOR_SHORT",
     "VIDEO_BY_TITLE", "CHANNEL_OPEN", "PLAY_SEARCH_RESULT", "MAP_LOCATION",
-    "CASUAL_CHAT", "SET_FACT"
+    "CASUAL_CHAT", "SET_FACT",
+    "URL_OPEN", "BLUETOOTH_TOGGLE", "BRIGHTNESS_CONTROL", "DELETE_PATH",
+    "CLEAN_TEMP", "SYSTEM_STATUS_FULL"
 })
 
 # Universal recency/currency signals — any of these means the answer may have

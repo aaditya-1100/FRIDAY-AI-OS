@@ -78,12 +78,10 @@ class EventBus:
 
     def publish_sync(self, envelope: EventEnvelope) -> None:
         """Synchronously publish an event (thread-safe)."""
-        loop = self._loop
-        if not loop:
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = None
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = self._loop
 
         if loop and loop.is_running():
             try:

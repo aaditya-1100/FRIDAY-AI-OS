@@ -443,7 +443,7 @@ function createTray() {
 }
 
 function setupGlobalShortcut() {
-  const shortcutString = 'Ctrl+Shift+Alt';
+  const shortcutString = 'Ctrl+Alt+Z';
   logToFile(`[HOTKEY] Attempting to register global shortcut: ${shortcutString}`);
 
   try {
@@ -763,7 +763,7 @@ ipcMain.on('show-notch-context-menu', () => {
   logToFile('[IPC] Received show-notch-context-menu request');
   const menu = Menu.buildFromTemplate([
     {
-      label: 'Restart FRIDAY',
+      label: 'Restart',
       click: () => {
         logToFile('[CONTEXT MENU] Restart selected — relaunching app');
         app.relaunch();
@@ -771,7 +771,7 @@ ipcMain.on('show-notch-context-menu', () => {
       }
     },
     {
-      label: 'End FRIDAY',
+      label: 'End',
       click: () => {
         logToFile('[CONTEXT MENU] End selected — shutting down');
         performShutdown();

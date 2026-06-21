@@ -39,13 +39,17 @@ class VoiceAgent(BaseAgent):
         
         logger.info(f"[VoiceAgent] Received tts_request for correlation_id={corr_id}: '{text[:50]}'")
         
+        status = "complete"
         try:
-            # We call tts_speak (web_mode=False for local playback)
-            web_mode = payload.get("web_mode", False)
+            web_mode = payload.get("web_mode")
+            if web_mode is None:
+                from core.realtime_emit import has_emitters
+                web_mode = has_emitters()
             await tts_speak(text, web_mode=web_mode, response_id=str(corr_id))
             logger.info(f"[VoiceAgent] Speech playback finished for correlation_id={corr_id}")
         except Exception as e:
             logger.error(f"[VoiceAgent] Error during speak(): {e}")
+            status = "failed"
         finally:
             # Publish friday.agent.voice.tts_complete
             complete_envelope = EventEnvelope(
@@ -54,7 +58,7 @@ class VoiceAgent(BaseAgent):
                 source="agent.voice.tts",
                 correlation_id=corr_id,
                 session_id=session_id,
-                payload={"status": "complete"}
+                payload={"status": status}
             )
             await event_bus.publish(complete_envelope)
 
@@ -65,7 +69,10 @@ class VoiceAgent(BaseAgent):
         intent = dispatch.intent
         if intent == "SPEAK":
             text = dispatch.parameters.get("text", "")
-            web_mode = dispatch.parameters.get("web_mode", True)
+            web_mode = dispatch.parameters.get("web_mode")
+            if web_mode is None:
+                from core.realtime_emit import has_emitters
+                web_mode = has_emitters()
             
             try:
                 # Call existing robust speak module

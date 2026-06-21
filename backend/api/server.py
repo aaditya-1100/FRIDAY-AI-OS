@@ -234,6 +234,8 @@ async def emit_to_clients(payload: dict) -> None:
 async def lifespan(app: FastAPI):
     enforce_single_backend_instance()
     loop = asyncio.get_running_loop()
+    from core.state_manager import set_main_loop as sm_set_main_loop
+    sm_set_main_loop(loop)
     
     # Start event bus and FSM WS manager
     from friday.core.event_bus import event_bus

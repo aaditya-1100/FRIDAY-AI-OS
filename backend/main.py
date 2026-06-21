@@ -14,7 +14,6 @@ from friday.core.event_bus import event_bus
 from friday.core.agent_registry import agent_registry
 from friday.core.schedulers.maintenance_scheduler import maintenance_scheduler
 from friday.core.fsm import cognitive_core
-from friday.agents import VoiceAgent, PCAgent, WebAgent, MemoryAgent, KnowledgeAgent, VisionAgent
 from friday.system.context import system_context
 from voice.listen import reset_stop, request_stop, set_mic_enabled
 from friday.core.proactive_engine import proactive_engine
@@ -45,26 +44,33 @@ async def main():
     # 1. Start event bus
     # Event bus is started here if not already started by server lifespan
     loop = asyncio.get_running_loop()
+    from core.state_manager import set_main_loop as sm_set_main_loop
+    sm_set_main_loop(loop)
     event_bus.start(loop)
     
     # 2. Start agent registry
     agent_registry.start()
     
-    # 3. Spawn all 6 agents
+    # Move agent imports inside main to avoid blocking imports at startup
+    from friday.agents import VoiceAgent, PCAgent, WebAgent, MemoryAgent, KnowledgeAgent, VisionAgent, MediaAgent
+
+    # 3. Spawn all 7 agents
     voice_agent = VoiceAgent()
     pc_agent = PCAgent()
     web_agent = WebAgent()
     memory_agent = MemoryAgent()
     knowledge_agent = KnowledgeAgent()
     vision_agent = VisionAgent()
+    media_agent = MediaAgent()
     
-    # Start all 6 agents
+    # Start all 7 agents
     await voice_agent.start()
     await pc_agent.start()
     await web_agent.start()
     await memory_agent.start()
     await knowledge_agent.start()
     await vision_agent.start()
+    await media_agent.start()
     
     # Start system context
     await system_context.start(event_bus)
@@ -72,18 +78,25 @@ async def main():
     # 4. Start maintenance scheduler
     maintenance_scheduler.start()
 
-    # Pre-warm spaCy model during startup
-    logger.info("[COGNITIVE_OS] Pre-warming spaCy 'en_core_web_sm' model...")
-    from brain.spacy_loader import get_spacy_model
-    get_spacy_model()
-    
-    # Pre-warm ONNX intent parser model
-    from brain.intent_parser import parse_intent
-    try:
-        parse_intent("hello")  # warms ONNX model before first real request
-        logger.info("[COGNITIVE_OS] Intent parser ONNX model pre-warmed.")
-    except Exception as e:
-        logger.warning(f"[COGNITIVE_OS] Intent parser pre-warm failed (non-fatal): {e}")
+    # Pre-warm spaCy model and ONNX intent parser model in background threads
+    async def prewarm_subsystems():
+        try:
+            logger.info("[COGNITIVE_OS] Pre-warming spaCy 'en_core_web_sm' model in background...")
+            from brain.spacy_loader import get_spacy_model
+            await asyncio.to_thread(get_spacy_model)
+            logger.info("[COGNITIVE_OS] spaCy model pre-warmed successfully.")
+        except Exception as e_spacy:
+            logger.warning(f"[COGNITIVE_OS] spaCy pre-warm failed (non-fatal): {e_spacy}")
+
+        try:
+            logger.info("[COGNITIVE_OS] Pre-warming ONNX intent parser model in background...")
+            from brain.intent_parser import parse_intent
+            await asyncio.to_thread(parse_intent, "hello")
+            logger.info("[COGNITIVE_OS] Intent parser ONNX model pre-warmed successfully.")
+        except Exception as e_intent:
+            logger.warning(f"[COGNITIVE_OS] Intent parser pre-warm failed (non-fatal): {e_intent}")
+
+    asyncio.create_task(prewarm_subsystems())
     
     # 5. Hand control to FSM (start CognitiveCore)
     cognitive_core.start(loop)
@@ -130,13 +143,14 @@ async def main():
         # Stop maintenance scheduler
         maintenance_scheduler.stop()
         
-        # Stop all 6 agents
+        # Stop all 7 agents
         await voice_agent.stop()
         await pc_agent.stop()
         await web_agent.stop()
         await memory_agent.stop()
         await knowledge_agent.stop()
         await vision_agent.stop()
+        await media_agent.stop()
         
         # Stop event bus
         await event_bus.stop()

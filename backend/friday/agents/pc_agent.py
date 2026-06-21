@@ -9,6 +9,79 @@ from friday.core.events import AgentType, TaskDispatch, TaskResult, TaskStatus
 from friday.agents.base_agent import BaseAgent
 from friday.security.permission_engine import permission_engine
 from execution.action_executor import execute_action
+import subprocess
+
+def toggle_bluetooth(state: str) -> bool:
+    """
+    Toggles Bluetooth status using the WinRT API via PowerShell script execution.
+    state: "On" or "Off".
+    """
+    try:
+        target_state = "On" if state.lower() in ("on", "enable") else "Off"
+        ps_script = f"""
+Param([string]$State = "{target_state}")
+Add-Type -AssemblyName System.Runtime.WindowsRuntime
+$asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | ? {{ $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' }})[0]
+Function Await($WinRtTask, $ResultType) {{
+    $asTask = $asTaskGeneric.MakeGenericMethod($ResultType)
+    $netTask = $asTask.Invoke($null, @($WinRtTask))
+    $netTask.Wait(-1) | Out-Null
+    $netTask.Result
+}}
+[Windows.Devices.Radios.Radio,Windows.System.Devices,ContentType=WindowsRuntime] | Out-Null
+[Windows.Devices.Radios.RadioAccessStatus,Windows.System.Devices,ContentType=WindowsRuntime] | Out-Null
+$status = Await ([Windows.Devices.Radios.Radio]::RequestAccessAsync()) ([Windows.Devices.Radios.RadioAccessStatus])
+$radios = Await ([Windows.Devices.Radios.Radio]::GetRadiosAsync()) ([System.Collections.Generic.IReadOnlyList[Windows.Devices.Radios.Radio]])
+$bt = $radios | ? {{ $_.Kind -eq 'Bluetooth' }}
+if ($bt) {{
+    [Windows.Devices.Radios.RadioState,Windows.System.Devices,ContentType=WindowsRuntime] | Out-Null
+    $targetState = if ($State -eq "On") {{ [Windows.Devices.Radios.RadioState]::On }} else {{ [Windows.Devices.Radios.RadioState]::Off }}
+    $res = Await ($bt.SetStateAsync($targetState)) ([Windows.Devices.Radios.RadioAccessStatus])
+    Write-Output "SUCCESS"
+}} else {{
+    Write-Output "Bluetooth radio not found."
+}}
+"""
+        cmd = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps_script]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if res.returncode == 0 and "SUCCESS" in res.stdout:
+            return True
+        else:
+            logger.error(f"Bluetooth toggle failed: {res.stdout} {res.stderr}")
+            return False
+    except Exception as e:
+        logger.error(f"Bluetooth toggle exception: {e}")
+        return False
+
+def set_screen_brightness(level: int) -> bool:
+    try:
+        import sys
+        if sys.platform != "win32":
+            raise NotImplementedError("Only Windows is supported.")
+            
+        import wmi
+        c = wmi.WMI(namespace="root\\WMI")
+        methods = c.WmiMonitorBrightnessMethods()
+        if not methods:
+            raise Exception("No monitor brightness methods found.")
+        for method in methods:
+            method.WmiSetBrightness(level, 1)
+        return True
+    except Exception as e:
+        logger.warning(f"Failed to set brightness via wmi package: {e}")
+        try:
+            cmd = [
+                "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+                f"(Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightnessMethods).WmiSetBrightness(1, {level})"
+            ]
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if res.returncode == 0:
+                return True
+            else:
+                raise Exception(res.stderr or res.stdout)
+        except Exception as e2:
+            logger.error(f"Failed to set brightness via PowerShell fallback: {e2}")
+            return False
 
 def is_safe_folder_name(name: str) -> bool:
     if not name:
@@ -67,7 +140,17 @@ class PCAgent(BaseAgent):
             "VOLUME_SET",
             "VOLUME_MUTE",
             "CREATE_FOLDER",
-            "OPEN_FOLDER"
+            "OPEN_FOLDER",
+            "BLUETOOTH_TOGGLE",
+            "BRIGHTNESS_CONTROL",
+            "DELETE_PATH",
+            "CLEAN_TEMP",
+            "SYSTEM_STATUS_FULL",
+            "CHECK_DISK_SPACE",
+            "CHECK_SYSTEM_INFO",
+            "PING_HOST",
+            "LIST_DIRECTORY",
+            "LIST_PROCESSES"
         ]
 
     async def handle_task(self, dispatch: TaskDispatch) -> TaskResult:
@@ -373,6 +456,128 @@ class PCAgent(BaseAgent):
                         agent_id=self.agent_id,
                         status=TaskStatus.SUCCESS,
                         payload={"success": True},
+                        correlation_id=dispatch.correlation_id
+                    )
+
+            elif intent == "BLUETOOTH_TOGGLE":
+                action = parameters.get("action") or parameters.get("query") or "toggle"
+                success = toggle_bluetooth(action)
+                status = TaskStatus.SUCCESS if success else TaskStatus.FAILED
+                return TaskResult(
+                    task_id=dispatch.task_id,
+                    agent_id=self.agent_id,
+                    status=status,
+                    payload={"success": success},
+                    correlation_id=dispatch.correlation_id
+                )
+
+            elif intent == "BRIGHTNESS_CONTROL":
+                level_val = parameters.get("level") or parameters.get("value")
+                if level_val is None:
+                    query_str = str(parameters.get("query") or "")
+                    digits = re.findall(r'\d+', query_str)
+                    level = int(digits[0]) if digits else 50
+                else:
+                    try:
+                        level = int(level_val)
+                    except ValueError:
+                        level = 50
+                
+                success = set_screen_brightness(level)
+                status = TaskStatus.SUCCESS if success else TaskStatus.FAILED
+                return TaskResult(
+                    task_id=dispatch.task_id,
+                    agent_id=self.agent_id,
+                    status=status,
+                    payload={"success": success, "level": level},
+                    correlation_id=dispatch.correlation_id
+                )
+
+            elif intent == "DELETE_PATH":
+                path = parameters.get("path") or parameters.get("filepath") or parameters.get("query")
+                try:
+                    from friday.security.deletion_guard import delete_to_recycle_bin
+                    success = delete_to_recycle_bin(path)
+                    return TaskResult(
+                        task_id=dispatch.task_id,
+                        agent_id=self.agent_id,
+                        status=TaskStatus.SUCCESS,
+                        payload={"success": success, "path": path},
+                        correlation_id=dispatch.correlation_id
+                    )
+                except Exception as e:
+                    return TaskResult(
+                        task_id=dispatch.task_id,
+                        agent_id=self.agent_id,
+                        status=TaskStatus.FAILED,
+                        payload={"error": str(e)},
+                        correlation_id=dispatch.correlation_id
+                    )
+
+            elif intent == "CLEAN_TEMP":
+                try:
+                    from friday.security.deletion_guard import clean_temp_files
+                    res_dict = clean_temp_files()
+                    status = TaskStatus.SUCCESS if res_dict.get("success") else TaskStatus.FAILED
+                    return TaskResult(
+                        task_id=dispatch.task_id,
+                        agent_id=self.agent_id,
+                        status=status,
+                        payload=res_dict,
+                        correlation_id=dispatch.correlation_id
+                    )
+                except Exception as e:
+                    return TaskResult(
+                        task_id=dispatch.task_id,
+                        agent_id=self.agent_id,
+                        status=TaskStatus.FAILED,
+                        payload={"error": str(e)},
+                        correlation_id=dispatch.correlation_id
+                    )
+
+            elif intent == "SYSTEM_STATUS_FULL":
+                try:
+                    from friday.system.system_monitor import get_system_status_full
+                    status_data = get_system_status_full()
+                    return TaskResult(
+                        task_id=dispatch.task_id,
+                        agent_id=self.agent_id,
+                        status=TaskStatus.SUCCESS,
+                        payload=status_data,
+                        correlation_id=dispatch.correlation_id
+                    )
+                except Exception as e:
+                    return TaskResult(
+                        task_id=dispatch.task_id,
+                        agent_id=self.agent_id,
+                        status=TaskStatus.FAILED,
+                        payload={"error": str(e)},
+                        correlation_id=dispatch.correlation_id
+                    )
+
+            elif intent in ("CHECK_DISK_SPACE", "CHECK_SYSTEM_INFO", "PING_HOST", "LIST_DIRECTORY", "LIST_PROCESSES"):
+                try:
+                    from friday.security.terminal_whitelist import execute_whitelisted_command
+                    cmd_params = {}
+                    if intent == "PING_HOST":
+                        cmd_params["host"] = parameters.get("host") or parameters.get("query") or ""
+                    elif intent == "LIST_DIRECTORY":
+                        cmd_params["path"] = parameters.get("path") or parameters.get("filepath") or parameters.get("query") or ""
+                    
+                    result_str = execute_whitelisted_command(intent, cmd_params)
+                    return TaskResult(
+                        task_id=dispatch.task_id,
+                        agent_id=self.agent_id,
+                        status=TaskStatus.SUCCESS,
+                        payload={"output": result_str},
+                        correlation_id=dispatch.correlation_id
+                    )
+                except Exception as e:
+                    return TaskResult(
+                        task_id=dispatch.task_id,
+                        agent_id=self.agent_id,
+                        status=TaskStatus.FAILED,
+                        payload={"error": str(e)},
                         correlation_id=dispatch.correlation_id
                     )
 

@@ -10,19 +10,21 @@ class ProactiveEngine:
     def __init__(self):
         self.rule_last_fired = {}  # {rule_name: datetime}
         self.consecutive_cpu_ticks = 0
-        self.fsm_idle_since = datetime.now()  # Default to boot time
+        self.fsm_idle_since = None
         self._prev_app = ""
         self._is_running = False
         # 60-second startup grace period: no proactive triggers during boot.
         # Prevents context_update events (fired within seconds of startup) from
         # triggering proactive rules that change FSM state before Sir has
         # interacted, which caused the notch to show non-IDLE on first connect.
-        self._startup_time = datetime.now()
+        self._startup_time = None
 
     def start(self):
         if self._is_running:
             return
         self._is_running = True
+        self._startup_time = datetime.now()
+        self.fsm_idle_since = datetime.now()
         event_bus.subscribe("friday.system.context_update", self._on_context_update)
         event_bus.subscribe("friday.core.state_change", self._on_state_change)
         logger.info("[ProactiveEngine] Started.")
