@@ -799,7 +799,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
                 print("[TRACE] [MIC_ADAPTIVE] Max hold-to-talk limit reached (45s) in Phase 2. Breaking to process.")
                 break
 
-        if phrase_time_limit and elapsed_time - phrase_start_time > phrase_time_limit:
+        if _MIC_MODE != "hold_to_talk" and phrase_time_limit and elapsed_time - phrase_start_time > phrase_time_limit:
             break
 
         buffer = source.stream.read(source.CHUNK, exception_on_overflow=False)

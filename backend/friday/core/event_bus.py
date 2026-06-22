@@ -20,7 +20,10 @@ class EventBus:
             self._loop = current_loop
             self._queue = asyncio.PriorityQueue()
             if self._running and self._dispatch_task:
-                self._dispatch_task.cancel()
+                try:
+                    self._dispatch_task.cancel()
+                except (RuntimeError, Exception):
+                    pass
                 self._dispatch_task = self._loop.create_task(self._dispatch_loop())
         if self._running:
             return
@@ -32,10 +35,10 @@ class EventBus:
         """Stop the background dispatch loop."""
         self._running = False
         if self._dispatch_task:
-            self._dispatch_task.cancel()
             try:
+                self._dispatch_task.cancel()
                 await self._dispatch_task
-            except asyncio.CancelledError:
+            except (asyncio.CancelledError, RuntimeError, Exception):
                 pass
             self._dispatch_task = None
         logger.info("[EVENT_BUS] Background dispatch loop stopped.")
