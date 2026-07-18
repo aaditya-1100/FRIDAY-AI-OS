@@ -225,6 +225,9 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
         import uuid
         response_id = str(uuid.uuid4())[:8]
     
+    # Clear any stale playback cancellation flag
+    _play_cancelled.clear()
+    
     # Determine language and select voice
     try:
         from friday.core.fsm import cognitive_core
@@ -259,8 +262,6 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
         temp_path = None
         provider_used = None
         audio_file_size = 0
-        from brain.routing_telemetry import telemetry_engine
-
         try:
             # ─── PROVIDER 1: Edge-TTS (Primary Neural - Authoritative Voice Identity) ────
             try:
@@ -295,16 +296,8 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
                 print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] TASK CANCELLED")
                 raise
             except Exception as e:
-                # Log provider switch to gTTS in telemetry
+                # Log provider switch to gTTS in console
                 print(f"[TRACE] [TTS_SPEAK] [{response_id}] [Edge-TTS] FAILED: {e} | Falling back to gTTS...")
-                telemetry_engine.log_voice_switch(
-                    response_id=response_id,
-                    text=normalized_text,
-                    requested_voice=VOICE,
-                    switched_from="Edge-TTS",
-                    switched_to="gTTS",
-                    reason=f"Edge-TTS failed after retry. Error: {e}"
-                )
                 if temp_path and os.path.exists(temp_path):
                     try:
                         os.remove(temp_path)
@@ -335,16 +328,8 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
                     print(f"[TRACE] [TTS_SPEAK] [{response_id}] [gTTS] TASK CANCELLED")
                     raise
                 except Exception as e:
-                    # Log provider switch to pyttsx3 in telemetry
+                    # Log provider switch to pyttsx3 in console
                     print(f"[TRACE] [TTS_SPEAK] [{response_id}] [gTTS] FAILED: {e} | Falling back to pyttsx3...")
-                    telemetry_engine.log_voice_switch(
-                        response_id=response_id,
-                        text=normalized_text,
-                        requested_voice=VOICE,
-                        switched_from="gTTS",
-                        switched_to="pyttsx3",
-                        reason=f"gTTS failed. Error: {e}"
-                    )
                     if temp_path and os.path.exists(temp_path):
                         try:
                             os.remove(temp_path)
@@ -375,14 +360,6 @@ async def speak(text: str, web_mode: bool = False, response_id: str = None) -> N
                     raise
                 except Exception as e:
                     print(f"[TRACE] [TTS_SPEAK] [{response_id}] [pyttsx3] FAILED: {e} | All TTS providers failed.")
-                    telemetry_engine.log_voice_switch(
-                        response_id=response_id,
-                        text=normalized_text,
-                        requested_voice=VOICE,
-                        switched_from="pyttsx3",
-                        switched_to="FAILED",
-                        reason=f"All providers failed. pyttsx3 error: {e}"
-                    )
                     if temp_path and os.path.exists(temp_path):
                         try:
                             os.remove(temp_path)

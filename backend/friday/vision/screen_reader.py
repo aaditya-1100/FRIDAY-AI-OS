@@ -154,8 +154,14 @@ class ScreenReader:
         except Exception:
             return None
 
-    def describe_screen(self, image: Image.Image) -> str:
-        """Describe what is visible on screen using local Ollama qwen2.5-vl:7b, falling back to OCR if unavailable."""
+    def describe_screen(self, image: Image.Image, user_query: str = "") -> str:
+        """Describe what is visible on screen using local Ollama qwen2.5-vl:7b, falling back to OCR if unavailable.
+
+        Args:
+            image: Screenshot to analyse.
+            user_query: The user's original question (e.g. "what's on my screen?").
+                        Passed to the VLM so it can answer directly, not just describe.
+        """
         import sys
         import base64
         import io
@@ -168,7 +174,7 @@ class ScreenReader:
             ollama_host = f"http://{ollama_host}"
 
         model_name = "qwen2.5-vl:7b"
-        
+
         try:
             # 1s timeout to check reachability and check if the vision model is available
             resp = httpx.get(f"{ollama_host}/api/tags", timeout=1.0)
@@ -181,19 +187,33 @@ class ScreenReader:
                     image.save(buffered, format="JPEG")
                     img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-                    system_prompt = (
-                        "You are a screen analysis assistant. Describe what is visible on screen concisely and accurately. "
-                        "Focus on: active application, visible text, UI state, and any notable content. Be factual, not interpretive."
+                    # Voice-optimised system prompt: no markdown, spoken sentences only
+                    system = (
+                        "You are FRIDAY, a voice assistant describing a screen to your user. "
+                        "Your response will be spoken aloud by a text-to-speech engine. "
+                        "Rules you must follow: no bullet points, no markdown formatting, "
+                        "no headers, no asterisks, no dashes at the start of lines. "
+                        "Respond in natural, flowing spoken sentences only. "
+                        "Maximum 3 sentences total. Be specific and direct."
                     )
-                    
+
+                    # User prompt includes the actual question for focused answers
+                    question = user_query.strip() if user_query.strip() else "What is on the screen right now?"
+                    user_prompt = (
+                        f"The user asked: '{question}'\n\n"
+                        "Describe what is currently visible on the screen. "
+                        "Include: which application is open, what content is visible, "
+                        "and directly answer the user's question if possible."
+                    )
+
                     payload = {
                         "model": model_name,
-                        "prompt": system_prompt,
-                        "system": system_prompt,
+                        "prompt": user_prompt,
+                        "system": system,
                         "images": [img_base64],
                         "stream": False
                     }
-                    
+
                     gen_resp = httpx.post(f"{ollama_host}/api/generate", json=payload, timeout=30.0)
                     if gen_resp.status_code == 200:
                         desc = gen_resp.json().get("response", "").strip()

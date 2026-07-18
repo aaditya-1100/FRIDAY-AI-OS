@@ -1,24 +1,24 @@
 # FRIDAY AI
 
-FRIDAY is a futuristic AI-powered personal desktop assistant built with Python, React, Electron, and WebSockets.
-
-It combines realtime voice interaction, intelligent execution workflows, browser automation, and an immersive orb-based UI to create a cinematic assistant experience inspired by JARVIS-style systems.
+FRIDAY is a fast, lean local AI voice assistant built with Python, React, Electron, and WebSockets.
+Responds to voice or text commands with real-time intent routing, screen awareness, and persistent memory.
+Inspired by JARVIS — minimal latency, no cloud dependency for core execution.
 
 ---
 
 # Features
 
-* Realtime voice interaction
-* Smart intent understanding
-* System control automation
+* Real-time voice interaction (Faster-Whisper STT + Edge-TTS)
+* Smart intent understanding (11-state FSM + Groq LLaMA 3.3)
+* System & app control (open apps, screenshots, system status)
 * Browser + YouTube control
-* Realtime websocket architecture
-* Orb-based immersive UI
-* Context + memory system
-* Live weather/news retrieval
-* Screenshot support
-* Workflow execution engine
-* Modular backend/frontend architecture
+* Spotify OAuth2/PKCE integration
+* WebSocket-based real-time state sync
+* Orb-based immersive UI (React + Electron)
+* Working / session / episodic / user-profile memory (4-layer)
+* Semantic memory via fastembed + Qdrant embedded
+* Live web search (Tavily + Serper)
+* Screen-awareness via vision pipeline
 
 ---
 
@@ -26,96 +26,138 @@ It combines realtime voice interaction, intelligent execution workflows, browser
 
 ## Frontend
 
-* React
-* TypeScript
-* TailwindCSS
+* React + TypeScript
+* TailwindCSS + Framer Motion
 * Electron
-* Framer Motion
 * WebSockets
 
 ## Backend
 
-* Python
-* FastAPI/WebSockets
-* Groq API
-* SpeechRecognition
-* Edge-TTS
-* Async architecture
+* Python 3.11+
+* FastAPI / WebSockets (uvicorn)
+* Groq API — llama-3.3-70b-versatile
+* Faster-Whisper base.en (local STT)
+* Edge-TTS (en-IN-NeerjaNeural)
+* fastembed (BAAI/bge-small-en-v1.5) + Qdrant embedded
+* Tavily web search
+* pyautogui / psutil / pygetwindow
 
 ---
 
 # Architecture
 
-FRIDAY uses:
-
-* Modular backend services
-* Realtime websocket communication
-* Async execution pipelines
-* Intelligent workflow routing
-* State-driven frontend synchronization
+* 11-state CognitiveFSM (IDLE → LISTENING → PLANNING → EXECUTING → RESPONDING…)
+* 7 agent classes: PC, Web, Media, Vision, Memory, Knowledge, Voice
+* Event-bus async architecture (publish/subscribe)
+* 4-layer memory: working → session → episodic → user profile
+* Deletion guard + capability registry (security layer)
 
 ---
 
-# Screenshots
+# Setup & Installation
 
-*Add screenshots or GIFs here.*
+## Prerequisites
 
----
+* **OS**: Windows 10/11 (required for window management, PyGetWindow, and WMI controls)
+* **Python**: 3.11+
+* **Node.js**: 18+ (for frontend)
+* **Tesseract OCR**: Required for vision/screenshot text extraction
+  Install from: https://github.com/tesseract-ocr/tesseract
+* **Optional**: [Ollama](https://ollama.com/) for enhanced local vision (`qwen2.5-vl:7b`)
+* **Optional**: Redis (auto-falls back to local SQLite if not running)
 
-# Setup
+## Installation Guide
 
-## Backend
+1. **Clone the project**:
+   ```bash
+   cd c:\FRIDAY
+   ```
 
+2. **Create and activate a Python virtual environment**:
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate
+   ```
+
+3. **Install backend dependencies**:
+   ```bash
+   pip install -r backend/requirements.txt
+   ```
+
+4. **Configure API keys** — create `backend/.env` (see `backend/.env.example`):
+   ```env
+   GROQ_API_KEY=your_groq_api_key_here
+   TAVILY_API_KEY=your_tavily_search_key_here
+   SERPER_API_KEY=your_serper_key_here
+   SPOTIFY_CLIENT_ID=your_spotify_client_id
+   SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+   ```
+
+5. **Qdrant (Embedded Mode)** — no install needed:
+   FRIDAY uses Qdrant in local embedded mode (`QdrantClient(path=...)`).
+   Collections are stored under `backend/data/qdrant/`. No Docker or port 6333 required.
+
+## Running FRIDAY
+
+### Start Backend
 ```bash
 cd backend
-pip install -r requirements.txt
-python main.py
+.\..\venv\Scripts\python.exe -m uvicorn api.server:app --host 127.0.0.1 --port 8001
 ```
 
-## Frontend
-
+### Start Frontend UI
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
----
+## Testing
 
-# Environment Variables
-
-Create:
-
-```env
-backend/.env
-```
-
-Example:
-
-```env
-GROQ_API_KEY=your_key_here
+Run the full test suite (75 tests):
+```bash
+cd backend
+..\venv\Scripts\python.exe -m pytest -v --tb=short
 ```
 
 ---
 
-# Roadmap
+# Performance (R9.0 Lean Build)
 
-* Advanced memory system
-* Better autonomous workflows
-* Improved realtime orchestration
-* Multi-agent support
-* Production deployment
-* Smarter context engine
-* Advanced cinematic UI
+| Metric | R8.x | R9.0 |
+|--------|------|------|
+| Boot import time | ~12s | **2.0s** |
+| RAM (full stack) | ~800 MB | **140 MB** |
+| Embedding stack | PyTorch + sentence-transformers | **fastembed** (ONNX, no GPU required) |
+| Test suite | 78 tests (15 failing) | **75 tests, 0 failing** |
+
+---
+
+# Known Limitations
+
+> [!WARNING]
+> **Single-Machine / Single-User Scope**:
+> FRIDAY is designed for single-user, local-machine execution. It does not scope databases per-user.
+> The following data stores write directly to `backend/data/` without multi-tenant isolation:
+> 1. **Session Fallback DB** (`backend/data/session_fallback.db`)
+> 2. **Stability Metrics** (`backend/data/stability_metrics.json`)
+> 3. **Active Project State** (`backend/data/active_project.json`)
+> 4. **Trigger Reliability** (`backend/data/trigger_reliability.json`)
+
+> [!NOTE]
+> **Groq Daily Quota**: The free tier of Groq API has a 100k token/day limit.
+> FRIDAY handles quota exhaustion gracefully with a keyword-fallback intent parser.
+> All system-control intents (open apps, screenshots, media control) continue working without Groq.
 
 ---
 
 # Disclaimer
 
-This project is currently an experimental personal AI assistant system under active development.
+This project is an experimental personal AI assistant under active development.
+Designed and built for personal use on a single Windows machine.
 
 ---
 
 # Author
 
-Aaditya
+Aaditya Pratap Chauhan

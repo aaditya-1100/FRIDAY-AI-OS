@@ -14,7 +14,18 @@ def assemble_system_prompt(working_memory: Dict[str, Any], system_context_data: 
     identity_str = f"You are FRIDAY, a personal AI assistant. You are helpful, concise, and intelligent. You never pad responses unnecessarily.{lang_instruction}"
     
     # 2. Behavioral rules (never truncated)
-    rules_str = "Rules: Be direct. Never verbosely restate the question. If uncertain: say so. If information is unavailable: say so clearly."
+    rules_str = "Rules: Be direct. Never verbosely restate the question. If uncertain: say so. If information is unavailable: say so clearly. Never ask the user to confirm their intent or ask confirmation-style questions. Execute commands directly. Only ask 'yes or no' style questions if it is a file deletion request."
+    
+    plan_type = working_memory.get("plan_type")
+    if plan_type not in ("DIRECT_LLM", "WEB_SYNTHESIS"):
+        from friday.core.proactive_engine import proactive_engine
+        context_mode = getattr(proactive_engine, "_detected_context_mode", "idle")
+        if context_mode == "coding":
+            rules_str += " User is currently coding. Prioritize code-related answers, use technical language."
+        elif context_mode == "study":
+            rules_str += " User is currently studying. Prioritize study and learning assistance, skew answers toward learning."
+        elif context_mode == "gaming":
+            rules_str += " User is currently gaming. Keep responses extremely short, suppress proactive recommendations, prioritize minimal interruptions."
     
     # 3. System context
     def get_system_context(compact=False) -> str:

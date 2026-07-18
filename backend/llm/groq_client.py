@@ -56,9 +56,9 @@ CRITICAL PERSONA RULES:
 """
 
 
-DEFAULT_MODEL      = "llama-3.1-8b-instant"     # fast, low-latency for responses
-INTENT_MODEL       = "llama-3.1-8b-instant"     # fast, used for intent parsing (avoids timeout)
-REALTIME_MODEL     = "llama-3.1-8b-instant"     # fast, used for realtime summarization (avoids timeout)
+DEFAULT_MODEL      = "llama-3.3-70b-versatile"  # primary model
+INTENT_MODEL       = "llama-3.3-70b-versatile"  # primary model
+REALTIME_MODEL     = "llama-3.3-70b-versatile"  # primary model
 
 
 def _filter_hallucinations(text: str) -> str:
@@ -77,27 +77,6 @@ def ask_groq(query: str, system_prompt=None, model: str | None = None, history: 
         return "I am sorry sir, but my Groq API key is not configured. Please check the environment variables."
 
     try:
-        # ── Phase 5: Behavior Planner & Dynamic Directives ──
-        try:
-            from brain.identity_manager import IdentityManager
-            id_mgr = IdentityManager()
-            engine = id_mgr.engine
-            intent_vector = engine.get_intent_vector(query)
-            overrides = engine.detect_overrides(query)
-            relevance_score = engine.get_relevance_score(query, intent_vector, overrides)
-            influence_weight = engine.get_influence_weight(relevance_score, intent_vector)
-            signals = engine.get_behavioral_signals(id_mgr.profile, intent_vector, overrides, relevance_score, influence_weight)
-            behavior_directives = engine.compile_signals_directives(signals, overrides)
-            
-            # Enrich system prompt with active behavior contract directives
-            if behavior_directives:
-                if not system_prompt:
-                    system_prompt = DEFAULT_SYSTEM_PROMPT
-                system_prompt = f"{system_prompt}\n{behavior_directives}"
-                print("[BEHAVIOR PLANNER] Dynamically injected Behavior Contract directives.")
-        except Exception as e_behavior:
-            print(f"[BEHAVIOR PLANNER WARNING] Failed to inject dynamic behavior directives: {e_behavior}")
-
         if not system_prompt:
             system_prompt = DEFAULT_SYSTEM_PROMPT
 
@@ -153,7 +132,7 @@ def ask_groq(query: str, system_prompt=None, model: str | None = None, history: 
                 
                 try:
                     corr_response = c.chat.completions.create(
-                        model="llama-3.1-8b-instant",  # Fast fallback
+                        model="llama-3.3-70b-versatile",
                         temperature=0.20,
                         timeout=3.0,
                         messages=correction_messages
@@ -173,10 +152,10 @@ def ask_groq(query: str, system_prompt=None, model: str | None = None, history: 
         except Exception as e:
             # Automatic failover retry if primary versatile model fails or times out
             if chosen_model == "llama-3.3-70b-versatile":
-                print(f"[GROQ FAILOVER] Model {chosen_model} failed or timed out (limit: {primary_timeout}s). Retrying with llama-3.1-8b-instant...")
+                print(f"[GROQ FAILOVER] Model {chosen_model} failed or timed out (limit: {primary_timeout}s). Retrying with llama-3.3-70b-versatile (no 8b fallback, deprecated 2026-06-25)...")
                 try:
                     response = c.chat.completions.create(
-                        model="llama-3.1-8b-instant",
+                        model="llama-3.3-70b-versatile",
                         temperature=0.25,
                         timeout=3.0,
                         messages=messages,
@@ -192,7 +171,7 @@ def ask_groq(query: str, system_prompt=None, model: str | None = None, history: 
                         ]
                         try:
                             corr_response = c.chat.completions.create(
-                                model="llama-3.1-8b-instant",
+                                model="llama-3.3-70b-versatile",
                                 temperature=0.20,
                                 timeout=3.0,
                                 messages=correction_messages

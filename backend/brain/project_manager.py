@@ -5,12 +5,8 @@ import time
 class ProjectManager:
     def __init__(self, file_path=None):
         if file_path is None:
-            self.file_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                "data",
-                "projects",
-                "project_registry.json"
-            )
+            from config.paths import get_data_path
+            self.file_path = get_data_path("projects", "project_registry.json")
         else:
             self.file_path = file_path
         

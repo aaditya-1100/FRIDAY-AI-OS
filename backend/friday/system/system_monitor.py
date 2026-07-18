@@ -64,12 +64,41 @@ def get_system_status_full() -> Dict[str, Any]:
     # Sort by memory percent and take top 10
     top_processes = sorted(process_list, key=lambda x: x['memory_percent'], reverse=True)[:10]
 
+    # 6. Battery Info
+    battery_info = None
+    try:
+        battery = psutil.sensors_battery()
+        if battery:
+            battery_info = {
+                "percent": float(battery.percent),
+                "power_plugged": bool(battery.power_plugged),
+                "secsleft": int(battery.secsleft) if battery.secsleft is not None else -1
+            }
+    except Exception:
+        pass
+
+    # 7. CPU Temperature
+    cpu_temp = None
+    try:
+        temps = psutil.sensors_temperatures() if hasattr(psutil, "sensors_temperatures") else None
+        if temps:
+            cpu_temps = []
+            for name, entries in temps.items():
+                if "cpu" in name.lower() or "core" in name.lower():
+                    for entry in entries:
+                        cpu_temps.append(entry.current)
+            if cpu_temps:
+                cpu_temp = sum(cpu_temps) / len(cpu_temps)
+    except Exception:
+        pass
+
     return {
         "cpu": {
             "percent": cpu_percent,
             "logical_cores": cpu_count_logical,
             "physical_cores": cpu_count_physical,
-            "frequency_mhz": round(cpu_freq_mhz, 1)
+            "frequency_mhz": round(cpu_freq_mhz, 1),
+            "temperature": round(cpu_temp, 1) if cpu_temp is not None else None
         },
         "memory": {
             "total_gb": round(memory_total_gb, 1),
@@ -78,5 +107,6 @@ def get_system_status_full() -> Dict[str, Any]:
         },
         "disks": disk_partitions,
         "os": os_info,
-        "top_processes": top_processes
+        "top_processes": top_processes,
+        "battery": battery_info
     }

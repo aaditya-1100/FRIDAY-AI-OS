@@ -197,7 +197,12 @@ def _get_whisper_model():
                 print("[STT] Loading Faster-Whisper model: base.en (first use)...")
                 from faster_whisper import WhisperModel
                 # Load multilingual model size "base" to support auto-detection
-                _whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
+                try:
+                    # Attempt offline/cached loading first to prevent network timeouts when offline
+                    _whisper_model = WhisperModel("base", device="cpu", compute_type="int8", local_files_only=True)
+                except Exception:
+                    # Fallback to online/auto-downloading if local files are missing
+                    _whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
     return _whisper_model
 
 
@@ -500,11 +505,8 @@ def request_stop() -> None:
 
 
 def reset_stop() -> None:
-    global _MIC_ENABLED
     print("[TRACE] [MIC_CONTROL] reset_stop() called")
     _STOP_EVENT.clear()
-    with _MIC_LOCK:
-        _MIC_ENABLED = True
 
 
 def _force_calibration() -> None:
@@ -611,15 +613,7 @@ def is_hotkey_held() -> bool:
     import os
     if os.path.exists("C:\\FRIDAY\\mock_hotkey_held.txt"):
         return True
-    import ctypes
-    try:
-        ctrl = (ctypes.windll.user32.GetAsyncKeyState(0x11) & 0x8000) != 0
-        alt = (ctypes.windll.user32.GetAsyncKeyState(0x12) & 0x8000) != 0
-        z_key = (ctypes.windll.user32.GetAsyncKeyState(0x5A) & 0x8000) != 0
-        return ctrl and alt and z_key
-    except Exception as e:
-        print(f"[HOTKEY POLLING ERROR] {e}")
-        return True
+    return _MIC_ENABLED
 
 def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout: float = None, phrase_time_limit: float = None, state: str = "CASUAL_CHAT", generation_id: int = 0) -> sr.AudioData | None:
     """

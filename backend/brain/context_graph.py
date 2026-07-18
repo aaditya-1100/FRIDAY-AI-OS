@@ -713,8 +713,7 @@ class ConversationContextGraph:
         
         # Lazy-load spacy to keep initialization instant
         if not hasattr(self, "_nlp"):
-            from brain.spacy_loader import get_spacy_model
-            self._nlp = get_spacy_model()
+            self._nlp = None
                 
         if not self._nlp:
             return query

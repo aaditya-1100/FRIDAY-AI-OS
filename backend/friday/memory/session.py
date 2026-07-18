@@ -10,12 +10,19 @@ _redis_active = None
 _sqlite_initialized = False
 
 class SessionMemory:
-    def __init__(self, host: str = "127.0.0.1", port: int = 6379, db: int = 0):
-        self.redis_host = host
-        self.redis_port = port
-        self.redis_db = db
+    def __init__(self, host: Optional[str] = None, port: Optional[int] = None, db: Optional[int] = None):
+        self.redis_host = host or os.environ.get("REDIS_HOST", "127.0.0.1")
+        try:
+            self.redis_port = int(port or os.environ.get("REDIS_PORT", 6379))
+        except ValueError:
+            self.redis_port = 6379
+        try:
+            self.redis_db = int(db or os.environ.get("REDIS_DB", 0))
+        except ValueError:
+            self.redis_db = 0
         
-        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "session_fallback.db"))
+        from config.paths import get_data_path
+        base_path = get_data_path("session_fallback.db")
         worker_id = os.environ.get("PYTEST_XDIST_WORKER")
         if worker_id:
             self.sqlite_path = f"{os.path.splitext(base_path)[0]}_{worker_id}.db"

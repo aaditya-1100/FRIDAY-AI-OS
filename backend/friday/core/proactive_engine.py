@@ -18,6 +18,8 @@ class ProactiveEngine:
         # triggering proactive rules that change FSM state before Sir has
         # interacted, which caused the notch to show non-IDLE on first connect.
         self._startup_time = None
+        self._detected_context_mode = "idle"
+        self._gaming_suppressed = False
 
     def start(self):
         if self._is_running:
@@ -75,6 +77,47 @@ class ProactiveEngine:
 
     async def _on_context_update(self, envelope: EventEnvelope):
         context = envelope.payload or {}
+
+        # Context Mode Detection
+        import psutil
+        coding_apps = {"code.exe", "pycharm64.exe", "devenv.exe", "sublime_text.exe", "cursor.exe", "cursor"}
+        game_apps = {"valorant.exe", "gta5.exe", "cyberpunk2077.exe", "steam.exe", "epicgames.exe", "csgo.exe", "league of legends.exe"}
+        study_keywords = {"youtube", "coursera", "udemy", "physicswallah"}
+        study_browsers = {"chrome.exe", "firefox.exe", "msedge.exe"}
+
+        has_code = False
+        has_game = False
+        has_browser = False
+        
+        try:
+            for proc in psutil.process_iter(['name']):
+                pname = (proc.info.get('name') or "").lower()
+                if pname in coding_apps:
+                    has_code = True
+                if pname in game_apps:
+                    has_game = True
+                if pname in study_browsers:
+                    has_browser = True
+        except Exception:
+            pass
+
+        active_win = (context.get("active_window") or "").lower()
+        cpu_pct = context.get("cpu_percent", 0.0)
+        
+        new_mode = "idle"
+        if has_game or (cpu_pct > 80.0 and not has_code):
+            new_mode = "gaming"
+        elif has_code:
+            new_mode = "coding"
+        elif has_browser and any(kw in active_win for kw in study_keywords):
+            new_mode = "study"
+            
+        self._detected_context_mode = new_mode
+        self._gaming_suppressed = (new_mode == "gaming")
+
+        if self._gaming_suppressed:
+            logger.info("[ProactiveEngine] Gaming mode active. Suppressing all proactive notifications.")
+            return
 
         # 60-second startup grace period: suppress all proactive triggers
         # for the first minute after boot so the notch always starts IDLE.
@@ -155,6 +198,24 @@ class ProactiveEngine:
                         msg = f"Looks like you opened {current_app}. Need any help getting started?"
                         
                     await self._trigger_proactive("APP_DETECTED", msg)
+
+        # Rule 6: LOW_DISK
+        disks = context.get("disk_partitions", [])
+        for d in disks:
+            free_pct = d.get("free_percent", 100.0)
+            if free_pct < 10.0:
+                device = d.get("device", "Disk")
+                if self._can_fire("LOW_DISK"):
+                    msg = f"Low disk space on {device}: only {free_pct:.1f}% free remaining."
+                    await self._trigger_proactive("LOW_DISK", msg)
+                break
+
+        # Rule 7: HIGH_CPU_TEMP
+        cpu_temp = context.get("cpu_temp")
+        if cpu_temp is not None and cpu_temp > 85.0:
+            if self._can_fire("HIGH_CPU_TEMP"):
+                msg = f"High CPU temperature detected: {cpu_temp:.1f}°C. Cool down the system."
+                await self._trigger_proactive("HIGH_CPU_TEMP", msg)
 
     async def _trigger_proactive(self, rule_name: str, message: str):
         # Double check state just before publishing

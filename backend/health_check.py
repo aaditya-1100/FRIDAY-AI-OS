@@ -28,7 +28,7 @@ if has_env:
                 if k not in os.environ:
                     os.environ[k] = v
 
-essential_keys = ["GROQ_API_KEY", "TAVILY_API_KEY", "SERPER_API_KEY"]
+essential_keys = ["GROQ_API_KEY", "TAVILY_API_KEY"]  # SERPER_API_KEY deprecated in R8.1
 for key in essential_keys:
     val = os.environ.get(key)
     if val:

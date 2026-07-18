@@ -5,7 +5,8 @@ from loguru import logger
 
 class UserProfile:
     def __init__(self):
-        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "user_profile.db"))
+        from config.paths import get_data_path
+        base_path = get_data_path("user_profile.db")
         worker_id = os.environ.get("PYTEST_XDIST_WORKER")
         if worker_id:
             self.sqlite_path = f"{os.path.splitext(base_path)[0]}_{worker_id}.db"

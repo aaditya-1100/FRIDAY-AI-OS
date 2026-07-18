@@ -19,8 +19,8 @@ if backend_path not in sys.path:
 from brain.planner import PlannerBrain
 from brain.intent_parser import _keyword_fallback
 from brain.context_manager import ContextManager
-from memory.preference import PreferenceMemory
-from memory.episodic import EpisodicMemory
+from friday.memory.preference import PreferenceMemory
+from friday.memory.episodic import EpisodicMemory
 
 class ReplayValidationSuite:
     """

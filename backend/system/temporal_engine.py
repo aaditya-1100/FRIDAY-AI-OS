@@ -482,9 +482,8 @@ class TemporalEngine:
             print(f"[TEMPORAL TRIGGER] WS emit failed: {e_ws}")
         
         try:
-            # Dynamically import to prevent circular import chain
-            from core.pipeline import safe_speak
-            await safe_speak(speech)
+            from voice.speak import speak as tts_speak
+            await tts_speak(speech)
         except Exception as e:
             print(f"[TEMPORAL TRIGGER ERROR] safe_speak call failed: {e}")
         

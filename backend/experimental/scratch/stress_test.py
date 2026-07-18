@@ -288,7 +288,7 @@ async def verify_retrieval_architecture():
     assert "self_identity" not in slice_music
     
     # Check 5: Run live Groq query on self-identity
-    print("  * Querying Groq (llama-3.1-8b-instant fallback) for Creator Identity:")
+    print("  * Querying Groq (llama-3.3-70b-versatile) for Creator Identity:")
     query_created = "who is your creator and who built you?"
     parsed_created = parse_intent(query_created)
     res_created = await execute_action(parsed_created)

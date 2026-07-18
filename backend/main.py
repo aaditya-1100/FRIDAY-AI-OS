@@ -12,7 +12,7 @@ from loguru import logger
 
 from friday.core.event_bus import event_bus
 from friday.core.agent_registry import agent_registry
-from friday.core.schedulers.maintenance_scheduler import maintenance_scheduler
+
 from friday.core.fsm import cognitive_core
 from friday.system.context import system_context
 from voice.listen import reset_stop, request_stop, set_mic_enabled
@@ -40,6 +40,9 @@ async def main():
         logger.info(f"[COGNITIVE_OS] Ollama service not detected (will fallback to safe error string if Groq fails): {e_ollama}")
 
     logger.info("[COGNITIVE_OS] Preloading neural models and initializing components...")
+    import threading
+    from voice.listen import _get_whisper_model
+    threading.Thread(target=_get_whisper_model, name="stt_preloader", daemon=True).start()
     
     # 1. Start event bus
     # Event bus is started here if not already started by server lifespan
@@ -71,22 +74,21 @@ async def main():
     await knowledge_agent.start()
     await vision_agent.start()
     await media_agent.start()
+    await asyncio.sleep(0.5)
+
+    # Register all agents in the store so the thin dispatcher can route by type
+    from friday.core.agent_store import register as agent_register
+    for _ag in (voice_agent, pc_agent, web_agent, memory_agent, knowledge_agent, vision_agent, media_agent):
+        agent_register(_ag)
     
     # Start system context
     await system_context.start(event_bus)
     
-    # 4. Start maintenance scheduler
-    maintenance_scheduler.start()
+
 
     # Pre-warm spaCy model and ONNX intent parser model in background threads
     async def prewarm_subsystems():
-        try:
-            logger.info("[COGNITIVE_OS] Pre-warming spaCy 'en_core_web_sm' model in background...")
-            from brain.spacy_loader import get_spacy_model
-            await asyncio.to_thread(get_spacy_model)
-            logger.info("[COGNITIVE_OS] spaCy model pre-warmed successfully.")
-        except Exception as e_spacy:
-            logger.warning(f"[COGNITIVE_OS] spaCy pre-warm failed (non-fatal): {e_spacy}")
+
 
         try:
             logger.info("[COGNITIVE_OS] Pre-warming ONNX intent parser model in background...")
@@ -140,9 +142,6 @@ async def main():
         # Stop system context
         system_context.stop()
         
-        # Stop maintenance scheduler
-        maintenance_scheduler.stop()
-        
         # Stop all 7 agents
         await voice_agent.stop()
         await pc_agent.stop()
@@ -164,6 +163,11 @@ async def main():
     except Exception as e:
         logger.error(f"[COGNITIVE_OS FATAL ERROR] {e}")
     finally:
+        try:
+            from friday.memory.semantic import close_qdrant_client
+            close_qdrant_client()
+        except Exception as e_qdrant:
+            logger.error(f"[COGNITIVE_OS] Failed to close Qdrant client: {e_qdrant}")
         try:
             from friday.memory.user_profile import user_profile
             await user_profile.flush()

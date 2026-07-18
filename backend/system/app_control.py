@@ -1,4 +1,5 @@
 import os
+import subprocess
 import winreg
 from pathlib import Path
 import re
@@ -72,6 +73,30 @@ SEARCH_PATHS = [
     Path.home() / "Pictures",
     Path.home() / "Videos"
 ]
+
+
+def _launch_registered_target(target: str | list[str]) -> bool:
+    """Launch a trusted, internally registered Windows target without shell parsing."""
+    try:
+        if isinstance(target, str):
+            target = target.strip()
+            if not target:
+                return False
+            os.startfile(target)
+            return True
+
+        if not target:
+            return False
+        subprocess.Popen(
+            target,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+        )
+        return True
+    except Exception as e:
+        print(f"[APP CONTROL WARNING] Launch failed for registered target '{target}': {e}")
+        return False
 
 
 # =========================================
@@ -235,8 +260,7 @@ def open_app(app_name: str):
         # ── 1. NATIVE FILE EXPLORER ──────────────────────────────────────────
         if app_name in ("explorer", "file explorer", "windows explorer", "my computer"):
             print("[APP CONTROL] Launching explorer.exe natively")
-            os.system("start explorer.exe")
-            return True
+            return _launch_registered_target(["explorer.exe"])
 
         # ── 2. PHYSICAL DRIVE PATTERNS (e.g. "c drive", "d drive", "c:") ─────
         drive_match = re.match(r"^([a-z])\s*(?:drive|:)?$", app_name)
@@ -301,15 +325,15 @@ def open_app(app_name: str):
         if app_name in SETTINGS_MAP:
             uri = SETTINGS_MAP[app_name]
             print(f"[APP CONTROL] Launching Windows Settings URI: '{uri}'")
-            os.system(f"start {uri}")
-            return True
+            return _launch_registered_target(uri)
 
         # ── 8. NATIVE SYSTEM SHORTCUTS (Legacy commands) ──────────────────────
         app_cmd = APP_MAP.get(app_name)
         if app_cmd:
             print(f"[APP CONTROL] Launching native legacy command: '{app_cmd}'")
-            os.system(f"start {app_cmd}")
-            return True
+            if " " in app_cmd:
+                return _launch_registered_target(app_cmd.split())
+            return _launch_registered_target(app_cmd)
 
         # ── 9. OS-LEVEL GENERIC SHELL OPEN ────────────────────────────────────
         try:

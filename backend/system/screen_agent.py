@@ -90,7 +90,7 @@ class ScreenAgent:
         win_title = win_info.get("title", "Unknown Window")
         win_proc = win_info.get("process", "Unknown Process")
         
-        from core.pipeline import context_manager
+        from friday.core.context_manager import context_manager
         import time
         
         now = time.time()

@@ -18,11 +18,9 @@ from friday.core.event_bus import event_bus
 from brain.intent_parser import parse_intent
 from llm.groq_client import ask_groq
 from friday.memory.session import SessionMemory
-from friday.core.schedulers import process_scheduler, task_scheduler
+
 from friday.memory.semantic import SemanticMemory
 from friday.memory.episodic import EpisodicMemory
-from friday.memory.knowledge_graph import KnowledgeGraph
-from brain.spacy_loader import get_spacy_model
 
 # Ollama availability flag, set once at startup in main.py
 OLLAMA_AVAILABLE = False
@@ -39,6 +37,7 @@ class AssistantState(str, Enum):
     IDLE = "IDLE"
     PERCEIVING = "PERCEIVING"
     PLANNING = "PLANNING"
+    CONFIRMING = "CONFIRMING"
     DELEGATING = "DELEGATING"
     WAITING = "WAITING"
     SYNTHESIZING = "SYNTHESIZING"
@@ -65,7 +64,8 @@ class CognitiveFSM:
         self._transitions = {
             AssistantState.IDLE: {AssistantState.PERCEIVING, AssistantState.INTERRUPTED, AssistantState.ERROR},
             AssistantState.PERCEIVING: {AssistantState.PLANNING, AssistantState.INTERRUPTED, AssistantState.ERROR, AssistantState.IDLE},
-            AssistantState.PLANNING: {AssistantState.DELEGATING, AssistantState.SYNTHESIZING, AssistantState.INTERRUPTED, AssistantState.ERROR, AssistantState.IDLE},
+            AssistantState.PLANNING: {AssistantState.DELEGATING, AssistantState.SYNTHESIZING, AssistantState.INTERRUPTED, AssistantState.ERROR, AssistantState.IDLE, AssistantState.CONFIRMING},
+            AssistantState.CONFIRMING: {AssistantState.PERCEIVING, AssistantState.IDLE, AssistantState.ERROR, AssistantState.INTERRUPTED},
             AssistantState.DELEGATING: {AssistantState.WAITING, AssistantState.SYNTHESIZING, AssistantState.INTERRUPTED, AssistantState.ERROR, AssistantState.IDLE},
             AssistantState.WAITING: {AssistantState.DELEGATING, AssistantState.SYNTHESIZING, AssistantState.INTERRUPTED, AssistantState.ERROR, AssistantState.IDLE},
             AssistantState.SYNTHESIZING: {AssistantState.RESPONDING, AssistantState.INTERRUPTED, AssistantState.ERROR, AssistantState.IDLE},
@@ -83,12 +83,13 @@ class CognitiveFSM:
 
     def transition_to(self, new_state: AssistantState, reason: str = "", force: bool = False):
         """Transitions to a new state if valid, and publishes a state change event."""
-        if not force and self.current_state == AssistantState.ERROR:
+        if not force and self.current_state.value == AssistantState.ERROR.value:
             raise FSMTransitionError("Cannot transition out of terminal ERROR state.")
 
         # Interrupt is always valid unless currently in ERROR
-        is_interrupt = new_state == AssistantState.INTERRUPTED
-        is_valid = force or is_interrupt or (new_state in self._transitions[self.current_state])
+        is_interrupt = new_state.value == AssistantState.INTERRUPTED.value
+        allowed_states = {x.value for x in self._transitions[self.current_state]}
+        is_valid = force or is_interrupt or (new_state.value in allowed_states)
 
         if not is_valid:
             raise FSMTransitionError(
@@ -135,7 +136,12 @@ class CognitiveCore:
 
     @property
     def current_state(self) -> AssistantState:
-        return self.fsm.current_state
+        try:
+            if hasattr(self, "fsm") and self.fsm is not None:
+                return self.fsm.current_state
+        except AttributeError:
+            pass
+        return AssistantState.IDLE
 
     @current_state.setter
     def current_state(self, val: AssistantState):
@@ -229,27 +235,7 @@ class CognitiveCore:
                 logger.error(f"[FSM] EpisodicMemory search failed: {e}")
                 recent_episodes = []
 
-            # 3. Entity relations via spaCy and KnowledgeGraph
-            try:
-                nlp = get_spacy_model()
-                entity_context = []
-                if nlp:
-                    doc = nlp(raw_input)
-                    entities = [ent.text for ent in doc.ents]
-                    graph = KnowledgeGraph()
-                    for ent in entities:
-                        rels = graph.get_relations(ent)
-                        for r in rels:
-                            entity_context.append({
-                                "source": r[0],
-                                "relation": r[1],
-                                "target": r[2],
-                                "weight": r[3]
-                            })
-            except Exception as e:
-                logger.error(f"[FSM] KnowledgeGraph query failed: {e}")
-                entity_context = []
-
+            entity_context = []
             return {
                 "semantic_facts": semantic_facts,
                 "recent_episodes": recent_episodes,
@@ -285,8 +271,8 @@ class CognitiveCore:
         if not self._loop:
             return
         rule_name = envelope.payload.get("rule", "PROACTIVE")
-        if rule_name == "HIGH_MEMORY":
-            logger.info(f"[CognitiveCore] Suppressing FSM transitions/voice turn for proactive rule 'HIGH_MEMORY'. Notch UI will handle silently.")
+        if rule_name in ("HIGH_MEMORY", "LOW_DISK", "HIGH_CPU_TEMP"):
+            logger.info(f"[CognitiveCore] Suppressing FSM transitions/voice turn for proactive rule '{rule_name}'. Notch UI will handle silently.")
             return
         if self.current_state != AssistantState.IDLE:
             logger.info(f"[CognitiveCore] Suppressed proactive trigger '{rule_name}' because FSM is not IDLE (state={self.current_state.value}).")
@@ -355,7 +341,8 @@ class CognitiveCore:
                 history=history_turns,
                 timeout=5.0
             )
-            return await process_scheduler.schedule_llm(func)
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(None, func)
 
         async def call_ollama_fallback():
             import functools
@@ -367,7 +354,8 @@ class CognitiveCore:
                 history=history_turns,
                 timeout=3.0
             )
-            return await process_scheduler.schedule_llm(func)
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(None, func)
 
         final_response = "I encountered an error while formulating my proactive thought."
         try:
@@ -507,10 +495,78 @@ class CognitiveCore:
         text = envelope.payload.get("text", "")
         logger.info(f"[CognitiveCore] Starting turn for input: '{text}' (correlation_id={corr_id})")
 
-        # 1. Reset FSM and set active correlation ID
+        previous_state = self.fsm.current_state
+        previous_memory = self.fsm.working_memory.copy() if self.fsm.working_memory else {}
+
+        # 1. Check for interruption
+        if previous_state in (AssistantState.RESPONDING, AssistantState.WAITING, AssistantState.SYNTHESIZING, AssistantState.DELEGATING):
+            logger.info(f"[CognitiveCore] Turn interrupted while in state {previous_state.value}. Cleaning up previous turn.")
+            self.fsm.transition_to(AssistantState.INTERRUPTED, reason="User interrupted the previous turn")
+            try:
+                from friday.core.control import cancel_speak
+                cancel_speak()
+            except Exception as e_cancel:
+                logger.error(f"[CognitiveCore] Failed to cancel stale speech: {e_cancel}")
+
+        # 2. Reset FSM and set active correlation ID
         self.fsm.reset_for_new_request(correlation_id=corr_id)
         self.active_correlation_id = corr_id
         self.fsm.working_memory["raw_input"] = text
+
+        is_confirmed_turn = False
+        if previous_state and previous_state.value == AssistantState.CONFIRMING.value:
+            text_clean = text.strip().lower()
+            is_yes = text_clean in ("yes", "y", "confirm", "proceed", "okay", "ok")
+            if is_yes:
+                prev_count = previous_memory.get("confirm_count", 1)
+                if prev_count == 1:
+                    # Transition CONFIRMING -> PERCEIVING -> PLANNING -> CONFIRMING
+                    self.fsm.transition_to(AssistantState.PERCEIVING, reason="Raw input received, starting perception")
+                    self.fsm.transition_to(AssistantState.PLANNING, reason="Input perceived, constructing execution plan")
+                    self.fsm.transition_to(AssistantState.CONFIRMING, reason="Second confirmation required for path deletion")
+                    
+                    self.fsm.working_memory["confirm_count"] = 2
+                    self.fsm.working_memory["original_text"] = previous_memory.get("original_text")
+                    self.fsm.working_memory["original_intent"] = previous_memory.get("original_intent")
+                    self.fsm.working_memory["original_parsed_intent"] = previous_memory.get("original_parsed_intent")
+                    
+                    envelope_out = EventEnvelope(
+                        topic="friday.perception.text.output",
+                        priority=EventPriority.P1,
+                        source="cognitive_core.orchestrator",
+                        correlation_id=corr_id,
+                        session_id=self.fsm.session_id,
+                        payload={"text": "Are you absolutely sure, sir? Say yes to confirm again."}
+                    )
+                    await event_bus.publish(envelope_out)
+                    return
+                elif prev_count == 2:
+                    is_confirmed_turn = True
+                    # Confirmed! Restore variables
+                    intent = previous_memory.get("original_intent") or "DELETE_PATH"
+                    parsed_result = previous_memory.get("original_parsed_intent") or {}
+                    text = previous_memory.get("original_text") or text
+                    confidence = 1.0
+                    
+                    self.fsm.working_memory["intent"] = intent
+                    self.fsm.working_memory["confidence"] = confidence
+                    self.fsm.working_memory["parsed_intent"] = parsed_result
+                    self.fsm.working_memory["confirmed"] = True
+
+                    self.fsm.transition_to(AssistantState.PERCEIVING, reason="Raw input received, starting perception")
+                    self.fsm.transition_to(AssistantState.PLANNING, reason="Input perceived, constructing execution plan")
+            else:
+                self.fsm.transition_to(AssistantState.IDLE, reason="Confirmation cancelled by user")
+                envelope_out = EventEnvelope(
+                    topic="friday.perception.text.output",
+                    priority=EventPriority.P1,
+                    source="warning",
+                    correlation_id=corr_id,
+                    session_id=self.fsm.session_id,
+                    payload={"text": "Action cancelled, sir."}
+                )
+                await event_bus.publish(envelope_out)
+                return
 
         # 1b. Extract app_id and detect language
         from friday.system.context import system_context
@@ -544,71 +600,91 @@ class CognitiveCore:
         self.fsm.working_memory["detected_language"] = detected_language
         logger.info(f"[CognitiveCore] Request turn: app_id='{app_id}' detected_language='{detected_language}'")
 
-        # 2. Transition to PERCEIVING
-        self.fsm.transition_to(AssistantState.PERCEIVING, reason="Raw input received, starting perception")
+        if not is_confirmed_turn:
+            # 2. Transition to PERCEIVING
+            self.fsm.transition_to(AssistantState.PERCEIVING, reason="Raw input received, starting perception")
         
-        intent = "CLARIFICATION"
-        confidence = 0.0
-        parsed_result = {}
-        
-        try:
-            # Call parse_intent(text) with a 3.0s timeout in threadpool
-            loop = asyncio.get_running_loop()
-            parsed_result = await asyncio.wait_for(
-                loop.run_in_executor(None, parse_intent, text),
-                timeout=3.0
-            )
-            intent = parsed_result.get("intent", "AI_QUERY")
-            confidence = parsed_result.get("confidence", 1.0 if intent != "CLARIFICATION" else 0.5)
-        except asyncio.TimeoutError:
-            logger.warning(f"[CognitiveCore] parse_intent timed out after 3.0s (correlation_id={corr_id})")
+        if not is_confirmed_turn:
             intent = "CLARIFICATION"
             confidence = 0.0
-            parsed_result = {"intent": "CLARIFICATION", "question": "Could you please clarify your request, sir?"}
-        except Exception as e:
-            logger.error(f"[CognitiveCore] Error in parse_intent: {e} (correlation_id={corr_id})")
-            intent = "AI_QUERY"
-            confidence = 0.5
-            parsed_result = {"intent": "AI_QUERY", "query": text}
+            parsed_result = {}
+            
+            try:
+                # Call parse_intent(text) with a 3.0s timeout in threadpool
+                loop = asyncio.get_running_loop()
+                parsed_result = await asyncio.wait_for(
+                    loop.run_in_executor(None, parse_intent, text),
+                    timeout=3.0
+                )
+                intent = parsed_result.get("intent", "AI_QUERY")
+                confidence = parsed_result.get("confidence", 1.0 if intent != "CLARIFICATION" else 0.5)
+            except asyncio.TimeoutError:
+                logger.warning(f"[CognitiveCore] parse_intent timed out after 3.0s (correlation_id={corr_id})")
+                intent = "CLARIFICATION"
+                confidence = 0.0
+                parsed_result = {"intent": "CLARIFICATION", "question": "Could you please clarify your request, sir?"}
+            except Exception as e:
+                logger.error(f"[CognitiveCore] Error in parse_intent: {e} (correlation_id={corr_id})")
+                intent = "AI_QUERY"
+                confidence = 0.5
+                parsed_result = {"intent": "AI_QUERY", "query": text}
 
-        # Store in FSM state dict
-        self.fsm.working_memory["intent"] = intent
-        self.fsm.working_memory["confidence"] = confidence
-        self.fsm.working_memory["parsed_intent"] = parsed_result
+            # Store in FSM state dict
+            self.fsm.working_memory["intent"] = intent
+            self.fsm.working_memory["confidence"] = confidence
+            self.fsm.working_memory["parsed_intent"] = parsed_result
 
-        # Publish friday.perception.intent_classified event
-        classified_envelope = EventEnvelope(
-            topic="friday.perception.intent_classified",
-            priority=EventPriority.P1,
-            source="cognitive_core.orchestrator",
-            correlation_id=corr_id,
-            session_id=self.fsm.session_id,
-            payload={"intent": intent, "confidence": confidence}
-        )
-        await event_bus.publish(classified_envelope)
+            # Publish friday.perception.intent_classified event
+            classified_envelope = EventEnvelope(
+                topic="friday.perception.intent_classified",
+                priority=EventPriority.P1,
+                source="cognitive_core.orchestrator",
+                correlation_id=corr_id,
+                session_id=self.fsm.session_id,
+                payload={"intent": intent, "confidence": confidence}
+            )
+            await event_bus.publish(classified_envelope)
 
-        # 3. Transition to PLANNING (always, no exceptions)
-        self.fsm.transition_to(AssistantState.PLANNING, reason="Input perceived, constructing execution plan")
+            # 3. Transition to PLANNING (always, no exceptions)
+            self.fsm.transition_to(AssistantState.PLANNING, reason="Input perceived, constructing execution plan")
 
-        # Retrieve memory context during PLANNING state
-        memory_context = await self._retrieve_memory_context(text, intent, app_id=app_id)
-        self.fsm.working_memory["memory_context"] = memory_context
+            # Retrieve memory context during PLANNING state
+            memory_context = await self._retrieve_memory_context(text, intent, app_id=app_id)
+            self.fsm.working_memory["memory_context"] = memory_context
 
-        try:
-            from friday.memory.knowledge_graph import KnowledgeGraph
-            def _get_kg_nodes():
-                kg = KnowledgeGraph()
-                return len(kg.graph.nodes)
-            kg_nodes_count = await asyncio.to_thread(_get_kg_nodes)
-        except Exception as e:
-            logger.warning(f"[FSM] Failed to load Knowledge Graph node count: {e}")
-            kg_nodes_count = 0
+            kg_nodes_count = 0  # knowledge_graph moved to experimental/ (R9.0-B9)
 
-        logger.info(f"[FSM PLANNING] Retrieved memory context: {memory_context}")
-        logger.info(f"[FSM PLANNING] Knowledge Graph nodes count: {kg_nodes_count}")
+            logger.info(f"[FSM PLANNING] Retrieved memory context: {memory_context}")
+            logger.info(f"[FSM PLANNING] Knowledge Graph nodes count: {kg_nodes_count}")
+        else:
+            intent = self.fsm.working_memory.get("intent")
+            confidence = self.fsm.working_memory.get("confidence", 1.0)
+            parsed_result = self.fsm.working_memory.get("parsed_intent", {})
+
+        # Check if confirmation is required for DELETE_PATH
+        is_confirmed = self.fsm.working_memory.get("confirmed", False)
+        if intent == "DELETE_PATH" and not is_confirmed:
+            # Transition PLANNING -> CONFIRMING
+            self.fsm.transition_to(AssistantState.CONFIRMING, reason="Confirmation required for path deletion")
+            self.fsm.working_memory["confirm_count"] = 1
+            self.fsm.working_memory["original_text"] = text
+            self.fsm.working_memory["original_intent"] = intent
+            self.fsm.working_memory["original_parsed_intent"] = parsed_result
+            
+            envelope_out = EventEnvelope(
+                topic="friday.perception.text.output",
+                priority=EventPriority.P1,
+                source="cognitive_core.orchestrator",
+                correlation_id=corr_id,
+                session_id=self.fsm.session_id,
+                payload={"text": "Please confirm if you want to delete this path. Say yes to proceed."}
+            )
+            await event_bus.publish(envelope_out)
+            return
 
         from friday.core.routing_table import INTENT_TO_AGENT, DIRECT_LLM_INTENTS, MULTI_ACTION_INTENT
 
+        logger.info(f"[DEBUG PLANNING] intent={intent}, confidence={confidence}, in_routing={intent in INTENT_TO_AGENT if intent else False}, in_direct={intent in DIRECT_LLM_INTENTS if intent else False}")
         # Direct LLM check or low-confidence/clarification or None/unrecognized intent
         if intent is None or intent not in INTENT_TO_AGENT or intent in DIRECT_LLM_INTENTS or confidence < 0.6:
             self.fsm.working_memory["plan_type"] = "DIRECT_LLM"
@@ -668,7 +744,6 @@ class CognitiveCore:
 
             elif plan_type == "MULTI":
                 from friday.core.events import TaskDispatch, AgentType
-                from friday.core.schedulers import task_scheduler
 
                 actions = self.fsm.working_memory.get("parsed_intent", {}).get("actions", [])
                 tasks_to_submit = []
@@ -692,12 +767,21 @@ class CognitiveCore:
                     dispatched_task_ids.append(sub_task_id)
 
                 if tasks_to_submit:
-                    task_scheduler.submit_dag(tasks_to_submit, corr_id, self.fsm.session_id)
+                    for task in tasks_to_submit:
+                        dispatch_envelope = EventEnvelope(
+                            topic=f"friday.agent.{task.agent_type.value.lower()}.dispatch",
+                            priority=EventPriority.P2,
+                            source="cognitive_core.orchestrator",
+                            correlation_id=corr_id,
+                            session_id=self.fsm.session_id,
+                            payload=task.model_dump()
+                        )
+                        await event_bus.publish(dispatch_envelope)
                 else:
                     logger.warning("[CognitiveCore] MULTI_ACTION decomposed into 0 actionable agent tasks!")
 
                 self.fsm.working_memory["dispatched_tasks"] = dispatched_task_ids
-                self.fsm.transition_to(AssistantState.WAITING, reason=f"Awaiting task DAG completion (MULTI task)")
+                self.fsm.transition_to(AssistantState.WAITING, reason=f"Awaiting task execution (MULTI task)")
 
             # 5. WAITING state execution (single-threaded subscription, no asyncio.gather)
             collected_results = []
@@ -725,6 +809,20 @@ class CognitiveCore:
             except asyncio.TimeoutError:
                 logger.warning(f"[CognitiveCore] WAITING state timed out after {timeout_limit}s. Collecting partial results.")
                 self.fsm.working_memory["partial"] = True
+                if not collected_results:
+                    # Nothing at all came back — abort turn cleanly and return to IDLE
+                    logger.warning("[CognitiveCore] No results received within timeout. Aborting turn.")
+                    self.fsm.transition_to(AssistantState.IDLE, reason="Agent execution timed out with no results")
+                    response_envelope = EventEnvelope(
+                        topic="friday.core.response",
+                        priority=EventPriority.P1,
+                        source="cognitive_core.orchestrator",
+                        correlation_id=corr_id,
+                        session_id=self.fsm.session_id,
+                        payload={"text": "I timed out waiting for a response, Sir. Please try again."}
+                    )
+                    await event_bus.publish(response_envelope)
+                    return
             finally:
                 event_bus.unsubscribe("friday.agent.*.result", on_agent_result)
 
@@ -752,6 +850,22 @@ class CognitiveCore:
         # 6. SYNTHESIZING state execution
         if self.fsm.working_memory.get("clarification", False) or intent == "CLARIFICATION":
             query_input = f"The user command was ambiguous or low confidence. Ask for clarification. Raw input: '{text}'"
+        elif intent in ("WEB_SEARCH", "SEARCH"):
+            snippets = []
+            agent_results = self.fsm.working_memory.get("agent_results", [])
+            for res in agent_results:
+                payload = res.get("payload", {})
+                results_list = payload.get("results", [])
+                for item in results_list:
+                    title = item.get("title", "")
+                    content = item.get("snippet") or item.get("content") or ""
+                    url = item.get("url", "")
+                    snippets.append(f"Title: {title}\nContent: {content}\nURL: {url}")
+            if snippets:
+                snippets_text = "\n\n".join(snippets)
+                query_input = f"User query: {text}\n\nSearch results:\n{snippets_text}"
+            else:
+                query_input = text
         else:
             query_input = text
 
@@ -797,7 +911,8 @@ class CognitiveCore:
                 history=history_turns,
                 timeout=5.0
             )
-            return await process_scheduler.schedule_llm(func)
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(None, func)
 
         async def call_ollama_fallback():
             import httpx
@@ -840,7 +955,26 @@ class CognitiveCore:
                     is_empty_search = True
 
         response_text = None
-        if is_empty_search:
+
+        # Check if we should bypass LLM synthesis and use the direct agent response
+        plan_type = self.fsm.working_memory.get("plan_type")
+        agent_result = None
+        agent_results = self.fsm.working_memory.get("agent_results", [])
+        if agent_results:
+            for r in agent_results:
+                if isinstance(r, dict) and r.get("payload", {}).get("response"):
+                    from types import SimpleNamespace
+                    agent_result = SimpleNamespace(payload=r.get("payload", {}))
+                    break
+
+        if (
+            plan_type not in ("DIRECT_LLM", "WEB_SYNTHESIS")
+            and agent_result is not None
+            and agent_result.payload.get("response")
+        ):
+            logger.info("[CognitiveCore] Direct agent response found. Bypassing Groq LLM synthesis.")
+            response_text = agent_result.payload["response"]
+        elif is_empty_search:
             logger.info("[CognitiveCore] Empty search results detected. Skipping LLM synthesis.")
             response_text = "No current results found for that query, Sir."
         else:
@@ -969,14 +1103,8 @@ class CognitiveCore:
         )
         await event_bus.publish(memory_envelope)
 
-        # Record turn in UserProfile
         try:
-            from brain.spacy_loader import get_spacy_model
-            nlp = get_spacy_model()
             entities_list = []
-            if nlp:
-                doc = nlp(raw_input)
-                entities_list = [ent.text for ent in doc.ents]
                 
             from friday.memory.user_profile import user_profile
             from friday.system.context import system_context

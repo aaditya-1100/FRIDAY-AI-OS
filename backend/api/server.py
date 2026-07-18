@@ -1,4 +1,4 @@
-"""
+﻿"""
 FastAPI + WebSocket: state sync and text commands for the React UI.
 Run:  python -m uvicorn api.server:app --host 127.0.0.1 --port 8001
 (cwd = backend, or PYTHONPATH includes backend)
@@ -102,11 +102,22 @@ def enforce_single_backend_instance() -> None:
                 proc = psutil.Process(old_pid)
                 pname = proc.name().lower()
                 cmdline = " ".join(proc.cmdline()).lower()
-                if "python" in pname or "uvicorn" in cmdline:
-                    print(f"[STARTUP LOCK] Found duplicate active backend instance (PID {old_pid}). Terminating it to take over...")
-                    proc.kill()
-                    proc.wait(timeout=2.0)
-                    print(f"[STARTUP LOCK] Stale instance (PID {old_pid}) terminated successfully.")
+                backend_marker = os.path.normcase(_backend_dir).lower()
+                is_friday_backend = (
+                    ("python" in pname or "uvicorn" in cmdline)
+                    and ("api.server" in cmdline or "backend" in cmdline)
+                    and backend_marker in os.path.normcase(cmdline)
+                )
+                if is_friday_backend:
+                    print(f"[STARTUP LOCK] Found previous FRIDAY backend instance (PID {old_pid}). Requesting clean termination...")
+                    proc.terminate()
+                    try:
+                        proc.wait(timeout=4.0)
+                        print(f"[STARTUP LOCK] Previous backend instance (PID {old_pid}) terminated successfully.")
+                    except psutil.TimeoutExpired:
+                        print(f"[STARTUP LOCK WARNING] Previous backend PID {old_pid} did not exit after terminate(). Leaving it untouched.")
+                else:
+                    print(f"[STARTUP LOCK WARNING] Ignoring PID {old_pid}; it does not look like this FRIDAY backend.")
         except Exception as e:
             print(f"[STARTUP LOCK WARNING] Error checking/killing stale backend PID: {e}")
             
@@ -218,7 +229,6 @@ async def _close_all_clients() -> None:
     clients.clear()
 
 
-# ── State broadcast ───────────────────────────────────────────────────────────
 
 async def broadcast_state(state: str) -> None:
     await _send_all_json({"type": "state", "state": state})
@@ -228,15 +238,17 @@ async def emit_to_clients(payload: dict) -> None:
     await _send_all_json(payload)
 
 
-# ── Application lifespan ──────────────────────────────────────────────────────
+# -- Application lifespan -------------------------------------------------------
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     enforce_single_backend_instance()
+    from config.paths import ensure_data_dirs
+    ensure_data_dirs()
     loop = asyncio.get_running_loop()
     from core.state_manager import set_main_loop as sm_set_main_loop
     sm_set_main_loop(loop)
-    
+
     # Start event bus and FSM WS manager
     from friday.core.event_bus import event_bus
     from friday.api.websocket import fsm_ws_manager
@@ -248,7 +260,7 @@ async def lifespan(app: FastAPI):
     async def sm_callback(state):
         await fsm_ws_manager.broadcast({"type": "state", "state": state})
     sm_register(sm_callback)
-    
+
     register_json_emitter(emit_to_clients)
     # Register the event loop so emit_json_sync() can schedule coroutines from
     # the PyAudio thread (mic_level streaming during LISTENING state).
@@ -269,13 +281,7 @@ async def lifespan(app: FastAPI):
     from system.app_control import ensure_app_index_loaded
     ensure_app_index_loaded()
     
-    # Warm SAPI5 Singleton Startup
-    try:
-        from voice.speak import init_tts_singleton
-        init_tts_singleton()
-        print("[STARTUP] SAPI5 TTS singleton initialized successfully.")
-    except Exception as e_tts:
-        print(f"[STARTUP WARNING] Failed to warm SAPI5 singleton: {e_tts}")
+    print("[STARTUP] SAPI5 local TTS engine lazy-init is deferred to first-use fallback.")
 
     reset_stop()                         # arm the mic listener
     agent_task = loop.create_task(agent_loop())
@@ -351,6 +357,12 @@ async def lifespan(app: FastAPI):
         except Exception as e_eb:
             print(f"[SHUTDOWN WARNING] Failed to stop event bus: {e_eb}")
             
+        try:
+            from friday.memory.semantic import close_qdrant_client
+            close_qdrant_client()
+        except Exception as e_qdrant:
+            print(f"[SHUTDOWN WARNING] Failed to close Qdrant client: {e_qdrant}")
+
         cleanup_backend_pid()
 
         print("[SERVER] All subsystems stopped.")
@@ -362,7 +374,14 @@ app = FastAPI(title="FRIDAY", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        origin.strip()
+        for origin in os.getenv(
+            "FRIDAY_CORS_ORIGINS",
+            "http://localhost:5173,http://127.0.0.1:5173,file://,null",
+        ).split(",")
+        if origin.strip()
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -384,8 +403,9 @@ def weather_endpoint():
     import requests as _req
     from datetime import datetime as _dt
 
-    LAT, LON = 29.2098, 78.9618  # Unconditionally locked to Kashipur, Uttarakhand, India
-    loc_name = "Kashipur, Uttarakhand, India"
+    LAT = float(os.getenv("FRIDAY_WEATHER_LAT", "29.2098"))
+    LON = float(os.getenv("FRIDAY_WEATHER_LON", "78.9618"))
+    loc_name = os.getenv("FRIDAY_WEATHER_LOCATION", "Kashipur, Uttarakhand, India")
 
     _WMO = {
         0: ("Clear Sky", "clear"), 1: ("Mainly Clear", "clear"),
@@ -491,7 +511,10 @@ async def websocket_endpoint(websocket: WebSocket):
     origin = websocket.headers.get("origin")
     if origin:
         origin_lower = origin.strip().lower()
-        if origin_lower not in ["file://", "http://localhost:5173"] and not origin_lower.startswith("file://"):
+        # "null" is sent by Electron 42+ (Chromium 130+) when loading from file://
+        # file:// and file:///path/... are sent by older Electron / dev builds
+        _allowed_origins = {"file://", "http://localhost:5173", "null"}
+        if origin_lower not in _allowed_origins and not origin_lower.startswith("file://"):
             print(f"[WS AUTH FAIL] Origin '{origin}' is not authorized.")
             await websocket.close(code=1008)
             return
@@ -646,5 +669,19 @@ async def diag_play_tts():
 
 
 if __name__ == "__main__":
+    import socket
+    import sys
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8001)
+    
+    port = 8001
+    host = "127.0.0.1"
+    
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind((host, port))
+        s.close()
+    except socket.error:
+        print(f"[SERVER ERROR] Port {port} is already in use by another process. Exiting cleanly.")
+        sys.exit(1)
+        
+    uvicorn.run(app, host=host, port=port)

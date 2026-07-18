@@ -58,6 +58,7 @@ INTENT_TO_AGENT: Dict[str, Optional[str]] = {
     "SCREEN_FIND": "VISION_AGENT",
     "SCREEN_SCREENSHOT": "VISION_AGENT",
     "SCREEN_DESCRIBE": "VISION_AGENT",
+    "SCREEN_CLICK": "VISION_AGENT",
 
     # Time-based OS tasks
     "SET_REMINDER": "PC_AGENT",
@@ -69,8 +70,8 @@ INTENT_TO_AGENT: Dict[str, Optional[str]] = {
     "LIST_REMINDERS": "PC_AGENT",
     "CANCEL_REMINDER": "PC_AGENT",
 
-    # Spotify local controls
-    "SPOTIFY_CONTROL": "PC_AGENT",
+    # Spotify
+    "SPOTIFY_CONTROL": "MEDIA_AGENT",
 
     # Maps and Location (executed via action_executor in PC_AGENT)
     "MAP": "PC_AGENT",

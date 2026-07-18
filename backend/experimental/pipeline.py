@@ -603,63 +603,14 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None, is
                 intent_data["target"] = corrected_target
                 intent = "OPEN"
 
-            # ── Phase 2: Confidence Core Integration ──
-            from brain.confidence_engine import confidence_engine
-            from brain.routing_telemetry import telemetry_engine
-            import sys
-
-            # Calculate raw component scores dynamically based on execution flow
-            components_score = {
-                "asr": 0.98 if len(query) > 3 else 0.40,
-                "intent": 0.30 if intent_data.get("_quota_limited") else (0.75 if getattr(plan, "is_simple_command", False) or "timed out" in sys.argv else 0.96),
-                "domain": 0.95 if intent else 0.30,
-                "routing": 0.95 if plan.target_brain != "LLM" or intent == "AI_QUERY" else 0.80,
-                "memory": 0.90 if "it" not in query and "that" not in query else 0.50,
-                "execution": 0.98
-            }
-            conf_res = confidence_engine.calculate_unified_confidence(intent, components_score)
-            unified_score = conf_res["unified_score"]
-            policy = conf_res["policy"]
-            print(f"[PIPELINE CONFIDENCE] Unified Turn Confidence: {unified_score:.4f} | Policy: {policy} | Action: {conf_res['action']}")
-
-            # Telemetry Turn Logging Setup
-            state_str = str(get_conversational_state())
-            latency_ms = int((time.time() - _last_interaction_time) * 1000)
-            
-            trigger_matrix = [
-                {
-                    "name": plan.target_brain,
-                    "semantic_intent_score": components_score["intent"],
-                    "capability_confidence": components_score["execution"],
-                    "historical_reliability": 0.95,
-                    "priority_weight": 1.0,
-                    "final_score": unified_score
-                }
-            ]
-            
-            telemetry_id = telemetry_engine.log_turn(
-                query=query,
-                system_state=state_str,
-                winner=plan.target_brain,
-                runner_up="LLM" if plan.target_brain != "LLM" else "RETRIEVAL",
-                winning_score=unified_score,
-                runner_up_score=0.40,
-                margin=float(round(unified_score - 0.40, 4)),
-                is_tiebreak_invoked=getattr(plan, "is_tiebreak_invoked", False),
-                confidence_score=unified_score,
-                latency_ms=latency_ms,
-                trigger_matrix=trigger_matrix,
-                confidence_breakdown=components_score
-            )
-
-            # Confidence Policy Enforcement
-            if policy == "LOW":
-                print(f"[PIPELINE CONFIDENCE] Low confidence block! Prompting active clarification.")
+            # ── Confidence Gating ──
+            parser_confidence = intent_data.get("confidence", 1.0)
+            if parser_confidence < 0.45:
+                print(f"[PIPELINE CONFIDENCE] Low confidence parser score ({parser_confidence})! Prompting clarification.")
                 clarification_msg = "I'm not entirely sure I understood that command, Sir. Could you please clarify?"
                 await safe_speak(clarification_msg)
                 short_term_memory.add("user", query)
                 short_term_memory.add("assistant", clarification_msg)
-                telemetry_engine.register_correction(telemetry_id, 0.0)
                 await emit_json({"type": "result", "ok": False, "reason": "low_confidence", "intent": intent})
                 return
 
@@ -714,9 +665,6 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None, is
                 short_term_memory.add("user", query)
                 short_term_memory.add("assistant", spoken_response)
                 episodic_memory.log_event(query, intent, False, intent_data)
-                telemetry_engine.register_correction(telemetry_id, 0.0)
-                from brain.trigger_intelligence import trigger_intel_mgr
-                trigger_intel_mgr.register_feedback(plan.target_brain, success=False)
                 print(f"[TRACE] [PIPELINE] Emitting websocket execution failure event...")
                 await emit_json({"type": "result", "ok": False, "reason": "execute_failed", "intent": intent})
                 return
@@ -751,9 +699,6 @@ async def process_transcript(raw_query: str, *, web_mode: bool | None = None, is
             # Log successful execution to memory
             print(f"[TRACE] [PIPELINE] Logging successful event to episodic memory...")
             episodic_memory.log_event(query, intent, True, intent_data)
-            telemetry_engine.register_success(telemetry_id)
-            from brain.trigger_intelligence import trigger_intel_mgr
-            trigger_intel_mgr.register_feedback(plan.target_brain, success=True)
             if intent == "OPEN":
                 target = intent_data.get("target")
                 if target:

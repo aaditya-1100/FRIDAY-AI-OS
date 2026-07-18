@@ -15,6 +15,8 @@ class SystemContext:
         self.active_window: Optional[str] = None
         self.cpu_percent: float = 0.0
         self.memory_percent: float = 0.0
+        self.disk_partitions = []
+        self.cpu_temp = None
         self._bus = None
         self._task = None
         self._running = False
@@ -60,6 +62,42 @@ class SystemContext:
                 
             self.cpu_percent = float(psutil.cpu_percent(interval=None))
             self.memory_percent = float(psutil.virtual_memory().percent)
+            
+            # Disk partitions free % collection
+            try:
+                self.disk_partitions = []
+                for p in psutil.disk_partitions():
+                    if 'cdrom' in p.opts or not p.mountpoint:
+                        continue
+                    try:
+                        usage = psutil.disk_usage(p.mountpoint)
+                        self.disk_partitions.append({
+                            "device": p.device,
+                            "mountpoint": p.mountpoint,
+                            "free_percent": (usage.free / usage.total) * 100.0 if usage.total > 0 else 100.0
+                        })
+                    except Exception:
+                        continue
+            except Exception as e_disk:
+                logger.warning(f"[SystemContext] Failed to collect disk partitions: {e_disk}")
+                self.disk_partitions = []
+                
+            # CPU temperature collection
+            try:
+                temps = psutil.sensors_temperatures() if hasattr(psutil, "sensors_temperatures") else None
+                if temps:
+                    cpu_temps = []
+                    for name, entries in temps.items():
+                        if "cpu" in name.lower() or "core" in name.lower():
+                            for entry in entries:
+                                cpu_temps.append(entry.current)
+                    self.cpu_temp = sum(cpu_temps) / len(cpu_temps) if cpu_temps else None
+                else:
+                    self.cpu_temp = None
+            except Exception as e_temp:
+                logger.warning(f"[SystemContext] Failed to get CPU temperature: {e_temp}")
+                self.cpu_temp = None
+                
         except Exception as e:
             logger.error(f"[SystemContext] Critical error collecting metrics: {e}")
             
@@ -90,7 +128,9 @@ class SystemContext:
             "active_window": self.active_window,
             "app_id": app_id,
             "cpu_percent": self.cpu_percent,
-            "memory_percent": self.memory_percent
+            "memory_percent": self.memory_percent,
+            "disk_partitions": self.disk_partitions,
+            "cpu_temp": self.cpu_temp
         }
         
     async def _loop(self) -> None:

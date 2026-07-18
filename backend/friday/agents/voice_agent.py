@@ -108,8 +108,20 @@ class VoiceAgent(BaseAgent):
         while self._running:
             try:
                 if not is_mic_enabled():
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(0.05)
                     continue
+
+                # Hotkey pressed (mic enabled) during active state -> cancel active speak immediately
+                from friday.core.fsm import cognitive_core, AssistantState
+                current_state = cognitive_core.current_state
+                if current_state in (AssistantState.RESPONDING, AssistantState.SYNTHESIZING):
+                    logger.info(f"[VoiceAgent] Hotkey pressed during active state '{current_state.value}'. Cancelling speech immediately.")
+                    try:
+                        from friday.core.control import cancel_speak
+                        cancel_speak()
+                    except Exception as e_cancel:
+                        logger.error(f"[VoiceAgent] Failed to cancel speak on voice agent hotkey event: {e_cancel}")
+
 
                 # stt_listen() yields transcriptions using the thread-isolated recognizer
                 query = await stt_listen()
@@ -141,11 +153,11 @@ class VoiceAgent(BaseAgent):
                         )
                         await event_bus.publish(envelope)
                 else:
-                    from core.state_manager import get_state, set_state, AssistantState
+                    from core.state_manager import get_state, set_state
                     try:
-                        if get_state() == AssistantState.LISTENING:
+                        if get_state() == "LISTENING":
                             logger.info("[VoiceAgent] listen() returned None in LISTENING state. Resetting to IDLE.")
-                            set_state(AssistantState.IDLE, force=True)
+                            set_state("IDLE", force=True)
                     except Exception as e_state:
                         logger.error(f"[VoiceAgent] Error resetting state: {e_state}")
                     await asyncio.sleep(0.1)

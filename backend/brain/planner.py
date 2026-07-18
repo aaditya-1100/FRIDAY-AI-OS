@@ -22,8 +22,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from brain.context_manager import ContextManager
-    from memory.preference import PreferenceMemory
-    from memory.episodic import EpisodicMemory
+    from friday.memory.preference import PreferenceMemory
+    from friday.memory.episodic import EpisodicMemory
 
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -120,10 +120,6 @@ class PlannerBrain:
 
         q = query.strip()
         q_lower = q.lower()
-        # ── Phase 3: Trigger Intelligence Dynamic Scoring ──
-        from brain.trigger_intelligence import trigger_intel_mgr
-        from brain.conflict_engine import conflict_resolver
-
         # Resolve command targets first to assign correct sub-class intent
         # ── Step 1: Memory-First Gate Check ──────────────────────────────────
         memory_score, memory_signals = self._calculate_memory_score(q_lower)
@@ -150,72 +146,41 @@ class PlannerBrain:
             "LLM": max(knowledge_score, conversational_score)
         }
 
-        # Calculate Trigger Intelligence Scores for all candidates
-        trigger_scores = {}
-        for trigger, intent_score in raw_intents.items():
-            trigger_scores[trigger] = trigger_intel_mgr.calculate_trigger_score(trigger, intent_score)
-
-        # Sort candidate triggers by their dynamic Trigger Intelligence Scores
-        sorted_candidates = sorted(trigger_scores.items(), key=lambda x: x[1], reverse=True)
+        # Sort candidate triggers by their raw scores
+        sorted_candidates = sorted(raw_intents.items(), key=lambda x: x[1], reverse=True)
         t1, s1 = sorted_candidates[0]
         t2, s2 = sorted_candidates[1] if len(sorted_candidates) > 1 else (None, 0.0)
 
-        # ── Phase 4: Dynamic Syntactic Conflict Engine Arbitration ──
+        # ── Raw Scores Margin Check ──
         margin = float(round(abs(s1 - s2), 4))
-        epsilon = 0.05
         is_tiebreak_invoked = False
+        is_clarification_by_margin = False
 
-        # Soft State Context extraction (Weak state Context bias)
-        from core.state_manager import get_conversational_state
-        state_str = str(get_conversational_state())
-
-        if t2 is not None and margin < epsilon:
-            print(f"[PIPELINE CONFLICT DETECTED] Margin between '{t1}' ({s1:.4f}) and '{t2}' ({s2:.4f}) is {margin:.4f} < {epsilon}. Invoking Conflict Engine...")
-            is_tiebreak_invoked = True
-            
-            # Compute high-resolution Fused Conflict Scores
-            c_score1 = conflict_resolver.calculate_fused_conflict_score(
-                trigger=t1,
-                semantic_intent_score=raw_intents[t1],
-                query=query,
-                system_state=state_str,
-                historical_reliability=trigger_intel_mgr.get_reliability(t1)
-            )
-            c_score2 = conflict_resolver.calculate_fused_conflict_score(
-                trigger=t2,
-                semantic_intent_score=raw_intents[t2],
-                query=query,
-                system_state=state_str,
-                historical_reliability=trigger_intel_mgr.get_reliability(t2)
-            )
-            
-            print(f"[CONFLICT RESULT] Fused Conflict Scores: '{t1}' = {c_score1:.4f} | '{t2}' = {c_score2:.4f}")
-            if c_score2 > c_score1:
-                target_brain = t2
-                route_reason = f"Conflict resolved in favor of '{t2}' (Conflict Score: {c_score2:.4f} > {c_score1:.4f})"
-            else:
-                target_brain = t1
-                route_reason = f"Conflict resolved in favor of '{t1}' (Conflict Score: {c_score1:.4f} >= {c_score2:.4f})"
+        if t2 is not None and margin < 0.08 and s1 > 0.0:
+            print(f"[PLANNER TIEBREAK] Margin between '{t1}' ({s1:.4f}) and '{t2}' ({s2:.4f}) is {margin:.4f} < 0.08. Invoking clarification.")
+            target_brain = "LLM"
+            is_clarification_by_margin = True
+            route_reason = f"Ambiguous routing margin between '{t1}' and '{t2}' < 0.08"
         else:
             target_brain = t1
-            route_reason = f"Arbitrated cleanly to '{t1}' with high scoring margin ({margin:.4f} >= {epsilon})"
+            route_reason = f"Arbitrated cleanly to '{t1}' with high scoring margin ({margin:.4f} >= 0.08)"
 
-        # Map dynamic triggers to corresponding core brains
-        if target_brain == "MEMORY" and s1 >= 8.0:
-            target_brain = "MEMORY"
-            route_reason = f"Memory-First Gate triggered: {', '.join(memory_signals)}"
-        elif target_brain == "RETRIEVAL":
-            target_brain = "RETRIEVAL"
-            route_reason = f"Retrieval Route chosen due to dynamic freshness score {s1:.4f}"
-        elif target_brain in ("MEDIA", "NATIVE_OS", "TEMPORAL"):
-            route_reason = f"Command Route '{target_brain}' chosen dynamically"
-        else:
-            target_brain = "LLM"
-            route_reason = f"Conversational fallback brain chosen dynamically"
+        # Map dynamic triggers to corresponding core brains if not clarification
+        if not is_clarification_by_margin:
+            if target_brain == "MEMORY" and s1 >= 8.0:
+                target_brain = "MEMORY"
+                route_reason = f"Memory-First Gate triggered: {', '.join(memory_signals)}"
+            elif target_brain == "RETRIEVAL":
+                target_brain = "RETRIEVAL"
+                route_reason = f"Retrieval Route chosen due to dynamic freshness score {s1:.4f}"
+            elif target_brain in ("MEDIA", "NATIVE_OS", "TEMPORAL"):
+                route_reason = f"Command Route '{target_brain}' chosen dynamically"
+            else:
+                target_brain = "LLM"
+                route_reason = f"Conversational fallback brain chosen dynamically"
 
-        # Dynamically attach attributes for pipeline telemetry collection
         self.is_tiebreak_invoked = is_tiebreak_invoked
-        self.trigger_scores = trigger_scores
+        self.trigger_scores = raw_intents
 
         # Overrides for mixed map queries containing pronouns or corrections
         if "map" in q_lower:
@@ -240,7 +205,7 @@ class PlannerBrain:
             is_simple_command = self._check_simple_command(q_lower)
 
         # ── Step 5: Ambiguity / multi-task checks ───────────────────────────
-        requires_clarification = self._detect_ambiguity(q_lower)
+        requires_clarification = self._detect_ambiguity(q_lower) or is_clarification_by_margin
         if requires_clarification:
             target_brain = "LLM"
             route_reason = "Ambiguity / clarification required"

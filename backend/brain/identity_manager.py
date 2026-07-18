@@ -1,8 +1,7 @@
 import os
 import json
 import re
-from brain.personalization_engine import PersonalizationEngine
-from brain.behavior_contract import BehaviorContract
+
 
 _identity_manager_instance = None
 
@@ -85,8 +84,6 @@ class IdentityManager:
             }
         }
         self.load()
-        self.engine = PersonalizationEngine()
-        self.contract = BehaviorContract()
         self._initialized = True
 
     def load(self):
@@ -115,72 +112,12 @@ class IdentityManager:
 
     def get_contextual_slices(self, query: str) -> dict:
         """
-        Calculates intent vectors, relevance scores, and behavioral weight signals
-        dynamically, pulling targeted slices *only* when relevance > 0.
+        Simplified identity slices selector based on keyword matching.
         """
-        import os
-        os.environ["FRIDAY_ACTIVE_QUERY"] = query
-        
-        # 1. Classify query intent and detect overrides
-        parsed_intent = "AI_QUERY"
         q = query.lower()
-        if "weather" in q:
-            parsed_intent = "WEATHER"
-        elif "news" in q:
-            parsed_intent = "NEWS"
-        elif "hello" in q or "hi" in q:
-            parsed_intent = "CASUAL_CHAT"
+        slices = {}
         
-        intent_vector = self.engine.get_intent_vector(query, parsed_intent)
-        overrides = self.engine.detect_overrides(query)
-        relevance_score = self.engine.get_relevance_score(query, intent_vector, overrides)
-        influence_weight = self.engine.get_influence_weight(relevance_score, intent_vector)
-        
-        # 2. Get behavioral signals & weighting adjustments
-        signals = self.engine.get_behavioral_signals(self.profile, intent_vector, overrides, relevance_score, influence_weight)
-        
-        # 3. Dynamic Behavior Contract
-        directives = self.contract.get_contract_directives(intent_vector, overrides, relevance_score, influence_weight)
-        behavior_prompt = self.contract.format_directives_prompt(directives)
-        
-        # 4. Context Selection & Targeted Retrieval
-        slices = {
-            "personalization_relevance": relevance_score,
-            "personalization_influence": influence_weight,
-            "behavior_directives": behavior_prompt
-        }
-        
-        # Add behavioral signals if personalization is relevant
-        if relevance_score > 0.0:
-            signals_prompt = self.engine.compile_signals_directives(signals, overrides)
-            if signals_prompt:
-                slices["behavioral_signals"] = signals_prompt
-                
-            # Targeted retrieval of profile segments based on intent
-            if intent_vector.get("recommendation", 0.0) > 0.50:
-                slices["preference_memory"] = self.profile.get("preference_memory", {})
-            if intent_vector.get("planning", 0.0) > 0.50 or intent_vector.get("debugging", 0.0) > 0.50:
-                slices["user_identity"] = {
-                    "interests": self.profile["user_identity"].get("interests", []),
-                    "goals": self.profile["user_identity"].get("goals", [])
-                }
-            if intent_vector.get("explanation", 0.0) > 0.50:
-                slices["user_identity"] = {
-                    "interests": self.profile["user_identity"].get("interests", []),
-                    "personality": self.profile["user_identity"].get("personality", [])
-                }
-            if intent_vector.get("casual_chat", 0.0) > 0.50:
-                slices["self_identity"] = self.profile.get("self_identity", {})
-                slices["user_identity"] = {
-                    "name": self.profile["user_identity"]["name"]
-                }
-        else:
-            # Low relevance: Only return a minimal self-awareness slice to avoid profile dumping
-            slices["self_identity"] = {
-                "name": self.profile["self_identity"]["name"]
-            }
-            
-        # E2E test/greetings fallback overrides to preserve backward compatibility with Category 1 tests
+        # Check Creator / Self Identity references
         if any(w in q for w in ("who created", "who made", "who built", "creator", "builder", "your maker", "made you", "built you")):
             slices["self_identity"] = {
                 "name": self.profile["self_identity"]["name"],
@@ -196,6 +133,11 @@ class IdentityManager:
                 "name": self.profile["user_identity"]["name"],
                 "role": self.profile["user_identity"]["role"],
                 "academic_context": self.profile["user_identity"].get("academic_context")
+            }
+        else:
+            # Fallback/default self identity
+            slices["self_identity"] = {
+                "name": self.profile["self_identity"]["name"]
             }
             
         return slices
@@ -235,7 +177,6 @@ class IdentityManager:
             if has_hallucination:
                 # Replace the hallucinated claim with a simple grounded statement or discard it
                 print(f"[HALLUCINATION FILTERED] Removed hallucinated claim: '{sentence}'")
-                # Instead of appending the fake bio, we gracefully omit it or add a simple fallback if empty
                 continue
             
             filtered_sentences.append(sentence)
@@ -244,7 +185,4 @@ class IdentityManager:
         if not filtered_text:
             return "I am FRIDAY, Aaditya's personal AI companion."
             
-        # 2. Over-Personalization Prevention Leakage Filter
-        filtered_text = self.engine.identity_leakage_filter(filtered_text)
-        
         return filtered_text

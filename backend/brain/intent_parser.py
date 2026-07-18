@@ -79,6 +79,12 @@ BRIGHTNESS_CONTROL → set or change screen brightness (e.g. "set brightness to 
 DELETE_PATH      → delete a file or directory safely (e.g. "delete file C:/data/temp.txt", "remove folder C:/temp/old")
 CLEAN_TEMP       → clean up temporary files in %TEMP% (e.g. "clean temp files", "empty temp directory")
 SYSTEM_STATUS_FULL → retrieve comprehensive platform, memory, CPU and disk partition usage (e.g. "show full system resources", "give me a detailed system monitor report")
+SCREEN_CLICK     → click a specific UI element on screen (e.g. "click the search bar", "click OK button", "click submit")
+PING_HOST        → ping a specific host or domain (e.g. "ping google.com", "check connection to yahoo.com")
+LIST_DIRECTORY   → list files and directories under a safe directory path (e.g. "list files in my documents folder", "show files in my folder")
+LIST_PROCESSES   → list top running system processes (e.g. "show running processes", "list active processes")
+CHECK_DISK_SPACE → check disk partition space (e.g. "check my disk space", "how much free disk space is left?")
+CHECK_SYSTEM_INFO→ check system specifications and memory (e.g. "show system specifications", "retrieve system specs info")
 
 == STATEFUL & PRONOUN CONTEXT RESOLUTION ==
 You are provided with CONVERSATION HISTORY showing the latest turns. Use this history to resolve pronouns ("it", "that", "there", "them", "him", "her") or contextual commands:
@@ -176,6 +182,25 @@ Use AI_QUERY for: math, coding, definitions, how-things-work, creative writing, 
 == SPOTIFY_CONTROL ==
 { "intent": "SPOTIFY_CONTROL", "command": "<play | pause | next | previous | volume_up | volume_down>" }
 
+== SCREEN_CLICK ==
+{ "intent": "SCREEN_CLICK", "target": "<description of the UI element to click>" }
+
+== PING_HOST ==
+{ "intent": "PING_HOST", "host": "<hostname or domain to ping>" }
+
+== LIST_DIRECTORY ==
+{ "intent": "LIST_DIRECTORY", "path": "<directory path or empty string if not mentioned>" }
+
+== LIST_PROCESSES ==
+{ "intent": "LIST_PROCESSES" }
+
+== CHECK_DISK_SPACE ==
+{ "intent": "CHECK_DISK_SPACE" }
+
+== CHECK_SYSTEM_INFO ==
+{ "intent": "CHECK_SYSTEM_INFO" }
+
+
 == MAP_LOCATION ==
 { "intent": "MAP_LOCATION", "location": "<location to display>" }
 == MAP_ROUTE ==
@@ -214,16 +239,18 @@ ALLOWED_INTENTS = frozenset({
     "OPEN", "SEARCH", "PLAY_MEDIA", "WEB_SEARCH",
     "AI_QUERY", "REALTIME_QUERY", "SCREENSHOT",
     "SYSTEM_STATUS", "WEATHER", "NEWS", "MULTI_ACTION",
-    "SPOTIFY_CONTROL", "MAP", "CLARIFICATION", "WINDOW_CONTROL",
+    "SPOTIFY_CONTROL", "CLARIFICATION", "WINDOW_CONTROL",
     "SET_REMINDER", "SET_TIMER", "STOPWATCH_CONTROL", "SET_ALARM",
     "SET_SCHEDULED_TASK", "SET_RECURRING_REMINDER", "LIST_REMINDERS",
-    "CANCEL_REMINDER", "MAP_ROUTE", "PLACE_DISCOVERY", "TRAVEL_ETA",
-    "SCREEN_UNDERSTANDING", "SCREEN_READ", "MAP_FOLLOWUP",
+    "CANCEL_REMINDER",
+    "SCREEN_UNDERSTANDING", "SCREEN_READ",
     "YOUTUBE_TOPIC_SEARCH", "LATEST_CREATOR_VIDEO", "LATEST_CREATOR_SHORT",
-    "VIDEO_BY_TITLE", "CHANNEL_OPEN", "PLAY_SEARCH_RESULT", "MAP_LOCATION",
+    "VIDEO_BY_TITLE", "CHANNEL_OPEN", "PLAY_SEARCH_RESULT",
     "CASUAL_CHAT", "SET_FACT",
     "URL_OPEN", "BLUETOOTH_TOGGLE", "BRIGHTNESS_CONTROL", "DELETE_PATH",
-    "CLEAN_TEMP", "SYSTEM_STATUS_FULL"
+    "CLEAN_TEMP", "SYSTEM_STATUS_FULL",
+    "SCREEN_CLICK", "PING_HOST", "LIST_DIRECTORY", "LIST_PROCESSES",
+    "CHECK_DISK_SPACE", "CHECK_SYSTEM_INFO"
 })
 
 # Universal recency/currency signals — any of these means the answer may have
@@ -473,7 +500,7 @@ def _keyword_fallback(query: str, history: list | None = None) -> dict:
 
     # ── MAP_FOLLOWUP zero-LLM fast-path ──────────────────────────────────────
     try:
-        from core.pipeline import context_manager
+        from friday.core.context_manager import context_manager
         is_followup, followup_action, followup_extra = context_manager.detect_map_followup(query)
         if is_followup and followup_action:
             result = {"intent": "MAP_FOLLOWUP", "action": followup_action}
@@ -727,7 +754,7 @@ def parse_intent(query: str, history: list | None = None, preferences: dict | No
 
         # MAP_FOLLOWUP fast-path check (before LLM, inside parse_intent)
         try:
-            from core.pipeline import context_manager
+            from friday.core.context_manager import context_manager
             is_followup, followup_action, followup_extra = context_manager.detect_map_followup(query)
             if is_followup and followup_action:
                 result = {"intent": "MAP_FOLLOWUP", "action": followup_action, "query": query}

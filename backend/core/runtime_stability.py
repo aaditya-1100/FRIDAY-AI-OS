@@ -359,7 +359,7 @@ class RuntimeStabilityManager:
         try:
             # 1. Clear old context manager payload cache
             try:
-                from core.pipeline import context_manager
+                from friday.core.context_manager import context_manager
                 context_manager.clear_expired_payloads()
             except Exception:
                 pass

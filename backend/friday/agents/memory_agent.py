@@ -8,9 +8,7 @@ from friday.memory.working import WorkingMemory
 from friday.memory.session import SessionMemory
 from friday.memory.episodic import EpisodicMemory
 from friday.memory.semantic import SemanticMemory
-from friday.memory.knowledge_graph import KnowledgeGraph
 from friday.memory.pipeline import memory_pipeline
-from friday.memory.consolidation import MemoryConsolidator
 
 class MemoryAgent(BaseAgent):
     def __init__(self):
@@ -19,8 +17,6 @@ class MemoryAgent(BaseAgent):
         self.session = SessionMemory()
         self.episodic = EpisodicMemory()
         self.semantic = SemanticMemory()
-        self.graph = KnowledgeGraph()
-        self.consolidator = MemoryConsolidator()
 
     async def startup(self) -> None:
         event_bus.subscribe("friday.memory.write", self.on_memory_write)
@@ -58,7 +54,7 @@ class MemoryAgent(BaseAgent):
         from friday.system.context import system_context
         app_id = system_context.get_context().get("app_id", "general")
         
-        # Run pipeline in threadpool (since it uses spacy and is CPU-bound)
+        # Run pipeline in threadpool (CPU-bound memory formation)
         loop = asyncio.get_running_loop()
         res = await loop.run_in_executor(
             None,
@@ -89,7 +85,7 @@ class MemoryAgent(BaseAgent):
         await event_bus.publish(complete_envelope)
 
     def get_capabilities(self) -> list[str]:
-        return ["WRITE_MEMORY", "READ_MEMORY", "CONSOLIDATE", "LOAD_SESSION_CONTEXT"]
+        return ["WRITE_MEMORY", "READ_MEMORY", "CONSOLIDATE", "LOAD_SESSION_CONTEXT", "SET_FACT"]
 
     async def handle_task(self, dispatch: TaskDispatch) -> TaskResult:
         intent = dispatch.intent
@@ -98,7 +94,49 @@ class MemoryAgent(BaseAgent):
         try:
             logger.info(f"[MemoryAgent] Executing memory action: {intent}")
             
-            if intent == "WRITE_MEMORY":
+            if intent == "SET_FACT":
+                import re
+                # SET_FACT uses the legacy key-value SemanticMemory (memory.semantic),
+                # NOT the Qdrant vector store (friday.memory.semantic) — different APIs.
+                from friday.memory.legacy_semantic import SemanticMemory as LegacySemanticMemory
+                sem = LegacySemanticMemory()
+                query_text = params.get("query") or ""
+                q = re.sub(r"^(please\s+)?(remember|save|store|keep)\s+(that\s+)?", "", query_text, flags=re.IGNORECASE).strip()
+                parts = re.split(r"\s+(?:is|was|as|to be|=)\s+", q, maxsplit=1, flags=re.IGNORECASE)
+                if len(parts) == 2:
+                    k = parts[0].strip()
+                    v = parts[1].strip()
+                    k_clean = re.sub(r"^(my|the|that|a|an)\s+", "", k, flags=re.IGNORECASE).strip()
+                    v_clean = re.sub(r"^(my|the|that|a|an)\s+", "", v, flags=re.IGNORECASE).strip()
+                    sem.add_fact(k_clean, v)
+                    sem.save()
+                    sem.add_fact(v_clean, k)
+                    sem.save()
+                    sem.load()
+                    ok1 = sem.get_fact(k_clean) == v
+                    ok2 = sem.get_fact(v_clean) == k
+                    if ok1 and ok2:
+                        resp = "I have committed and verified that in my semantic registry, Sir."
+                    else:
+                        resp = "I'm sorry Sir, but I encountered an error verifying that fact on disk."
+                else:
+                    sem.add_fact(q, q)
+                    sem.save()
+                    sem.load()
+                    resp = (
+                        "I have committed and verified that in my semantic registry, Sir."
+                        if sem.get_fact(q) == q
+                        else "I'm sorry Sir, but I encountered an error verifying that fact on disk."
+                    )
+                return TaskResult(
+                    task_id=dispatch.task_id,
+                    agent_id=self.agent_id,
+                    status=TaskStatus.SUCCESS,
+                    payload={"response": resp},
+                    correlation_id=dispatch.correlation_id
+                )
+
+            elif intent == "WRITE_MEMORY":
                 query = params.get("query", "")
                 task_intent = params.get("task_intent", "")
                 success = params.get("success", True)
