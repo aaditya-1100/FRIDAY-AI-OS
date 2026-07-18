@@ -9,7 +9,7 @@ Format: [Version] — [Date] — [Summary]
 
 ### Overview
 Major simplification pass. Removed all experimental subsystems that were not
-delivering user-facing value. Result: **2s boot, 140 MB RAM** (down from ~12s and ~800 MB).
+delivering user-facing value. Result: **2s boot, 140 MB RAM (idle) / 325 MB (active)** (down from ~12s and ~800 MB).
 
 ---
 
@@ -66,7 +66,7 @@ Packages removed from `requirements.txt`: `sentence-transformers`, `torch`, `onn
 | Metric | R8.x | R9.0 |
 |--------|------|------|
 | Boot import time | ~12s | **2.0s** |
-| RAM (full stack, idle) | ~800 MB | **140 MB** |
+| RAM (full stack) | ~800 MB | **140 MB (Idle)**<br>**325 MB (Active)** |
 | Embedding model size | ~500 MB (PyTorch) | **~45 MB (ONNX)** |
 | Test suite | 78 tests, 15 failing | **75 tests, 0 failing** |
 

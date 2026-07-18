@@ -121,8 +121,8 @@ def set_state(state, force=False):
     # Deterministic State Ownership block
     if state == AssistantState.IDLE and not force:
         try:
-            from core import pipeline
-            is_speaking_active = getattr(pipeline, "is_speaking", False)
+            from voice.speak import _speak_lock
+            is_speaking_active = _speak_lock.locked()
         except Exception:
             is_speaking_active = False
 

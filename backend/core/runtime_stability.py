@@ -163,31 +163,6 @@ class RuntimeStabilityManager:
                 except Exception as e_health:
                     print(f"[WATCHDOG WARNING] Health audit failed: {e_health}")
                 
-                # ── CONVERSATIONAL ATTENTION WINDOW TIMEOUT (CRITICAL PACING LAYER) ──
-                try:
-                    from core import pipeline
-                    from core.state_manager import get_conversational_state
-                    # Legacy pipeline state tracking compatibility
-                    from core.state_manager import AssistantState as SMAssistantState
-                    if pipeline.active and current in (AssistantState.IDLE,):
-                        conv_state = get_conversational_state()
-                        if conv_state == "TASK_MODE":
-                            timeout_dur = 20.0
-                        elif conv_state == "EMOTIONAL_CONTEXT":
-                            timeout_dur = 45.0
-                        else:
-                            timeout_dur = 30.0
-
-                        inactive_dur = time.time() - pipeline._last_interaction_time
-                        if inactive_dur > timeout_dur:
-                            print(f"[WATCHDOG] Conversational attention window expired ({inactive_dur:.1f}s of silence in {conv_state}). Reverting to passive wake-word mode.")
-                            pipeline.set_web_session_active(False)
-                            from voice.listen import is_mic_enabled, get_mic_mode
-                            target_state = SMAssistantState.LISTENING if (is_mic_enabled() and get_mic_mode() != "hold_to_talk") else SMAssistantState.IDLE
-                            from core.state_manager import set_state as sm_set_state
-                            sm_set_state(target_state, force=True)
-                except Exception as e_attn:
-                    print(f"[WATCHDOG WARNING] Attention window check error: {e_attn}")
                 
                 # If state has changed, reset duration counters
                 now = time.monotonic()

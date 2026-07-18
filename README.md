@@ -126,7 +126,7 @@ cd backend
 | Metric | R8.x | R9.0 |
 |--------|------|------|
 | Boot import time | ~12s | **2.0s** |
-| RAM (full stack) | ~800 MB | **140 MB** |
+| RAM (full stack) | ~800 MB | **140 MB (Idle at boot)**<br>**325 MB (Active after first query)** |
 | Embedding stack | PyTorch + sentence-transformers | **fastembed** (ONNX, no GPU required) |
 | Test suite | 78 tests (15 failing) | **75 tests, 0 failing** |
 
@@ -134,14 +134,9 @@ cd backend
 
 # Known Limitations
 
-> [!WARNING]
-> **Single-Machine / Single-User Scope**:
-> FRIDAY is designed for single-user, local-machine execution. It does not scope databases per-user.
-> The following data stores write directly to `backend/data/` without multi-tenant isolation:
-> 1. **Session Fallback DB** (`backend/data/session_fallback.db`)
-> 2. **Stability Metrics** (`backend/data/stability_metrics.json`)
-> 3. **Active Project State** (`backend/data/active_project.json`)
-> 4. **Trigger Reliability** (`backend/data/trigger_reliability.json`)
+> [!NOTE]
+> **Per-User Data Isolation**:
+> FRIDAY supports multi-tenant or multi-developer data isolation. Set the `FRIDAY_DATA_DIR` environment variable in `backend/.env` to isolate user profiles, databases, screenshots, and active project files to a specific subdirectory.
 
 > [!NOTE]
 > **Groq Daily Quota**: The free tier of Groq API has a 100k token/day limit.
