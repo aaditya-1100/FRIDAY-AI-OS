@@ -1,4 +1,4 @@
-﻿"""
+"""
 FastAPI + WebSocket: state sync and text commands for the React UI.
 Run:  python -m uvicorn api.server:app --host 127.0.0.1 --port 8001
 (cwd = backend, or PYTHONPATH includes backend)
@@ -576,12 +576,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 register_playback_completed(response_id)
 
             elif msg_type == "mic_off":
-                # Disable backend microphone listener immediately
+                from voice.listen import get_mic_mode
+                was_hold_to_talk = (get_mic_mode() == "hold_to_talk")
                 set_mic_enabled(False)
-                # Cancel any active TTS playback or speak loops instantly
-                cancel_speak()
-                cognitive_core.fsm.transition_to(AssistantState.IDLE, reason="UI disabled mic", force=True)
-                print("[MIC] Disabled by UI")
+                if not was_hold_to_talk:
+                    cancel_speak()
+                    cognitive_core.fsm.transition_to(AssistantState.IDLE, reason="UI disabled mic", force=True)
+                print(f"[MIC] Disabled by UI (was_hold_to_talk={was_hold_to_talk})")
 
             elif msg_type == "force_idle":
                 cognitive_core.abort_current_turn()

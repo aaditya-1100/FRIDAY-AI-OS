@@ -462,8 +462,6 @@ def set_mic_enabled(enabled: bool, mode: str = None) -> None:
         _MIC_ENABLED = enabled
         if enabled:
             _MIC_MODE = mode if mode is not None else "hold_to_talk"
-        else:
-            _MIC_MODE = None
     if not enabled:
         _STOP_EVENT.set()
         # Safely acquire _listen_execution_lock to ensure listen thread stops reading before stream close
@@ -615,7 +613,7 @@ def is_hotkey_held() -> bool:
         return True
     return _MIC_ENABLED
 
-def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout: float = None, phrase_time_limit: float = None, state: str = "CASUAL_CHAT", generation_id: int = 0) -> sr.AudioData | None:
+def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout: float = None, phrase_time_limit: float = None, state: str = "CASUAL_CHAT", generation_id: int = 0, is_hold_to_talk: bool = False) -> sr.AudioData | None:
     """
     Custom chunk-by-chunk listener that implements real-time adaptive pause thresholds
     based on conversational state, pacing, and hesitation patterns.
@@ -689,7 +687,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
             return None
 
         elapsed_time += seconds_per_buffer
-        if _MIC_MODE == "hold_to_talk":
+        if is_hold_to_talk:
             if not is_hotkey_held():
                 consecutive_releases += 1
                 if consecutive_releases >= 6:  # Confirmed released (~200ms)
@@ -769,10 +767,17 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
     consecutive_releases = 0
     while True:
         if _STOP_EVENT.is_set():
+            if is_hold_to_talk and len(frames) > phrase_buffer_count:
+                print("[MIC_ADAPTIVE] Stop event set, hold-to-talk audio captured. Breaking to process.")
+                break
             return None
+
         with _MIC_LOCK:
             if not _MIC_ENABLED:
-                print("[TRACE] [MIC_ADAPTIVE] Mic disabled during Phase 2, aborting.")
+                if is_hold_to_talk and len(frames) > phrase_buffer_count:
+                    print("[MIC_ADAPTIVE] Mic disabled, hold-to-talk audio captured. Breaking to process.")
+                    break
+                print("[MIC_ADAPTIVE] Mic disabled during Phase 2, aborting.")
                 return None
         from core.runtime_orchestrator import orchestrator
         if generation_id != orchestrator.current_generation_id:
@@ -780,7 +785,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
             return None
 
         elapsed_time += seconds_per_buffer
-        if _MIC_MODE == "hold_to_talk":
+        if is_hold_to_talk:
             if not is_hotkey_held():
                 consecutive_releases += 1
                 if consecutive_releases >= 6:  # Confirmed released (~200ms)
@@ -793,7 +798,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
                 print("[TRACE] [MIC_ADAPTIVE] Max hold-to-talk limit reached (45s) in Phase 2. Breaking to process.")
                 break
 
-        if _MIC_MODE != "hold_to_talk" and phrase_time_limit and elapsed_time - phrase_start_time > phrase_time_limit:
+        if not is_hold_to_talk and phrase_time_limit and elapsed_time - phrase_start_time > phrase_time_limit:
             break
 
         buffer = source.stream.read(source.CHUNK, exception_on_overflow=False)
@@ -876,7 +881,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
         adaptive_pause_threshold = tmp_threshold
         pause_buffer_count = int(math.ceil(adaptive_pause_threshold / seconds_per_buffer))
 
-        if _MIC_MODE == "hold_to_talk":
+        if is_hold_to_talk:
             # Bypass automatic silence detection cutoff; we only cut off on key release or max limit
             pass
         else:
@@ -886,7 +891,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
     # Exclude trailing non-speaking frames
     phrase_count -= pause_count
     if phrase_count < phrase_buffer_count and len(buffer) > 0:
-        if _MIC_MODE == "hold_to_talk":
+        if is_hold_to_talk:
             pass
         else:
             # Phrase was too short to be speech, return None
@@ -896,7 +901,7 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
 
     # STT Protection Layer: Reject if we didn't get enough actual speech chunks (e.g., just a transient pop)
     if total_active_speech_chunks < 3:
-        if _MIC_MODE == "hold_to_talk":
+        if is_hold_to_talk:
             pass
         else:
             print(f"[TRACE] [MIC_VAD] Phase 2 STT Protection: Rejected as noise pulse. Active speech chunks={total_active_speech_chunks} < 3.")
@@ -915,7 +920,9 @@ def _adaptive_listen(recognizer: sr.Recognizer, source: sr.AudioSource, timeout:
 
 
 def sync_listen() -> str | None:
-    global _ambient_calibrated
+    global _ambient_calibrated, _MIC_MODE
+    
+    is_hold_to_talk = (_MIC_MODE == "hold_to_talk")
 
     if not _listen_execution_lock.acquire(blocking=False):
         print("[TRACE] [MIC_SYNC] WARNING: Another listen thread is already active! Aborting concurrent execution to prevent PortAudio deadlock.")
@@ -1041,7 +1048,8 @@ def sync_listen() -> str | None:
                     timeout=LISTEN_TIMEOUT,
                     phrase_time_limit=PHRASE_TIME_LIMIT,
                     state=state,
-                    generation_id=generation_id
+                    generation_id=generation_id,
+                    is_hold_to_talk=is_hold_to_talk
                 )
             else:
                 audio = recognizer.listen(
@@ -1088,12 +1096,18 @@ def sync_listen() -> str | None:
                   f"Current device: index={_resolved_device_index} '{_resolved_device_name}'")
 
         if _STOP_EVENT.is_set():
-            print("[TRACE] [MIC_SYNC] Stop event set post-listening, exiting")
-            return None
+            if is_hold_to_talk and audio is not None:
+                print("[MIC_SYNC] Stop event set but hold-to-talk audio exists. Proceeding to STT.")
+            else:
+                print("[TRACE] [MIC_SYNC] Stop event set post-listening, exiting")
+                return None
         with _MIC_LOCK:
             if not _MIC_ENABLED:
-                print("[TRACE] [MIC_SYNC] Mic disabled post-listening, exiting")
-                return None
+                if is_hold_to_talk and audio is not None:
+                    print("[MIC_SYNC] Mic disabled but hold-to-talk audio exists. Proceeding to STT.")
+                else:
+                    print("[TRACE] [MIC_SYNC] Mic disabled post-listening, exiting")
+                    return None
 
         # Transcription with 45s safety timeout.
         # _get_whisper_model() loads weights on first call (~4-10s cold start).
@@ -1114,7 +1128,7 @@ def sync_listen() -> str | None:
                 q = "".join(s.text for s in segs).strip().lower()
                 avg_lp = sum(s.avg_logprob for s in segs) / len(segs) if segs else 0.0
                 print(f"[STT] Transcript: '{q}' (confidence: {avg_lp:.2f})")
-                print(f"[TRACE] [MIC_SYNC] \u2713 TRANSCRIPT: '{q}' (speech accepted)")
+                print(f"[TRACE] [MIC_SYNC] OK TRANSCRIPT: '{q}' (speech accepted)")
                 print(f"[E2E_TRACE] [STAGE 5: Transcript Generated] PASS. Transcript: '{q}'", flush=True)
                 if q:
                     print(f"Sir: {q}")
@@ -1156,7 +1170,7 @@ def sync_listen() -> str | None:
         except Exception as _e_reset:
             print(f"[LISTEN] Safety reset attempt failed: {_e_reset}")
 
-        if _MIC_MODE == "hold_to_talk":
+        if is_hold_to_talk:
             try:
                 global _microphone
                 if _microphone is not None and _microphone.stream is not None:
@@ -1164,6 +1178,10 @@ def sync_listen() -> str | None:
                     _microphone.__exit__(None, None, None)
             except Exception as e_close:
                 print(f"[TRACE] [MIC_SYNC] Error closing mic stream: {e_close}")
+        
+        with _MIC_LOCK:
+            _MIC_MODE = None
+
         _listen_execution_lock.release()
 
 
