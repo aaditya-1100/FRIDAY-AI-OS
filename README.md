@@ -88,7 +88,6 @@ Inspired by JARVIS — minimal latency, no cloud dependency for core execution.
    ```env
    GROQ_API_KEY=your_groq_api_key_here
    TAVILY_API_KEY=your_tavily_search_key_here
-   SERPER_API_KEY=your_serper_key_here
    SPOTIFY_CLIENT_ID=your_spotify_client_id
    SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
    ```
