@@ -17,3 +17,10 @@ dist/
 build/
 data/cache/screenshots/
 data/memory/
+
+# Full data directory (all user data, vector stores, SQLite DBs)
+data/
+
+# Runtime artifacts
+friday_backend.pid
+friday_runtime.log

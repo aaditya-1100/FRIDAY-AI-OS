@@ -1,5 +1,5 @@
 .venv/
-**pycache**/
+**__pycache__**/
 node_modules/
 .env
 *.mp3
@@ -19,3 +19,13 @@ backend/data/qdrant*/
 backend/data/screenshots/
 release/
 requirements.txt
+
+# Full data directory (all user data, SQLite, vector stores)
+backend/data/
+
+# Runtime logs
+backend/logs/
+logs/
+
+# Frontend dependencies
+frontend/node_modules/
