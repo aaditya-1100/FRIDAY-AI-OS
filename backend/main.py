@@ -20,7 +20,6 @@ from friday.core.proactive_engine import proactive_engine
 
 async def main():
     reset_stop()
-    set_mic_enabled(True)
 
     # Check Ollama availability once at startup
     try:
@@ -39,10 +38,12 @@ async def main():
         fsm_module.OLLAMA_AVAILABLE = False
         logger.info(f"[COGNITIVE_OS] Ollama service not detected (will fallback to safe error string if Groq fails): {e_ollama}")
 
-    logger.info("[COGNITIVE_OS] Preloading neural models and initializing components...")
+    logger.info("[COGNITIVE_OS] Preloading neural models in background...")
     import threading
     from voice.listen import _get_whisper_model
+    from friday.memory.semantic import get_embedding_model
     threading.Thread(target=_get_whisper_model, name="stt_preloader", daemon=True).start()
+    threading.Thread(target=get_embedding_model, name="embedding_preloader", daemon=True).start()
     
     # 1. Start event bus
     # Event bus is started here if not already started by server lifespan

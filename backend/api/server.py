@@ -286,18 +286,21 @@ async def lifespan(app: FastAPI):
     reset_stop()                         # arm the mic listener
     agent_task = loop.create_task(agent_loop())
 
-    # Pre-warm Faster-Whisper model in a background thread.
-    # WhisperModel() only loads weights into RAM — it does NOT open any audio
-    # device, so this is Bluetooth A2DP safe. By the time Sir presses the
-    # hotkey the model is already loaded and first transcription is instant.
-    def _prewarm_whisper():
+    # Pre-warm Faster-Whisper and fastembed models in a background daemon thread.
+    def _prewarm_models():
         try:
             from voice.listen import _get_whisper_model
             _get_whisper_model()
-            print("[STARTUP] Faster-Whisper model pre-warmed successfully.")
         except Exception as e_pw:
             print(f"[STARTUP WARNING] Whisper pre-warm failed (non-fatal): {e_pw}")
-    loop.run_in_executor(None, _prewarm_whisper)
+        try:
+            from friday.memory.semantic import get_embedding_model
+            get_embedding_model()
+        except Exception as e_pe:
+            print(f"[STARTUP WARNING] Fastembed pre-warm failed (non-fatal): {e_pe}")
+
+    import threading
+    threading.Thread(target=_prewarm_models, name="model_preloader", daemon=True).start()
 
     try:
         yield

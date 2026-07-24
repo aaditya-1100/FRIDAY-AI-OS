@@ -33,26 +33,36 @@ class _DeterministicEmbeddingFallback:
             norm = math.sqrt(sum(v * v for v in buckets)) or 1.0
             yield _Vector(v / norm for v in buckets)
 
+import threading
+
+_embedding_ready = threading.Event()
+_embedding_lock = threading.Lock()
+
 def get_embedding_model():
     global _model_instance
     if _model_instance is None:
-        if os.getenv("FRIDAY_FORCE_HASH_EMBEDDINGS") == "1":
-            _model_instance = _DeterministicEmbeddingFallback()
-            return _model_instance
-        model_name = "BAAI/bge-small-en-v1.5"
-        logger.info(f"[SemanticMemory] Loading embedding model using fastembed: {model_name}")
-        try:
-            _model_instance = TextEmbedding(model_name=model_name)
-        except Exception as e:
-            logger.warning(f"[SemanticMemory] Failed to load {model_name} via fastembed, trying default: {e}")
-            try:
-                _model_instance = TextEmbedding()
-            except Exception as fallback_error:
-                logger.warning(
-                    "[SemanticMemory] fastembed default model unavailable; using deterministic offline fallback: "
-                    f"{fallback_error}"
-                )
-                _model_instance = _DeterministicEmbeddingFallback()
+        with _embedding_lock:
+            if _model_instance is None:
+                if os.getenv("FRIDAY_FORCE_HASH_EMBEDDINGS") == "1":
+                    _model_instance = _DeterministicEmbeddingFallback()
+                    _embedding_ready.set()
+                    return _model_instance
+                model_name = "BAAI/bge-small-en-v1.5"
+                logger.info(f"[SemanticMemory] Loading embedding model using fastembed: {model_name}")
+                try:
+                    _model_instance = TextEmbedding(model_name=model_name)
+                except Exception as e:
+                    logger.warning(f"[SemanticMemory] Failed to load {model_name} via fastembed, trying default: {e}")
+                    try:
+                        _model_instance = TextEmbedding()
+                    except Exception as fallback_error:
+                        logger.warning(
+                            "[SemanticMemory] fastembed default model unavailable; using deterministic offline fallback: "
+                            f"{fallback_error}"
+                        )
+                        _model_instance = _DeterministicEmbeddingFallback()
+                _embedding_ready.set()
+                logger.info("[SemanticMemory] Embedding model loaded and ready.")
     return _model_instance
 
 class SemanticMemory:
@@ -83,6 +93,9 @@ class SemanticMemory:
 
     @property
     def model(self):
+        if not _embedding_ready.is_set():
+            logger.info("[SemanticMemory] Waiting for embedding model to finish loading in background...")
+            _embedding_ready.wait(timeout=60.0)
         return get_embedding_model()
 
     def _init_collections(self):

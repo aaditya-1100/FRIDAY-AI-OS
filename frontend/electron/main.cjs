@@ -595,7 +595,7 @@ function handleBackendFailure() {
 
   safeSetTimeout(() => {
     if (isQuitting) return;
-    waitForBackend('127.0.0.1', 8001, 15, () => {
+    waitForBackend('127.0.0.1', 8001, 180, () => {
       if (isQuitting) return;
       setupBackendWatchdog();
     });
@@ -819,7 +819,7 @@ app.whenReady().then(() => {
     startBackend();
     
     logToFile('[STARTUP] Waiting for backend to be ready...');
-    waitForBackend('127.0.0.1', 8001, 90, () => {
+    waitForBackend('127.0.0.1', 8001, 180, () => {
       if (isQuitting) return;
       logToFile('[STARTUP] Backend ready. Initializing Hotkey, Watchdog, and sending backend-ready event...');
       

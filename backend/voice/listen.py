@@ -188,6 +188,7 @@ def _get_recognizer() -> sr.Recognizer:
 
 _whisper_model = None
 _whisper_model_lock = threading.Lock()
+_whisper_ready = threading.Event()
 
 def _get_whisper_model():
     global _whisper_model
@@ -203,6 +204,8 @@ def _get_whisper_model():
                 except Exception:
                     # Fallback to online/auto-downloading if local files are missing
                     _whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
+                _whisper_ready.set()
+                print("[STT] Faster-Whisper model loaded and ready.")
     return _whisper_model
 
 
@@ -1119,6 +1122,9 @@ def sync_listen() -> str | None:
 
         def _run_stt():
             try:
+                if not _whisper_ready.is_set():
+                    print("[STT] Waiting for Faster-Whisper model to finish loading in background...")
+                    _whisper_ready.wait(timeout=60.0)
                 model = _get_whisper_model()
                 print("[STT] Model loaded. Transcribing audio...")
                 import io as _io
