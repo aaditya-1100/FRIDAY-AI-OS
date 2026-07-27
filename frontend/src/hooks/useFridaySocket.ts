@@ -401,10 +401,9 @@ export function useFridaySocket(options?: { disabled?: boolean }) {
         setConnected(true);
         reconnectAttempt.current = 0;
         
-        // ── CRITICAL: Sync mic state to backend on every (re)connect. ──────────
-        const syncMsg = micMutedRef.current ? "mic_off" : "mic_on";
-        console.log(`[TRACE] [WS] Syncing mic state on connect: "${syncMsg}"`);
-        socket.send(JSON.stringify({ type: syncMsg }));
+        // Sync mic to off on connect (hold-to-talk is the only active mode)
+        socket.send(JSON.stringify({ type: "mic_off" }));
+        console.log("[TRACE] [WS] Mic synced to off on connect (hold-to-talk mode)");
       };
       
       socket.onclose = (event) => {

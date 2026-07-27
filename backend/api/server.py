@@ -597,15 +597,14 @@ async def websocket_endpoint(websocket: WebSocket):
             elif msg_type == "mic_on":
                 # Re-enable backend microphone listener
                 mode = msg.get("mode")
-                reset_stop()
-                set_mic_enabled(True, mode=mode)
-                from core.state_manager import set_state
-                # Only transition to LISTENING immediately if this is an active voice turn command (mode is provided)
-                if mode is not None:
+                if mode is None:
+                    print("[MIC] Ignored ambient mic_on without mode. Hold-to-talk only.")
+                else:
+                    reset_stop()
+                    set_mic_enabled(True, mode=mode)
+                    from core.state_manager import set_state
                     set_state("LISTENING")
                     print(f"[MIC] Enabled by UI. Transitioned state to LISTENING immediately. Mode={mode}")
-                else:
-                    print(f"[MIC] Enabled by UI (mic_on synced). Mode={mode}")
 
             elif msg_type == "shutdown":
                 # UI-initiated full shutdown

@@ -1129,7 +1129,7 @@ def sync_listen() -> str | None:
                 print("[STT] Model loaded. Transcribing audio...")
                 import io as _io
                 wav_io = _io.BytesIO(audio.get_wav_data())
-                segs, _info = model.transcribe(wav_io, beam_size=1)
+                segs, _info = model.transcribe(wav_io, beam_size=1, language="en")
                 segs = list(segs)
                 q = "".join(s.text for s in segs).strip().lower()
                 avg_lp = sum(s.avg_logprob for s in segs) / len(segs) if segs else 0.0
