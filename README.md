@@ -1,149 +1,294 @@
 # FRIDAY AI OS
 
-> **A personal AI operating layer for Windows — built from scratch.**
+> ## An Agentic AI Operating Layer for Real-World Computer Interaction
 >
-> FRIDAY lets me interact with my computer through voice or text, understand what I want, decide which capability to use, execute the action, and remember useful context across sessions.
+> FRIDAY is an experimental AI agent platform that connects language models to a real Windows environment through **perception, stateful reasoning, tool orchestration, computer control, and persistent memory**.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![React](https://img.shields.io/badge/React-TypeScript-61DAFB?logo=react&logoColor=111)](https://react.dev/)
 [![Electron](https://img.shields.io/badge/Electron-Desktop-47848F?logo=electron&logoColor=white)](https://www.electronjs.org/)
 [![Status](https://img.shields.io/badge/status-active%20development-orange)](#project-status)
 
-## What is FRIDAY?
+## The idea
 
-FRIDAY started as a simple voice-assistant experiment and evolved into a **personal AI system that can operate a Windows desktop**.
+Most AI interfaces stop at generating an answer.
 
-The basic loop is:
+FRIDAY explores the next layer: **how an AI system can move from understanding an instruction to operating inside a real environment.**
 
-**Hear → Understand → Plan → Execute → Respond → Remember**
+The system is built around a continuous control loop:
 
-Instead of building another chatbot, I focused on the orchestration layer between an AI model and a real computer: tool selection, state management, memory, safety checks, and desktop execution.
+**Perceive → Interpret → Plan → Delegate → Execute → Synthesize → Reflect**
 
-## See it in action
+A language model provides reasoning capability, but FRIDAY is the surrounding system that gives that reasoning access to a computer.
 
-> **Real demos are intentionally kept here rather than simulated in the documentation.**
-> Add your latest screenshots and screen-recordings to `docs/media/` and link them below.
+## What FRIDAY actually is
 
-### Demo video
+FRIDAY is not designed as a single monolithic chatbot. It is a small **agent runtime** with explicit state, asynchronous event routing, specialized agents, tool permissions, and memory services.
 
-`docs/media/friday-demo.mp4`  
-*A short end-to-end recording showing voice input, reasoning/routing, desktop control, and the FRIDAY UI.*
+At the center is a cognitive state machine with explicit transitions such as:
+
+```text
+IDLE
+  ↓
+PERCEIVING
+  ↓
+PLANNING
+  ↓
+DELEGATING
+  ↓
+WAITING
+  ↓
+SYNTHESIZING
+  ↓
+RESPONDING
+  ↓
+REFLECTING
+  ↓
+IDLE
+```
+
+Interruptions and failures are modeled explicitly rather than treated as ordinary responses.
+
+## System architecture
+
+```text
+                         ┌─────────────────────┐
+                         │    Voice / Text      │
+                         │       Input         │
+                         └──────────┬──────────┘
+                                    ↓
+                         ┌─────────────────────┐
+                         │      Perception     │
+                         │  STT + Screen/OCR   │
+                         └──────────┬──────────┘
+                                    ↓
+                         ┌─────────────────────┐
+                         │   Cognitive Core    │
+                         │ State + Planning    │
+                         └──────────┬──────────┘
+                                    ↓
+                         ┌─────────────────────┐
+                         │   Event Bus /       │
+                         │ Task Orchestration  │
+                         └──────────┬──────────┘
+                                    ↓
+          ┌──────────┬──────────┬──┴──────┬──────────┬──────────┬──────────┐
+          ↓          ↓          ↓         ↓          ↓          ↓          ↓
+         PC         Web       Media     Vision     Memory   Knowledge   Voice
+        Agent      Agent      Agent      Agent      Agent      Agent     Agent
+          └──────────┴──────────┴────────┬──────────┴──────────┴──────────┘
+                                          ↓
+                                ┌──────────────────┐
+                                │ Tool Permissions │
+                                │ + Safety Checks  │
+                                └────────┬─────────┘
+                                         ↓
+                                ┌──────────────────┐
+                                │ Real Environment │
+                                │ Windows / Web    │
+                                └────────┬─────────┘
+                                         ↓
+                                Result + Context
+                                         ↓
+                                  Memory / UI State
+```
+
+## The important engineering pieces
+
+### 1. Cognitive state and control flow
+
+FRIDAY uses an explicit state machine instead of a single request/response function. Each transition is validated, logged, associated with a correlation ID, and published through the event system.
+
+This gives the system a concrete representation of **where an interaction is, what it is doing, and how it can recover or be interrupted**.
+
+### 2. Event-driven orchestration
+
+Agents communicate through a priority-aware asynchronous event bus. Events carry session IDs, correlation IDs, sources, priorities, and structured payloads.
+
+The bus supports wildcard subscriptions and concurrent delivery, allowing the cognitive layer and specialized agents to remain decoupled.
+
+### 3. Specialized agents
+
+FRIDAY currently separates responsibilities into seven agents:
+
+- **PC** — Windows, applications, files, system operations
+- **Web** — browser interaction and web workflows
+- **Media** — media and playback control
+- **Vision** — screenshot reading, OCR, screen description, screen targeting
+- **Memory** — storing and retrieving contextual information
+- **Knowledge** — knowledge-oriented tasks and retrieval
+- **Voice** — speech input/output lifecycle
+
+Each agent follows a common lifecycle, declares capabilities, processes dispatched tasks, reports structured results, and emits health/heartbeat events.
+
+### 4. Perception and computer vision
+
+FRIDAY can capture the current screen and turn it into machine-usable context.
+
+Its vision layer supports operations such as:
+
+- structured screen reading
+- OCR-based text extraction
+- finding text on screen
+- screen description
+- screenshot capture
+- visual understanding
+- locating UI targets for computer interaction
+
+This makes the computer an environment FRIDAY can **observe**, not merely a set of APIs it can call.
+
+### 5. Persistent memory
+
+FRIDAY's memory is more than conversation history.
+
+The architecture combines working/session context with semantic and episodic retrieval. Semantic memory uses embeddings with local Qdrant storage, while the cognitive layer can retrieve relevant memory under a latency budget before planning a response or action.
+
+The practical goal is simple: **do not force every interaction to start from zero.**
+
+### 6. Safety and authorization
+
+Giving an AI access to a computer requires more than tool availability.
+
+FRIDAY includes agent trust levels and a permission engine that maps tools to permission requirements. Sensitive operations can trigger a human-confirmation flow, while denied operations are audit-logged rather than silently executed.
+
+The intended model is:
+
+**Capability ≠ unrestricted authority.**
+
+### 7. Stateful context
+
+The cognitive layer assembles context from multiple sources when needed:
+
+- current system state
+- active application/window
+- screen context
+- tool results
+- semantic memory
+- recent episodic context
+- recent conversation turns
+
+This context is then supplied to the reasoning layer with explicit budget management and truncation rules.
+
+## What the system can currently do
+
+| Layer | Current capability |
+|---|---|
+| **Perception** | Voice input, text input, screenshots, OCR, screen understanding |
+| **Reasoning** | Intent parsing, LLM-assisted planning, stateful response synthesis |
+| **Orchestration** | Event routing, task dispatch, priorities, correlation tracking |
+| **Computer use** | Application control, files, screenshots, system information, browser interaction |
+| **Vision** | Screen reading, text finding, screen description, visual target detection |
+| **Memory** | Session context, semantic retrieval, episodic retrieval |
+| **Safety** | Trust levels, permission policies, human confirmation, audit logging |
+| **Interface** | Electron + React desktop UI with real-time state synchronization |
+
+## Technology
+
+### Runtime
+
+- Python 3.11+
+- `asyncio`
+- FastAPI / Uvicorn
+- WebSockets
+- Event-driven internal architecture
+
+### Intelligence
+
+- Groq-hosted LLaMA 3.3 for LLM inference
+- Faster-Whisper for speech recognition
+- Edge-TTS for speech synthesis
+- fastembed with `BAAI/bge-small-en-v1.5`
+- embedded Qdrant for vector retrieval
+- optional Ollama vision models
+
+### Computer interaction
+
+- `pyautogui`
+- `psutil`
+- `pygetwindow`
+- browser automation tooling
+- Tesseract OCR
 
 ### Interface
 
-`docs/media/friday-ui.png`  
-*Main FRIDAY desktop interface / orb UI.*
+- React
+- TypeScript
+- TailwindCSS
+- Framer Motion
+- Electron
 
-### Memory + tools
+## Reliability engineering
 
-`docs/media/friday-memory.png`  
-*Example of FRIDAY using memory or a tool-driven workflow.*
+FRIDAY has gone through multiple iterations focused less on adding features and more on making the runtime behave predictably.
 
-## What can it do?
+Recent work includes:
 
-| Capability | Example |
-|---|---|
-| **Voice interaction** | Speak to FRIDAY and receive spoken responses |
-| **Desktop control** | Open apps, inspect system state, take screenshots, interact with windows |
-| **Web + media** | Search the web, control browser/YouTube workflows, interact with Spotify |
-| **Vision** | Analyze the current screen and extract useful visual/text context |
-| **Memory** | Keep working, session, episodic, and user-profile context |
-| **Real-time UI** | Stream state between Python and the Electron interface over WebSockets |
-
-## Why I built it
-
-I wanted to understand what it takes to turn a general-purpose language model into something that can **reliably act inside a real environment**.
-
-The interesting part is not just the model. It is the system around it:
-
-- **Routing:** decide what capability a request needs.
-- **Orchestration:** coordinate multiple tools and agents.
-- **State:** track where FRIDAY is in the interaction lifecycle.
-- **Memory:** retain useful context without treating every interaction as isolated.
-- **Safety:** guard destructive or sensitive actions before execution.
-- **Latency:** keep the system responsive enough to feel interactive.
-
-## Architecture at a glance
-
-```text
-User
-  ↓
-Voice / Text Input
-  ↓
-Intent + Cognitive State
-  ↓
-Planning / Routing
-  ↓
-┌────────┬────────┬────────┬────────┬────────┬────────┐
-│  PC    │  Web   │ Media  │ Vision │ Memory │Knowledge│
-└────────┴────────┴────────┴────────┴────────┴────────┘
-  ↓
-Tool Execution
-  ↓
-Response + UI State
-  ↓
-Memory Update
-```
-
-FRIDAY currently uses an **11-state cognitive flow** and separates capabilities into dedicated agent classes for PC, Web, Media, Vision, Memory, Knowledge, and Voice tasks.
-
-## Core engineering
-
-### Frontend
-
-- React + TypeScript
-- TailwindCSS + Framer Motion
-- Electron desktop shell
-- WebSockets for live state synchronization
-
-### Backend
-
-- Python 3.11+
-- FastAPI + WebSockets
-- Groq LLaMA 3.3 for intent/planning support
-- Faster-Whisper for local speech-to-text
-- Edge-TTS for speech output
-- fastembed + embedded Qdrant for semantic memory
-- pyautogui / psutil / pygetwindow for Windows interaction
-- Tavily for web retrieval
-
-### Memory
-
-FRIDAY uses four practical memory layers:
-
-**Working → Session → Episodic → User Profile**
-
-Semantic retrieval is handled with embeddings and local Qdrant storage.
-
-### Reliability and safety
-
-The system includes capability registration, a deletion guard, explicit state transitions, deterministic routing checks, and regression/health tooling.
-
-## Project status
-
-**Current status: active development / public experimental release.**
-
-The public repository represents the current implementation rather than a polished commercial product. The project has gone through several iterations focused on startup reliability, voice interaction, agent execution, memory, and reducing runtime overhead.
-
-Recent engineering work includes:
-
-- resolving ambient self-listening and microphone-state issues
+- fixing ambient self-listening and microphone-state synchronization
 - hardening hold-to-talk speech recognition
-- reducing startup delays
-- stabilizing event-bus task cancellation
-- moving the embedding stack to fastembed / ONNX
-- removing local databases and build artifacts from the public repository
+- removing startup-time microphone activation
+- reducing startup latency
+- stabilizing asynchronous task cancellation
+- moving semantic embeddings to the lighter fastembed / ONNX stack
+- removing local databases and release artifacts from the public repository
+- maintaining regression, health, routing, and determinism checks
 
 ## Performance snapshot
 
-| Metric | R9.0 lean build |
+The repository's documented R9.0 lean-build measurements report:
+
+| Metric | Measurement |
 |---|---:|
 | Boot import time | ~2.0 s |
 | RAM at idle boot | ~140 MB |
 | RAM after first query | ~325 MB |
 | Regression suite | 75 tests / 0 failing |
 
-These figures are from the project's documented lean-build benchmark and should be treated as development measurements, not formal performance guarantees.
+These are development measurements from the project, not independent benchmarks or production guarantees.
+
+## Project status
+
+**Active development / experimental public release.**
+
+FRIDAY is intentionally a systems experiment rather than a finished commercial product. The repository is used to explore the engineering problems around agentic computer interaction: control flow, tool orchestration, perception, memory, permissions, latency, reliability, and recovery.
+
+## What I am exploring
+
+The central question behind the project is:
+
+> **What software architecture is needed for an AI system to reliably act in a real computer environment rather than only generate text?**
+
+That question naturally connects FRIDAY to broader areas of AI engineering:
+
+- agentic systems
+- human-computer interaction
+- multimodal perception
+- computer use
+- memory architectures
+- tool-using language models
+- autonomous robotics and embodied AI
+
+## Repository structure
+
+```text
+FRIDAY-AI-OS/
+├── backend/
+│   ├── friday/
+│   │   ├── agents/          # Specialized execution agents
+│   │   ├── core/            # Cognitive state + event system
+│   │   ├── memory/          # Context and semantic retrieval
+│   │   ├── security/        # Capability + permission controls
+│   │   ├── vision/          # Screen perception
+│   │   └── system/          # Environment and OS integration
+│   ├── tests/               # Regression and behavior tests
+│   └── requirements.txt
+├── frontend/                # React + Electron interface
+├── health_check.py          # Runtime health checks
+├── determinism_audit.py
+├── production_regression_suite_spec.md
+├── ROUTING_MATRIX.md
+├── CHANGELOG.md
+└── README.md
+```
 
 ## Run locally
 
@@ -152,8 +297,8 @@ These figures are from the project's documented lean-build benchmark and should 
 - Windows 10/11
 - Python 3.11+
 - Node.js 18+
-- Tesseract OCR for screen text extraction
-- API keys for the external services you choose to enable
+- Tesseract OCR
+- API keys for the optional cloud services you enable
 
 ### Backend
 
@@ -165,14 +310,14 @@ pip install -r backend/requirements.txt
 
 Create `backend/.env` using the provided example configuration.
 
-### Start
+Start the backend:
 
 ```bash
 cd backend
-.\..\venv\Scripts\python.exe -m uvicorn api.server:app --host 127.0.0.1 --port 8001
+..\venv\Scripts\python.exe -m uvicorn api.server:app --host 127.0.0.1 --port 8001
 ```
 
-In another terminal:
+Start the interface separately:
 
 ```bash
 cd frontend
@@ -180,36 +325,21 @@ npm install
 npm run dev
 ```
 
-## Repository map
-
-```text
-FRIDAY-AI-OS/
-├── backend/            # AI, orchestration, memory, tools
-├── frontend/           # Electron + React interface
-├── docs/media/         # Screenshots and demo recordings
-├── health_check.py     # Runtime health checks
-├── determinism_audit.py
-├── production_regression_suite_spec.md
-├── ROUTING_MATRIX.md
-├── CHANGELOG.md
-└── README.md
-```
-
 ## Roadmap
 
-The next stage is about making FRIDAY **more reliable, more inspectable, and easier to extend** rather than simply adding more features.
+The next phase is focused on **reliability, evaluation, and deeper environmental understanding** rather than simply adding more commands.
 
-- stronger tool verification and failure recovery
-- better screen/vision workflows
-- more robust long-term memory decisions
-- cleaner desktop packaging
-- improved observability and evaluation
+- stronger action verification and recovery
+- more robust screen/vision interaction
+- better uncertainty handling around tool results and memory
+- improved observability and evaluation harnesses
+- cleaner desktop packaging and deployment
 
-## About the project
+## Author
 
-FRIDAY is a personal engineering project by **Aaditya Pratap Chauhan**.
+**Aaditya Pratap Chauhan**
 
-It is an ongoing exploration of AI agents, computer interaction, memory systems, and the practical engineering required to make AI systems act rather than just answer.
+FRIDAY is a long-running personal engineering project exploring the boundary between language models and real-world computer interaction.
 
 ## License
 
