@@ -49,11 +49,17 @@ IDLE
 
 Interruptions and failures are modeled explicitly rather than treated as ordinary responses.
 
+## Interaction model
+
+FRIDAY uses a **push-to-talk interaction model** rather than continuously listening for commands. Voice capture begins from an explicit user action, while the interface presents a small **floating island centered at the top of the screen** for active interaction and system state.
+
+This design keeps the agent available without turning microphone activation into a side effect of application startup or connectivity.
+
 ## System architecture
 
 ```text
                          ┌─────────────────────┐
-                         │    Voice / Text      │
+                         │ Push-to-Talk / Text  │
                          │       Input         │
                          └──────────┬──────────┘
                                     ↓
@@ -173,14 +179,14 @@ This context is then supplied to the reasoning layer with explicit budget manage
 
 | Layer | Current capability |
 |---|---|
-| **Perception** | Voice input, text input, screenshots, OCR, screen understanding |
+| **Perception** | Push-to-talk voice input, text input, screenshots, OCR, screen understanding |
 | **Reasoning** | Intent parsing, LLM-assisted planning, stateful response synthesis |
 | **Orchestration** | Event routing, task dispatch, priorities, correlation tracking |
 | **Computer use** | Application control, files, screenshots, system information, browser interaction |
 | **Vision** | Screen reading, text finding, screen description, visual target detection |
 | **Memory** | Session context, semantic retrieval, episodic retrieval |
 | **Safety** | Trust levels, permission policies, human confirmation, audit logging |
-| **Interface** | Electron + React desktop UI with real-time state synchronization |
+| **Interface** | Electron + React desktop UI with a floating top-center interaction surface |
 
 ## Technology
 
