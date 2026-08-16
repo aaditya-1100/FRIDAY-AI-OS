@@ -21,6 +21,53 @@ The system is built around a continuous control loop:
 
 A language model provides reasoning capability, but FRIDAY is the surrounding system that gives that reasoning access to a computer.
 
+## Interaction model
+
+FRIDAY is designed to stay **out of the way of the user's work**.
+
+It does not open a full assistant window, live in the taskbar, or use a wake word. Instead, it appears as a narrow, pill-shaped **floating island at the top-center of the screen**, directly beneath the camera/notch area on a modern laptop. It acts as a compact status and interaction surface rather than demanding focus.
+
+### Push-to-talk, by design
+
+FRIDAY uses a deliberate **walkie-talkie interaction model**:
+
+**Hold `Ctrl + Alt + Z` → speak → release → FRIDAY processes the turn.**
+
+The microphone is only active while the hotkey is held. There is no passive background listening in the normal interaction flow.
+
+This design gives the user explicit control over microphone activation and avoids treating connectivity or application startup as permission to listen.
+
+### What happens during a turn
+
+When the hotkey is held, the floating island indicates that FRIDAY is actively listening. When the key is released, the system moves through its processing stages and returns to idle after responding.
+
+The interaction pipeline is:
+
+1. **Listen** — capture the user's voice while push-to-talk is held.
+2. **Transcribe** — process speech locally with Faster-Whisper.
+3. **Interpret** — determine whether the request is a question, command, memory lookup, or system action.
+4. **Plan / route** — use deterministic routing where appropriate and LLM-assisted reasoning where ambiguity requires it.
+5. **Execute** — delegate work to the relevant agent and tools.
+6. **Respond** — synthesize the result and speak it back with Edge-TTS.
+7. **Reflect / remember** — update relevant interaction state and memory.
+
+The UI is intentionally minimal: no modal workflow, no full-screen takeover, and no requirement to leave the application currently in use.
+
+## What FRIDAY can do from that interface
+
+From a single deliberate push-to-talk interaction, FRIDAY can:
+
+- answer questions using live web retrieval or stored context
+- control supported media workflows such as Spotify
+- capture and analyze screenshots
+- read and locate text on the current screen
+- open applications and interact with Windows resources
+- work with files and system information through guarded tool paths
+- retrieve relevant information from semantic and episodic memory
+- surface passive/proactive information through the floating island without turning every event into a spoken interruption
+
+FRIDAY is designed around the idea that **the computer itself is part of the environment the agent observes and acts within**.
+
 ## What FRIDAY actually is
 
 FRIDAY is not designed as a single monolithic chatbot. It is a small **agent runtime** with explicit state, asynchronous event routing, specialized agents, tool permissions, and memory services.
@@ -49,54 +96,46 @@ IDLE
 
 Interruptions and failures are modeled explicitly rather than treated as ordinary responses.
 
-## Interaction model
-
-FRIDAY uses a **push-to-talk interaction model** rather than continuously listening for commands. Voice capture begins from an explicit user action, while the interface presents a small **floating island centered at the top of the screen** for active interaction and system state.
-
-This design keeps the agent available without turning microphone activation into a side effect of application startup or connectivity.
-
 ## System architecture
 
 ```text
-                         ┌─────────────────────┐
-                         │ Push-to-Talk / Text  │
-                         │       Input         │
-                         └──────────┬──────────┘
+                     ┌──────────────────────────────┐
+                     │ Push-to-Talk / Text Input     │
+                     │      Ctrl + Alt + Z          │
+                     └──────────────┬───────────────┘
                                     ↓
-                         ┌─────────────────────┐
-                         │      Perception     │
-                         │  STT + Screen/OCR   │
-                         └──────────┬──────────┘
+                     ┌──────────────────────────────┐
+                     │         Perception           │
+                     │  STT + Screen/OCR Context   │
+                     └──────────────┬───────────────┘
                                     ↓
-                         ┌─────────────────────┐
-                         │   Cognitive Core    │
-                         │ State + Planning    │
-                         └──────────┬──────────┘
+                     ┌──────────────────────────────┐
+                     │        Cognitive Core        │
+                     │  State + Planning + Context  │
+                     └──────────────┬───────────────┘
                                     ↓
-                         ┌─────────────────────┐
-                         │   Event Bus /       │
-                         │ Task Orchestration  │
-                         └──────────┬──────────┘
+                     ┌──────────────────────────────┐
+                     │  Event Bus / Task Dispatch   │
+                     │   Priority + Correlation     │
+                     └──────────────┬───────────────┘
                                     ↓
-          ┌──────────┬──────────┬──┴──────┬──────────┬──────────┬──────────┐
-          ↓          ↓          ↓         ↓          ↓          ↓          ↓
-         PC         Web       Media     Vision     Memory   Knowledge   Voice
-        Agent      Agent      Agent      Agent      Agent      Agent     Agent
-          └──────────┴──────────┴────────┬──────────┴──────────┴──────────┘
-                                          ↓
-                                ┌──────────────────┐
-                                │ Tool Permissions │
-                                │ + Safety Checks  │
-                                └────────┬─────────┘
-                                         ↓
-                                ┌──────────────────┐
-                                │ Real Environment │
-                                │ Windows / Web    │
-                                └────────┬─────────┘
-                                         ↓
-                                Result + Context
-                                         ↓
-                                  Memory / UI State
+       ┌───────────┬───────────┬────┴────┬───────────┬──────────┬───────────┐
+       ↓           ↓           ↓         ↓           ↓          ↓           ↓
+      PC          Web        Media     Vision      Memory   Knowledge     Voice
+     Agent       Agent       Agent      Agent       Agent      Agent      Agent
+       └───────────┴───────────┴────┬────┴───────────┴──────────┴───────────┘
+                                    ↓
+                          ┌──────────────────────┐
+                          │ Permissions + Safety │
+                          └──────────┬───────────┘
+                                     ↓
+                          ┌──────────────────────┐
+                          │  Windows / Web / UI  │
+                          └──────────┬───────────┘
+                                     ↓
+                             Result + New Context
+                                     ↓
+                            Memory / UI Feedback
 ```
 
 ## The important engineering pieces
@@ -186,7 +225,7 @@ This context is then supplied to the reasoning layer with explicit budget manage
 | **Vision** | Screen reading, text finding, screen description, visual target detection |
 | **Memory** | Session context, semantic retrieval, episodic retrieval |
 | **Safety** | Trust levels, permission policies, human confirmation, audit logging |
-| **Interface** | Electron + React desktop UI with a floating top-center interaction surface |
+| **Interface** | Electron + React desktop UI with a top-center floating interaction surface |
 
 ## Technology
 
@@ -222,6 +261,14 @@ This context is then supplied to the reasoning layer with explicit budget manage
 - TailwindCSS
 - Framer Motion
 - Electron
+
+## Why the interface is deliberately minimal
+
+FRIDAY is designed to sit **alongside work, not on top of it**.
+
+The floating island occupies a small strip of otherwise unused screen space. Push-to-talk makes activation explicit. Voice input and voice output keep the user's hands available for whatever they are already doing.
+
+The design goal is not to make the assistant the center of attention. It is to make AI capability **immediately available without demanding focus**.
 
 ## Reliability engineering
 
